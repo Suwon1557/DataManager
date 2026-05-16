@@ -6,5 +6,20 @@ namespace DataManager
         {
             InitializeComponent();
         }
+
+        private void tpDataManager_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnCheckDataIntegrity_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnSelectAdd_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

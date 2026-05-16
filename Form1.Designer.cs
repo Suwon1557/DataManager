@@ -9,6 +9,11 @@
         private TabControl tcMain;
         private TabPage tpDataManager;
         private TabPage tpTrainingTest;
+        private GroupBox gbDataLoad;
+        private Button btnFolderAdd;
+        private TextBox txtFolderPath;
+        private Button btnCheckDataIntegrity;
+        private Label lblTitle;
 
         /// <summary>
         ///  Clean up any resources being used.
@@ -33,9 +38,15 @@
         {
             tcMain = new TabControl();
             tpDataManager = new TabPage();
+            gbDataLoad = new GroupBox();
+            btnCheckDataIntegrity = new Button();
+            txtFolderPath = new TextBox();
+            btnFolderAdd = new Button();
             tpTrainingTest = new TabPage();
             lblTitle = new Label();
             tcMain.SuspendLayout();
+            tpDataManager.SuspendLayout();
+            gbDataLoad.SuspendLayout();
             SuspendLayout();
             // 
             // tcMain
@@ -51,6 +62,7 @@
             // 
             // tpDataManager
             // 
+            tpDataManager.Controls.Add(gbDataLoad);
             tpDataManager.Location = new Point(4, 24);
             tpDataManager.Name = "tpDataManager";
             tpDataManager.Padding = new Padding(3);
@@ -58,6 +70,56 @@
             tpDataManager.TabIndex = 0;
             tpDataManager.Text = "데이터 관리";
             tpDataManager.UseVisualStyleBackColor = true;
+            tpDataManager.Click += tpDataManager_Click;
+            // 
+            // gbDataLoad
+            // 
+            gbDataLoad.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            gbDataLoad.Controls.Add(btnCheckDataIntegrity);
+            gbDataLoad.Controls.Add(txtFolderPath);
+            gbDataLoad.Controls.Add(btnFolderAdd);
+            gbDataLoad.Font = new Font("함초롬바탕 확장", 14.2499981F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            gbDataLoad.ForeColor = Color.FromArgb(14, 61, 156);
+            gbDataLoad.Location = new Point(3, 3);
+            gbDataLoad.Name = "gbDataLoad";
+            gbDataLoad.Size = new Size(786, 100);
+            gbDataLoad.TabIndex = 0;
+            gbDataLoad.TabStop = false;
+            gbDataLoad.Text = "데이터 불러오기";
+            // 
+            // btnCheckDataIntegrity
+            // 
+            btnCheckDataIntegrity.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnCheckDataIntegrity.Font = new Font("함초롬돋움 확장", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            btnCheckDataIntegrity.Location = new Point(582, 34);
+            btnCheckDataIntegrity.Name = "btnCheckDataIntegrity";
+            btnCheckDataIntegrity.Size = new Size(192, 38);
+            btnCheckDataIntegrity.TabIndex = 2;
+            btnCheckDataIntegrity.Text = "데이터 무결성 검사";
+            btnCheckDataIntegrity.UseVisualStyleBackColor = true;
+            btnCheckDataIntegrity.Click += btnCheckDataIntegrity_Click;
+            // 
+            // txtFolderPath
+            // 
+            txtFolderPath.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtFolderPath.Font = new Font("함초롬돋움 확장", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            txtFolderPath.Location = new Point(161, 37);
+            txtFolderPath.Name = "txtFolderPath";
+            txtFolderPath.Size = new Size(412, 32);
+            txtFolderPath.TabIndex = 1;
+            txtFolderPath.Text = "(폴더경로)";
+            // 
+            // btnFolderAdd
+            // 
+            btnFolderAdd.Font = new Font("함초롬돋움 확장", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            btnFolderAdd.ForeColor = Color.Black;
+            btnFolderAdd.Location = new Point(12, 34);
+            btnFolderAdd.Name = "btnFolderAdd";
+            btnFolderAdd.Size = new Size(140, 38);
+            btnFolderAdd.TabIndex = 0;
+            btnFolderAdd.Text = "폴더선택";
+            btnFolderAdd.UseVisualStyleBackColor = true;
+            btnFolderAdd.Click += btnSelectAdd_Click;
             // 
             // tpTrainingTest
             // 
@@ -91,12 +153,13 @@
             Name = "Form1";
             Text = "Form1";
             tcMain.ResumeLayout(false);
+            tpDataManager.ResumeLayout(false);
+            gbDataLoad.ResumeLayout(false);
+            gbDataLoad.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
-
-        private Label lblTitle;
     }
 }
