@@ -20,6 +20,11 @@
         private TextBox txtFolderPath;
         private Button btnCheckDataIntegrity;
         private Label lblTitle;
+        private Button btnReverse;
+        private Button btnStop;
+        private Button btnPlay;
+        private TrackBar tbPlaybackSpeed;
+        private Label lblPlaybackSpeed;
 
         /// <summary>
         ///  Clean up any resources being used.
@@ -45,6 +50,11 @@
             tcMain = new TabControl();
             tpDataManager = new TabPage();
             gbDataContent = new GroupBox();
+            tbPlaybackSpeed = new TrackBar();
+            lblPlaybackSpeed = new Label();
+            btnReverse = new Button();
+            btnStop = new Button();
+            btnPlay = new Button();
             dgvDataInfo = new DataGridView();
             colDataName = new DataGridViewTextBoxColumn();
             colDataValue = new DataGridViewTextBoxColumn();
@@ -59,6 +69,7 @@
             tcMain.SuspendLayout();
             tpDataManager.SuspendLayout();
             gbDataContent.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)tbPlaybackSpeed).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgvDataInfo).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbDataPreview).BeginInit();
             gbDataLoad.SuspendLayout();
@@ -91,6 +102,11 @@
             // gbDataContent
             // 
             gbDataContent.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            gbDataContent.Controls.Add(lblPlaybackSpeed);
+            gbDataContent.Controls.Add(tbPlaybackSpeed);
+            gbDataContent.Controls.Add(btnReverse);
+            gbDataContent.Controls.Add(btnStop);
+            gbDataContent.Controls.Add(btnPlay);
             gbDataContent.Controls.Add(dgvDataInfo);
             gbDataContent.Controls.Add(lvDataItems);
             gbDataContent.Controls.Add(pbDataPreview);
@@ -102,6 +118,61 @@
             gbDataContent.TabIndex = 1;
             gbDataContent.TabStop = false;
             gbDataContent.Text = "데이터 탐색";
+            // 
+            // tbPlaybackSpeed
+            // 
+            tbPlaybackSpeed.LargeChange = 25;
+            tbPlaybackSpeed.Location = new Point(94, 307);
+            tbPlaybackSpeed.Maximum = 200;
+            tbPlaybackSpeed.Minimum = 25;
+            tbPlaybackSpeed.Name = "tbPlaybackSpeed";
+            tbPlaybackSpeed.Size = new Size(300, 45);
+            tbPlaybackSpeed.SmallChange = 25;
+            tbPlaybackSpeed.TabIndex = 6;
+            tbPlaybackSpeed.TickFrequency = 25;
+            tbPlaybackSpeed.Value = 100;
+            tbPlaybackSpeed.Scroll += tbPlaybackSpeed_Scroll;
+            // 
+            // lblPlaybackSpeed
+            // 
+            lblPlaybackSpeed.AutoSize = true;
+            lblPlaybackSpeed.Font = new Font("한컴 고딕", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblPlaybackSpeed.ForeColor = Color.Black;
+            lblPlaybackSpeed.Location = new Point(12, 311);
+            lblPlaybackSpeed.Name = "lblPlaybackSpeed";
+            lblPlaybackSpeed.Size = new Size(45, 26);
+            lblPlaybackSpeed.TabIndex = 7;
+            lblPlaybackSpeed.Text = "x1";
+            // 
+            // btnReverse
+            // 
+            btnReverse.ForeColor = Color.Black;
+            btnReverse.Location = new Point(176, 269);
+            btnReverse.Name = "btnReverse";
+            btnReverse.Size = new Size(76, 32);
+            btnReverse.TabIndex = 5;
+            btnReverse.Text = "<<";
+            btnReverse.UseVisualStyleBackColor = true;
+            // 
+            // btnStop
+            // 
+            btnStop.ForeColor = Color.Black;
+            btnStop.Location = new Point(94, 269);
+            btnStop.Name = "btnStop";
+            btnStop.Size = new Size(76, 32);
+            btnStop.TabIndex = 4;
+            btnStop.Text = "| |";
+            btnStop.UseVisualStyleBackColor = true;
+            // 
+            // btnPlay
+            // 
+            btnPlay.ForeColor = Color.Black;
+            btnPlay.Location = new Point(12, 269);
+            btnPlay.Name = "btnPlay";
+            btnPlay.Size = new Size(76, 32);
+            btnPlay.TabIndex = 3;
+            btnPlay.Text = ">>";
+            btnPlay.UseVisualStyleBackColor = true;
             // 
             // dgvDataInfo
             // 
@@ -250,6 +321,8 @@
             tcMain.ResumeLayout(false);
             tpDataManager.ResumeLayout(false);
             gbDataContent.ResumeLayout(false);
+            gbDataContent.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)tbPlaybackSpeed).EndInit();
             ((System.ComponentModel.ISupportInitialize)dgvDataInfo).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbDataPreview).EndInit();
             gbDataLoad.ResumeLayout(false);

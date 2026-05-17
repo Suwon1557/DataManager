@@ -6,6 +6,7 @@ namespace DataManager
         {
             InitializeComponent();
             InitializeDataInfoGrid();
+            UpdatePlaybackSpeedLabel();
             Shown += Form1_Shown;
         }
 
@@ -18,10 +19,18 @@ namespace DataManager
             dgvDataInfo.Rows.Add("속도값", "0");
         }
 
+        private void UpdatePlaybackSpeedLabel()
+        {
+            decimal playbackSpeed = tbPlaybackSpeed.Value / 100m;
+            lblPlaybackSpeed.Text = $"x{playbackSpeed:0.##}";
+        }
+
         private void Form1_Shown(object? sender, EventArgs e)
         {
             dgvDataInfo.ClearSelection();
             dgvDataInfo.CurrentCell = null;
+            tbPlaybackSpeed.Value = 100;
+            UpdatePlaybackSpeedLabel();
         }
 
         private void tpDataManager_Click(object sender, EventArgs e)
@@ -42,6 +51,11 @@ namespace DataManager
             {
                 txtFolderPath.Text = folderBrowserDialog.SelectedPath;
             }
+        }
+
+        private void tbPlaybackSpeed_Scroll(object sender, EventArgs e)
+        {
+            UpdatePlaybackSpeedLabel();
         }
     }
 }
