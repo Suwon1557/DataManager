@@ -90,7 +90,8 @@
             // btnCheckDataIntegrity
             // 
             btnCheckDataIntegrity.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnCheckDataIntegrity.Font = new Font("함초롬돋움 확장", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            btnCheckDataIntegrity.Font = new Font("한컴 고딕", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnCheckDataIntegrity.ForeColor = Color.Black;
             btnCheckDataIntegrity.Location = new Point(582, 34);
             btnCheckDataIntegrity.Name = "btnCheckDataIntegrity";
             btnCheckDataIntegrity.Size = new Size(192, 38);
@@ -102,16 +103,17 @@
             // txtFolderPath
             // 
             txtFolderPath.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtFolderPath.Font = new Font("함초롬돋움 확장", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            txtFolderPath.Font = new Font("한컴 고딕", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            txtFolderPath.ForeColor = Color.Black;
             txtFolderPath.Location = new Point(161, 37);
             txtFolderPath.Name = "txtFolderPath";
-            txtFolderPath.Size = new Size(412, 32);
+            txtFolderPath.Size = new Size(412, 35);
             txtFolderPath.TabIndex = 1;
             txtFolderPath.Text = "(폴더경로)";
             // 
             // btnFolderAdd
             // 
-            btnFolderAdd.Font = new Font("함초롬돋움 확장", 14F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            btnFolderAdd.Font = new Font("한컴 고딕", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnFolderAdd.ForeColor = Color.Black;
             btnFolderAdd.Location = new Point(12, 34);
             btnFolderAdd.Name = "btnFolderAdd";
