@@ -50,8 +50,8 @@
             tcMain = new TabControl();
             tpDataManager = new TabPage();
             gbDataContent = new GroupBox();
-            tbPlaybackSpeed = new TrackBar();
             lblPlaybackSpeed = new Label();
+            tbPlaybackSpeed = new TrackBar();
             btnReverse = new Button();
             btnStop = new Button();
             btnPlay = new Button();
@@ -66,6 +66,9 @@
             btnFolderAdd = new Button();
             tpTrainingTest = new TabPage();
             lblTitle = new Label();
+            button1 = new Button();
+            button2 = new Button();
+            button3 = new Button();
             tcMain.SuspendLayout();
             tpDataManager.SuspendLayout();
             gbDataContent.SuspendLayout();
@@ -83,7 +86,7 @@
             tcMain.Location = new Point(0, 40);
             tcMain.Name = "tcMain";
             tcMain.SelectedIndex = 0;
-            tcMain.Size = new Size(800, 640);
+            tcMain.Size = new Size(800, 810);
             tcMain.TabIndex = 0;
             // 
             // tpDataManager
@@ -93,7 +96,7 @@
             tpDataManager.Location = new Point(4, 24);
             tpDataManager.Name = "tpDataManager";
             tpDataManager.Padding = new Padding(3);
-            tpDataManager.Size = new Size(792, 612);
+            tpDataManager.Size = new Size(792, 782);
             tpDataManager.TabIndex = 0;
             tpDataManager.Text = "데이터 관리";
             tpDataManager.UseVisualStyleBackColor = true;
@@ -102,6 +105,9 @@
             // gbDataContent
             // 
             gbDataContent.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            gbDataContent.Controls.Add(button3);
+            gbDataContent.Controls.Add(button2);
+            gbDataContent.Controls.Add(button1);
             gbDataContent.Controls.Add(lblPlaybackSpeed);
             gbDataContent.Controls.Add(tbPlaybackSpeed);
             gbDataContent.Controls.Add(btnReverse);
@@ -114,10 +120,21 @@
             gbDataContent.ForeColor = Color.FromArgb(14, 61, 156);
             gbDataContent.Location = new Point(3, 109);
             gbDataContent.Name = "gbDataContent";
-            gbDataContent.Size = new Size(786, 500);
+            gbDataContent.Size = new Size(786, 670);
             gbDataContent.TabIndex = 1;
             gbDataContent.TabStop = false;
             gbDataContent.Text = "데이터 탐색";
+            // 
+            // lblPlaybackSpeed
+            // 
+            lblPlaybackSpeed.AutoSize = true;
+            lblPlaybackSpeed.Font = new Font("한컴 고딕", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblPlaybackSpeed.ForeColor = Color.FromArgb(14, 61, 156);
+            lblPlaybackSpeed.Location = new Point(12, 311);
+            lblPlaybackSpeed.Name = "lblPlaybackSpeed";
+            lblPlaybackSpeed.Size = new Size(35, 27);
+            lblPlaybackSpeed.TabIndex = 7;
+            lblPlaybackSpeed.Text = "x1";
             // 
             // tbPlaybackSpeed
             // 
@@ -132,17 +149,6 @@
             tbPlaybackSpeed.TickFrequency = 25;
             tbPlaybackSpeed.Value = 100;
             tbPlaybackSpeed.Scroll += tbPlaybackSpeed_Scroll;
-            // 
-            // lblPlaybackSpeed
-            // 
-            lblPlaybackSpeed.AutoSize = true;
-            lblPlaybackSpeed.Font = new Font("한컴 고딕", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            lblPlaybackSpeed.ForeColor = Color.FromArgb(14, 61, 156);
-            lblPlaybackSpeed.Location = new Point(12, 311);
-            lblPlaybackSpeed.Name = "lblPlaybackSpeed";
-            lblPlaybackSpeed.Size = new Size(45, 26);
-            lblPlaybackSpeed.TabIndex = 7;
-            lblPlaybackSpeed.Text = "x1";
             // 
             // btnReverse
             // 
@@ -219,7 +225,7 @@
             lvDataItems.GridLines = true;
             lvDataItems.Location = new Point(540, 36);
             lvDataItems.Name = "lvDataItems";
-            lvDataItems.Size = new Size(234, 215);
+            lvDataItems.Size = new Size(234, 227);
             lvDataItems.TabIndex = 1;
             lvDataItems.UseCompatibleStateImageBehavior = false;
             lvDataItems.View = View.Details;
@@ -231,7 +237,7 @@
             pbDataPreview.BorderStyle = BorderStyle.FixedSingle;
             pbDataPreview.Location = new Point(12, 36);
             pbDataPreview.Name = "pbDataPreview";
-            pbDataPreview.Size = new Size(300, 215);
+            pbDataPreview.Size = new Size(300, 227);
             pbDataPreview.SizeMode = PictureBoxSizeMode.Zoom;
             pbDataPreview.TabIndex = 0;
             pbDataPreview.TabStop = false;
@@ -292,7 +298,7 @@
             tpTrainingTest.Location = new Point(4, 24);
             tpTrainingTest.Name = "tpTrainingTest";
             tpTrainingTest.Padding = new Padding(3);
-            tpTrainingTest.Size = new Size(792, 612);
+            tpTrainingTest.Size = new Size(792, 782);
             tpTrainingTest.TabIndex = 1;
             tpTrainingTest.Text = "학습/테스트";
             tpTrainingTest.UseVisualStyleBackColor = true;
@@ -309,11 +315,41 @@
             lblTitle.TabIndex = 0;
             lblTitle.Text = "Data Manager";
             // 
+            // button1
+            // 
+            button1.ForeColor = Color.Black;
+            button1.Location = new Point(319, 194);
+            button1.Name = "button1";
+            button1.Size = new Size(96, 34);
+            button1.TabIndex = 8;
+            button1.Text = "필터링";
+            button1.UseVisualStyleBackColor = true;
+            // 
+            // button2
+            // 
+            button2.ForeColor = Color.Black;
+            button2.Location = new Point(431, 194);
+            button2.Name = "button2";
+            button2.Size = new Size(96, 34);
+            button2.TabIndex = 9;
+            button2.Text = "삭제";
+            button2.UseVisualStyleBackColor = true;
+            // 
+            // button3
+            // 
+            button3.ForeColor = Color.Black;
+            button3.Location = new Point(319, 234);
+            button3.Name = "button3";
+            button3.Size = new Size(208, 34);
+            button3.TabIndex = 10;
+            button3.Text = "삭제 취소";
+            button3.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 680);
+            ClientSize = new Size(800, 850);
             Controls.Add(lblTitle);
             Controls.Add(tcMain);
             Name = "Form1";
@@ -332,5 +368,9 @@
         }
 
         #endregion
+
+        private Button button2;
+        private Button button1;
+        private Button button3;
     }
 }
