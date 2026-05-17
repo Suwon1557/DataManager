@@ -137,7 +137,7 @@
             // 
             lblPlaybackSpeed.AutoSize = true;
             lblPlaybackSpeed.Font = new Font("한컴 고딕", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            lblPlaybackSpeed.ForeColor = Color.Black;
+            lblPlaybackSpeed.ForeColor = Color.FromArgb(14, 61, 156);
             lblPlaybackSpeed.Location = new Point(12, 311);
             lblPlaybackSpeed.Name = "lblPlaybackSpeed";
             lblPlaybackSpeed.Size = new Size(45, 26);
