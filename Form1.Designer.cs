@@ -13,6 +13,9 @@
         private GroupBox gbDataContent;
         private PictureBox pbDataPreview;
         private ListView lvDataItems;
+        private DataGridView dgvDataInfo;
+        private DataGridViewTextBoxColumn colDataName;
+        private DataGridViewTextBoxColumn colDataValue;
         private Button btnFolderAdd;
         private TextBox txtFolderPath;
         private Button btnCheckDataIntegrity;
@@ -42,6 +45,9 @@
             tcMain = new TabControl();
             tpDataManager = new TabPage();
             gbDataContent = new GroupBox();
+            dgvDataInfo = new DataGridView();
+            colDataName = new DataGridViewTextBoxColumn();
+            colDataValue = new DataGridViewTextBoxColumn();
             lvDataItems = new ListView();
             pbDataPreview = new PictureBox();
             gbDataLoad = new GroupBox();
@@ -53,6 +59,7 @@
             tcMain.SuspendLayout();
             tpDataManager.SuspendLayout();
             gbDataContent.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvDataInfo).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbDataPreview).BeginInit();
             gbDataLoad.SuspendLayout();
             SuspendLayout();
@@ -84,6 +91,7 @@
             // gbDataContent
             // 
             gbDataContent.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            gbDataContent.Controls.Add(dgvDataInfo);
             gbDataContent.Controls.Add(lvDataItems);
             gbDataContent.Controls.Add(pbDataPreview);
             gbDataContent.Font = new Font("함초롬바탕 확장", 14.2499981F, FontStyle.Bold, GraphicsUnit.Point, 129);
@@ -95,6 +103,42 @@
             gbDataContent.TabStop = false;
             gbDataContent.Text = "데이터 탐색";
             // 
+            // dgvDataInfo
+            // 
+            dgvDataInfo.AllowUserToAddRows = false;
+            dgvDataInfo.AllowUserToDeleteRows = false;
+            dgvDataInfo.AllowUserToResizeColumns = false;
+            dgvDataInfo.AllowUserToResizeRows = false;
+            dgvDataInfo.BackgroundColor = SystemColors.Window;
+            dgvDataInfo.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvDataInfo.Columns.AddRange(new DataGridViewColumn[] { colDataName, colDataValue });
+            dgvDataInfo.Font = new Font("한컴 고딕", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            dgvDataInfo.Location = new Point(318, 36);
+            dgvDataInfo.MultiSelect = false;
+            dgvDataInfo.Name = "dgvDataInfo";
+            dgvDataInfo.ReadOnly = true;
+            dgvDataInfo.RowHeadersVisible = false;
+            dgvDataInfo.ScrollBars = ScrollBars.None;
+            dgvDataInfo.Size = new Size(216, 138);
+            dgvDataInfo.TabIndex = 2;
+            dgvDataInfo.Text = "(폴더경로)";
+            // 
+            // colDataName
+            // 
+            colDataName.HeaderText = "데이터";
+            colDataName.Name = "colDataName";
+            colDataName.ReadOnly = true;
+            colDataName.SortMode = DataGridViewColumnSortMode.NotSortable;
+            colDataName.Width = 128;
+            // 
+            // colDataValue
+            // 
+            colDataValue.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            colDataValue.HeaderText = "값";
+            colDataValue.Name = "colDataValue";
+            colDataValue.ReadOnly = true;
+            colDataValue.SortMode = DataGridViewColumnSortMode.NotSortable;
+            // 
             // lvDataItems
             // 
             lvDataItems.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
@@ -102,9 +146,9 @@
             lvDataItems.ForeColor = Color.Black;
             lvDataItems.FullRowSelect = true;
             lvDataItems.GridLines = true;
-            lvDataItems.Location = new Point(522, 36);
+            lvDataItems.Location = new Point(540, 36);
             lvDataItems.Name = "lvDataItems";
-            lvDataItems.Size = new Size(252, 215);
+            lvDataItems.Size = new Size(234, 215);
             lvDataItems.TabIndex = 1;
             lvDataItems.UseCompatibleStateImageBehavior = false;
             lvDataItems.View = View.Details;
@@ -206,6 +250,7 @@
             tcMain.ResumeLayout(false);
             tpDataManager.ResumeLayout(false);
             gbDataContent.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvDataInfo).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbDataPreview).EndInit();
             gbDataLoad.ResumeLayout(false);
             gbDataLoad.PerformLayout();

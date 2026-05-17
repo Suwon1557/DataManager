@@ -5,16 +5,31 @@ namespace DataManager
         public Form1()
         {
             InitializeComponent();
+            InitializeDataInfoGrid();
+            Shown += Form1_Shown;
+        }
+
+        private void InitializeDataInfoGrid()
+        {
+            dgvDataInfo.Rows.Clear();
+            dgvDataInfo.Rows.Add("데이터", "0");
+            dgvDataInfo.Rows.Add("이미지", "0");
+            dgvDataInfo.Rows.Add("조향값", "0");
+            dgvDataInfo.Rows.Add("속도값", "0");
+        }
+
+        private void Form1_Shown(object? sender, EventArgs e)
+        {
+            dgvDataInfo.ClearSelection();
+            dgvDataInfo.CurrentCell = null;
         }
 
         private void tpDataManager_Click(object sender, EventArgs e)
         {
-
         }
 
         private void btnCheckDataIntegrity_Click(object sender, EventArgs e)
         {
-
         }
 
         private void btnSelectAdd_Click(object sender, EventArgs e)
