@@ -10,6 +10,9 @@
         private TabPage tpDataManager;
         private TabPage tpTrainingTest;
         private GroupBox gbDataLoad;
+        private GroupBox gbDataContent;
+        private PictureBox pbDataPreview;
+        private ListView lvDataItems;
         private Button btnFolderAdd;
         private TextBox txtFolderPath;
         private Button btnCheckDataIntegrity;
@@ -38,6 +41,9 @@
         {
             tcMain = new TabControl();
             tpDataManager = new TabPage();
+            gbDataContent = new GroupBox();
+            lvDataItems = new ListView();
+            pbDataPreview = new PictureBox();
             gbDataLoad = new GroupBox();
             btnCheckDataIntegrity = new Button();
             txtFolderPath = new TextBox();
@@ -46,6 +52,8 @@
             lblTitle = new Label();
             tcMain.SuspendLayout();
             tpDataManager.SuspendLayout();
+            gbDataContent.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pbDataPreview).BeginInit();
             gbDataLoad.SuspendLayout();
             SuspendLayout();
             // 
@@ -57,20 +65,61 @@
             tcMain.Location = new Point(0, 40);
             tcMain.Name = "tcMain";
             tcMain.SelectedIndex = 0;
-            tcMain.Size = new Size(800, 580);
+            tcMain.Size = new Size(800, 640);
             tcMain.TabIndex = 0;
             // 
             // tpDataManager
             // 
+            tpDataManager.Controls.Add(gbDataContent);
             tpDataManager.Controls.Add(gbDataLoad);
             tpDataManager.Location = new Point(4, 24);
             tpDataManager.Name = "tpDataManager";
             tpDataManager.Padding = new Padding(3);
-            tpDataManager.Size = new Size(792, 552);
+            tpDataManager.Size = new Size(792, 612);
             tpDataManager.TabIndex = 0;
             tpDataManager.Text = "데이터 관리";
             tpDataManager.UseVisualStyleBackColor = true;
             tpDataManager.Click += tpDataManager_Click;
+            // 
+            // gbDataContent
+            // 
+            gbDataContent.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            gbDataContent.Controls.Add(lvDataItems);
+            gbDataContent.Controls.Add(pbDataPreview);
+            gbDataContent.Font = new Font("함초롬바탕 확장", 14.2499981F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            gbDataContent.ForeColor = Color.FromArgb(14, 61, 156);
+            gbDataContent.Location = new Point(3, 109);
+            gbDataContent.Name = "gbDataContent";
+            gbDataContent.Size = new Size(786, 500);
+            gbDataContent.TabIndex = 1;
+            gbDataContent.TabStop = false;
+            gbDataContent.Text = "데이터 탐색";
+            // 
+            // lvDataItems
+            // 
+            lvDataItems.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            lvDataItems.Font = new Font("맑은 고딕", 10.5F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            lvDataItems.ForeColor = Color.Black;
+            lvDataItems.FullRowSelect = true;
+            lvDataItems.GridLines = true;
+            lvDataItems.Location = new Point(522, 36);
+            lvDataItems.Name = "lvDataItems";
+            lvDataItems.Size = new Size(252, 215);
+            lvDataItems.TabIndex = 1;
+            lvDataItems.UseCompatibleStateImageBehavior = false;
+            lvDataItems.View = View.Details;
+            // 
+            // pbDataPreview
+            // 
+            pbDataPreview.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            pbDataPreview.BackColor = Color.White;
+            pbDataPreview.BorderStyle = BorderStyle.FixedSingle;
+            pbDataPreview.Location = new Point(12, 36);
+            pbDataPreview.Name = "pbDataPreview";
+            pbDataPreview.Size = new Size(300, 215);
+            pbDataPreview.SizeMode = PictureBoxSizeMode.Zoom;
+            pbDataPreview.TabIndex = 0;
+            pbDataPreview.TabStop = false;
             // 
             // gbDataLoad
             // 
@@ -128,7 +177,7 @@
             tpTrainingTest.Location = new Point(4, 24);
             tpTrainingTest.Name = "tpTrainingTest";
             tpTrainingTest.Padding = new Padding(3);
-            tpTrainingTest.Size = new Size(792, 552);
+            tpTrainingTest.Size = new Size(792, 612);
             tpTrainingTest.TabIndex = 1;
             tpTrainingTest.Text = "학습/테스트";
             tpTrainingTest.UseVisualStyleBackColor = true;
@@ -149,13 +198,15 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 620);
+            ClientSize = new Size(800, 680);
             Controls.Add(lblTitle);
             Controls.Add(tcMain);
             Name = "Form1";
             Text = "Form1";
             tcMain.ResumeLayout(false);
             tpDataManager.ResumeLayout(false);
+            gbDataContent.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)pbDataPreview).EndInit();
             gbDataLoad.ResumeLayout(false);
             gbDataLoad.PerformLayout();
             ResumeLayout(false);
