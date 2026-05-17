@@ -25,6 +25,10 @@
         private Button btnPlay;
         private TrackBar tbPlaybackSpeed;
         private Label lblPlaybackSpeed;
+        private TrackBar tbImageNavigator;
+        private Button btnSetRange;
+        private Button btnCancelRange;
+        private Panel pnlImageRangeMarker;
 
         /// <summary>
         ///  Clean up any resources being used.
@@ -50,6 +54,12 @@
             tcMain = new TabControl();
             tpDataManager = new TabPage();
             gbDataContent = new GroupBox();
+            btnCancelRange = new Button();
+            pnlImageRangeMarker = new Panel();
+            tbImageNavigator = new TrackBar();
+            button3 = new Button();
+            button2 = new Button();
+            button1 = new Button();
             lblPlaybackSpeed = new Label();
             tbPlaybackSpeed = new TrackBar();
             btnReverse = new Button();
@@ -66,12 +76,11 @@
             btnFolderAdd = new Button();
             tpTrainingTest = new TabPage();
             lblTitle = new Label();
-            button1 = new Button();
-            button2 = new Button();
-            button3 = new Button();
+            btnSetRange = new Button();
             tcMain.SuspendLayout();
             tpDataManager.SuspendLayout();
             gbDataContent.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)tbImageNavigator).BeginInit();
             ((System.ComponentModel.ISupportInitialize)tbPlaybackSpeed).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgvDataInfo).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbDataPreview).BeginInit();
@@ -105,6 +114,10 @@
             // gbDataContent
             // 
             gbDataContent.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            gbDataContent.Controls.Add(btnSetRange);
+            gbDataContent.Controls.Add(btnCancelRange);
+            gbDataContent.Controls.Add(pnlImageRangeMarker);
+            gbDataContent.Controls.Add(tbImageNavigator);
             gbDataContent.Controls.Add(button3);
             gbDataContent.Controls.Add(button2);
             gbDataContent.Controls.Add(button1);
@@ -125,21 +138,82 @@
             gbDataContent.TabStop = false;
             gbDataContent.Text = "데이터 탐색";
             // 
+            // btnCancelRange
+            // 
+            btnCancelRange.ForeColor = Color.Black;
+            btnCancelRange.Location = new Point(663, 318);
+            btnCancelRange.Name = "btnCancelRange";
+            btnCancelRange.Size = new Size(111, 34);
+            btnCancelRange.TabIndex = 12;
+            btnCancelRange.Text = "취소";
+            btnCancelRange.UseVisualStyleBackColor = true;
+            btnCancelRange.Click += btnCancelRange_Click;
+            // 
+            // pnlImageRangeMarker
+            // 
+            pnlImageRangeMarker.BackColor = Color.FromArgb(255, 114, 16);
+            pnlImageRangeMarker.Location = new Point(12, 367);
+            pnlImageRangeMarker.Name = "pnlImageRangeMarker";
+            pnlImageRangeMarker.Size = new Size(12, 12);
+            pnlImageRangeMarker.TabIndex = 13;
+            pnlImageRangeMarker.Visible = false;
+            // 
+            // tbImageNavigator
+            // 
+            tbImageNavigator.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            tbImageNavigator.Location = new Point(12, 354);
+            tbImageNavigator.Maximum = 100;
+            tbImageNavigator.Name = "tbImageNavigator";
+            tbImageNavigator.Size = new Size(762, 45);
+            tbImageNavigator.TabIndex = 11;
+            tbImageNavigator.MouseUp += tbImageNavigator_MouseUp;
+            // 
+            // button3
+            // 
+            button3.ForeColor = Color.Black;
+            button3.Location = new Point(319, 234);
+            button3.Name = "button3";
+            button3.Size = new Size(208, 34);
+            button3.TabIndex = 10;
+            button3.Text = "삭제 취소";
+            button3.UseVisualStyleBackColor = true;
+            // 
+            // button2
+            // 
+            button2.ForeColor = Color.Black;
+            button2.Location = new Point(431, 194);
+            button2.Name = "button2";
+            button2.Size = new Size(96, 34);
+            button2.TabIndex = 9;
+            button2.Text = "삭제";
+            button2.UseVisualStyleBackColor = true;
+            button2.Click += button2_Click;
+            // 
+            // button1
+            // 
+            button1.ForeColor = Color.Black;
+            button1.Location = new Point(319, 194);
+            button1.Name = "button1";
+            button1.Size = new Size(96, 34);
+            button1.TabIndex = 8;
+            button1.Text = "필터링";
+            button1.UseVisualStyleBackColor = true;
+            // 
             // lblPlaybackSpeed
             // 
             lblPlaybackSpeed.AutoSize = true;
-            lblPlaybackSpeed.Font = new Font("한컴 고딕", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblPlaybackSpeed.Font = new Font("한컴 고딕", 20.25F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblPlaybackSpeed.ForeColor = Color.FromArgb(14, 61, 156);
-            lblPlaybackSpeed.Location = new Point(12, 311);
+            lblPlaybackSpeed.Location = new Point(319, 307);
             lblPlaybackSpeed.Name = "lblPlaybackSpeed";
-            lblPlaybackSpeed.Size = new Size(35, 27);
+            lblPlaybackSpeed.Size = new Size(45, 35);
             lblPlaybackSpeed.TabIndex = 7;
             lblPlaybackSpeed.Text = "x1";
             // 
             // tbPlaybackSpeed
             // 
             tbPlaybackSpeed.LargeChange = 25;
-            tbPlaybackSpeed.Location = new Point(94, 307);
+            tbPlaybackSpeed.Location = new Point(12, 307);
             tbPlaybackSpeed.Maximum = 200;
             tbPlaybackSpeed.Minimum = 25;
             tbPlaybackSpeed.Name = "tbPlaybackSpeed";
@@ -315,35 +389,16 @@
             lblTitle.TabIndex = 0;
             lblTitle.Text = "Data Manager";
             // 
-            // button1
+            // btnSetRange
             // 
-            button1.ForeColor = Color.Black;
-            button1.Location = new Point(319, 194);
-            button1.Name = "button1";
-            button1.Size = new Size(96, 34);
-            button1.TabIndex = 8;
-            button1.Text = "필터링";
-            button1.UseVisualStyleBackColor = true;
-            // 
-            // button2
-            // 
-            button2.ForeColor = Color.Black;
-            button2.Location = new Point(431, 194);
-            button2.Name = "button2";
-            button2.Size = new Size(96, 34);
-            button2.TabIndex = 9;
-            button2.Text = "삭제";
-            button2.UseVisualStyleBackColor = true;
-            // 
-            // button3
-            // 
-            button3.ForeColor = Color.Black;
-            button3.Location = new Point(319, 234);
-            button3.Name = "button3";
-            button3.Size = new Size(208, 34);
-            button3.TabIndex = 10;
-            button3.Text = "삭제 취소";
-            button3.UseVisualStyleBackColor = true;
+            btnSetRange.ForeColor = Color.Black;
+            btnSetRange.Location = new Point(540, 318);
+            btnSetRange.Name = "btnSetRange";
+            btnSetRange.Size = new Size(111, 34);
+            btnSetRange.TabIndex = 14;
+            btnSetRange.Text = "범위 설정";
+            btnSetRange.UseVisualStyleBackColor = true;
+            btnSetRange.Click += btnSetRange_Click;
             // 
             // Form1
             // 
@@ -358,6 +413,7 @@
             tpDataManager.ResumeLayout(false);
             gbDataContent.ResumeLayout(false);
             gbDataContent.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)tbImageNavigator).EndInit();
             ((System.ComponentModel.ISupportInitialize)tbPlaybackSpeed).EndInit();
             ((System.ComponentModel.ISupportInitialize)dgvDataInfo).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbDataPreview).EndInit();
