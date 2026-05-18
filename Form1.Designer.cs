@@ -9,6 +9,10 @@
         private TabControl tcMain;
         private TabPage tpDataManager;
         private TabPage tpTrainingTest;
+        private GroupBox gbTrainingSetup;
+        private GroupBox gbModelTest;
+        private Button btnTrain;
+        private TextBox txtTrainingLog;
         private GroupBox gbDataLoad;
         private GroupBox gbDataContent;
         private PictureBox pbDataPreview;
@@ -83,6 +87,10 @@
             txtFolderPath = new TextBox();
             btnFolderAdd = new Button();
             tpTrainingTest = new TabPage();
+            gbTrainingSetup = new GroupBox();
+            gbModelTest = new GroupBox();
+            txtTrainingLog = new TextBox();
+            btnTrain = new Button();
             lblTitle = new Label();
             tcMain.SuspendLayout();
             tpDataManager.SuspendLayout();
@@ -94,6 +102,8 @@
             ((System.ComponentModel.ISupportInitialize)dgvDataInfo).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbDataPreview).BeginInit();
             gbDataLoad.SuspendLayout();
+            tpTrainingTest.SuspendLayout();
+            gbTrainingSetup.SuspendLayout();
             SuspendLayout();
             // 
             // tcMain
@@ -158,6 +168,7 @@
                 var legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
                 var series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
                 var title1 = new System.Windows.Forms.DataVisualization.Charting.Title();
+                chtSpeedValue.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
                 chtSpeedValue.BackColor = Color.WhiteSmoke;
                 chtSpeedValue.BorderlineColor = Color.FromArgb(255, 114, 16);
                 chtSpeedValue.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
@@ -174,7 +185,6 @@
                 legend1.Enabled = false;
                 legend1.Name = "Legend1";
                 chtSpeedValue.Legends.Add(legend1);
-                chtSpeedValue.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
                 chtSpeedValue.Location = new Point(12, 533);
                 chtSpeedValue.Name = "chtSpeedValue";
                 series1.BorderWidth = 2;
@@ -204,6 +214,7 @@
                 var legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
                 var series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
                 var title2 = new System.Windows.Forms.DataVisualization.Charting.Title();
+                chtSteeringValue.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
                 chtSteeringValue.BackColor = Color.WhiteSmoke;
                 chtSteeringValue.BorderlineColor = Color.FromArgb(14, 61, 156);
                 chtSteeringValue.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
@@ -220,7 +231,6 @@
                 legend2.Enabled = false;
                 legend2.Name = "Legend1";
                 chtSteeringValue.Legends.Add(legend2);
-                chtSteeringValue.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
                 chtSteeringValue.Location = new Point(12, 402);
                 chtSteeringValue.Name = "chtSteeringValue";
                 series2.BorderWidth = 2;
@@ -424,7 +434,6 @@
             // 
             // pbDataPreview
             // 
-            pbDataPreview.Anchor = AnchorStyles.Top | AnchorStyles.Left;
             pbDataPreview.BackColor = Color.White;
             pbDataPreview.BorderStyle = BorderStyle.FixedSingle;
             pbDataPreview.Location = new Point(12, 36);
@@ -487,6 +496,8 @@
             // 
             // tpTrainingTest
             // 
+            tpTrainingTest.Controls.Add(gbModelTest);
+            tpTrainingTest.Controls.Add(gbTrainingSetup);
             tpTrainingTest.Location = new Point(4, 24);
             tpTrainingTest.Name = "tpTrainingTest";
             tpTrainingTest.Padding = new Padding(3);
@@ -494,6 +505,56 @@
             tpTrainingTest.TabIndex = 1;
             tpTrainingTest.Text = "학습/테스트";
             tpTrainingTest.UseVisualStyleBackColor = true;
+            // 
+            // gbTrainingSetup
+            // 
+            gbTrainingSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            gbTrainingSetup.Controls.Add(txtTrainingLog);
+            gbTrainingSetup.Controls.Add(btnTrain);
+            gbTrainingSetup.Font = new Font("함초롬바탕 확장", 14.2499981F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            gbTrainingSetup.ForeColor = Color.FromArgb(14, 61, 156);
+            gbTrainingSetup.Location = new Point(6, 6);
+            gbTrainingSetup.Name = "gbTrainingSetup";
+            gbTrainingSetup.Size = new Size(780, 100);
+            gbTrainingSetup.TabIndex = 0;
+            gbTrainingSetup.TabStop = false;
+            gbTrainingSetup.Text = "데이터 학습";
+            gbTrainingSetup.Enter += gbTrainingSetup_Enter;
+            // 
+            // txtTrainingLog
+            // 
+            txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtTrainingLog.Font = new Font("한컴 고딕", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            txtTrainingLog.ForeColor = Color.Black;
+            txtTrainingLog.Location = new Point(161, 37);
+            txtTrainingLog.Name = "txtTrainingLog";
+            txtTrainingLog.ReadOnly = true;
+            txtTrainingLog.Size = new Size(607, 35);
+            txtTrainingLog.TabIndex = 1;
+            // 
+            // gbModelTest
+            // 
+            gbModelTest.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            gbModelTest.Font = new Font("함초롬바탕 확장", 14.2499981F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            gbModelTest.ForeColor = Color.FromArgb(14, 61, 156);
+            gbModelTest.Location = new Point(6, 112);
+            gbModelTest.Name = "gbModelTest";
+            gbModelTest.Size = new Size(780, 664);
+            gbModelTest.TabIndex = 1;
+            gbModelTest.TabStop = false;
+            gbModelTest.Text = "모델 테스트";
+            // 
+            // btnTrain
+            // 
+            btnTrain.Font = new Font("한컴 고딕", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnTrain.ForeColor = Color.Black;
+            btnTrain.Location = new Point(12, 34);
+            btnTrain.Name = "btnTrain";
+            btnTrain.Size = new Size(140, 38);
+            btnTrain.TabIndex = 0;
+            btnTrain.Text = "학습";
+            btnTrain.UseVisualStyleBackColor = true;
+            btnTrain.Click += btnTrain_Click;
             // 
             // lblTitle
             // 
@@ -529,6 +590,9 @@
             ((System.ComponentModel.ISupportInitialize)pbDataPreview).EndInit();
             gbDataLoad.ResumeLayout(false);
             gbDataLoad.PerformLayout();
+            tpTrainingTest.ResumeLayout(false);
+            gbTrainingSetup.ResumeLayout(false);
+            gbTrainingSetup.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }

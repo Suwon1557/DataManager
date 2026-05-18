@@ -70,7 +70,6 @@ namespace DataManager
 
             _imageRangeMarkers.Add(marker);
 
-            // 마커는 최대 2개까지만 유지하고, 3번째가 들어오면 가장 오래된 마커를 지운다.
             if (_imageRangeMarkers.Count > 2)
             {
                 Panel oldestMarker = _imageRangeMarkers[0];
@@ -115,22 +114,24 @@ namespace DataManager
             _isRangeSettingMode = false;
             pnlImageRangeMarker.Visible = false;
 
-            // 디자이너/런타임 상태가 꼬여도 차트는 항상 표시되게 강제로 맞춘다.
-            chtSteeringValue.Visible = true;
-            chtSpeedValue.Visible = true;
-            chtSteeringValue.BringToFront();
-            chtSpeedValue.BringToFront();
+            EnsureChartVisible(chtSteeringValue);
+            EnsureChartVisible(chtSpeedValue);
+        }
 
-            if (chtSteeringValue.Series.Count > 0 && chtSteeringValue.Series[0].Points.Count == 0)
+        private static void EnsureChartVisible(System.Windows.Forms.DataVisualization.Charting.Chart? chart)
+        {
+            if (chart is null)
             {
-                chtSteeringValue.Series[0].Points.AddXY(0, 0);
-                chtSteeringValue.Series[0].Points.AddXY(1, 1);
+                return;
             }
 
-            if (chtSpeedValue.Series.Count > 0 && chtSpeedValue.Series[0].Points.Count == 0)
+            chart.Visible = true;
+            chart.BringToFront();
+
+            if (chart.Series.Count > 0 && chart.Series[0].Points.Count == 0)
             {
-                chtSpeedValue.Series[0].Points.AddXY(0, 0);
-                chtSpeedValue.Series[0].Points.AddXY(1, 1);
+                chart.Series[0].Points.AddXY(0, 0);
+                chart.Series[0].Points.AddXY(1, 1);
             }
         }
 
@@ -145,7 +146,7 @@ namespace DataManager
         private void btnSelectAdd_Click(object sender, EventArgs e)
         {
             using FolderBrowserDialog folderBrowserDialog = new();
-            folderBrowserDialog.Description = "불러올 데이터 폴더를 선택해";
+            folderBrowserDialog.Description = "불러올 데이터 폴더를 선택";
             folderBrowserDialog.ShowNewFolderButton = false;
 
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
@@ -186,12 +187,19 @@ namespace DataManager
 
         private void gbDataContent_Enter(object sender, EventArgs e)
         {
-
         }
 
         private void gbDataContent_Resize(object sender, EventArgs e)
         {
             UpdateImageRangeMarkerPositions();
+        }
+
+        private void gbTrainingSetup_Enter(object sender, EventArgs e)
+        {
+        }
+
+        private void btnTrain_Click(object sender, EventArgs e)
+        {
         }
     }
 }
