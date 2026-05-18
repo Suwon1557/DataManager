@@ -175,7 +175,7 @@ namespace DataManager
             AddImageRangeMarker();
         }
 
-        private void btnDeleteRange_Click(object sender, EventArgs e)
+        private void btnDelete_Click(object sender, EventArgs e)
         {
             ClearImageRangeMarkers();
         }
@@ -200,6 +200,16 @@ namespace DataManager
 
         private void btnTrain_Click(object sender, EventArgs e)
         {
+        }
+
+        private void tlpTestPreview_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void btnCancelDelete_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
