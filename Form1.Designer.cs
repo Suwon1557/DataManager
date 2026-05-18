@@ -28,7 +28,12 @@
         private TrackBar tbImageNavigator;
         private Button btnSetRange;
         private Button btnCancelRange;
+        private Button btnCancelDelete;
+        private Button btnDeleteRange;
+        private Button btnFilter;
         private Panel pnlImageRangeMarker;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chtSteeringValue;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chtSpeedValue;
 
         /// <summary>
         ///  Clean up any resources being used.
@@ -54,12 +59,15 @@
             tcMain = new TabControl();
             tpDataManager = new TabPage();
             gbDataContent = new GroupBox();
+            chtSpeedValue = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            chtSteeringValue = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            btnSetRange = new Button();
             btnCancelRange = new Button();
             pnlImageRangeMarker = new Panel();
             tbImageNavigator = new TrackBar();
-            button3 = new Button();
-            button2 = new Button();
-            button1 = new Button();
+            btnCancelDelete = new Button();
+            btnDeleteRange = new Button();
+            btnFilter = new Button();
             lblPlaybackSpeed = new Label();
             tbPlaybackSpeed = new TrackBar();
             btnReverse = new Button();
@@ -76,10 +84,11 @@
             btnFolderAdd = new Button();
             tpTrainingTest = new TabPage();
             lblTitle = new Label();
-            btnSetRange = new Button();
             tcMain.SuspendLayout();
             tpDataManager.SuspendLayout();
             gbDataContent.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)chtSpeedValue).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)chtSteeringValue).BeginInit();
             ((System.ComponentModel.ISupportInitialize)tbImageNavigator).BeginInit();
             ((System.ComponentModel.ISupportInitialize)tbPlaybackSpeed).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgvDataInfo).BeginInit();
@@ -114,13 +123,15 @@
             // gbDataContent
             // 
             gbDataContent.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            gbDataContent.Controls.Add(chtSpeedValue);
+            gbDataContent.Controls.Add(chtSteeringValue);
             gbDataContent.Controls.Add(btnSetRange);
             gbDataContent.Controls.Add(btnCancelRange);
             gbDataContent.Controls.Add(pnlImageRangeMarker);
             gbDataContent.Controls.Add(tbImageNavigator);
-            gbDataContent.Controls.Add(button3);
-            gbDataContent.Controls.Add(button2);
-            gbDataContent.Controls.Add(button1);
+            gbDataContent.Controls.Add(btnCancelDelete);
+            gbDataContent.Controls.Add(btnDeleteRange);
+            gbDataContent.Controls.Add(btnFilter);
             gbDataContent.Controls.Add(lblPlaybackSpeed);
             gbDataContent.Controls.Add(tbPlaybackSpeed);
             gbDataContent.Controls.Add(btnReverse);
@@ -137,6 +148,108 @@
             gbDataContent.TabIndex = 1;
             gbDataContent.TabStop = false;
             gbDataContent.Text = "데이터 탐색";
+            gbDataContent.Enter += gbDataContent_Enter;
+            // 
+            // chtSpeedValue
+            // 
+            {
+                var chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+                var legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+                var series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+                var title1 = new System.Windows.Forms.DataVisualization.Charting.Title();
+                chtSpeedValue.BackColor = Color.WhiteSmoke;
+                chtSpeedValue.BorderlineColor = Color.FromArgb(255, 114, 16);
+                chtSpeedValue.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
+                chtSpeedValue.BorderlineWidth = 2;
+                chartArea1.AxisX.MajorGrid.Enabled = false;
+                chartArea1.AxisX.LineColor = Color.DimGray;
+                chartArea1.AxisX.Title = "프레임";
+                chartArea1.AxisY.LineColor = Color.DimGray;
+                chartArea1.AxisY.MajorGrid.LineColor = Color.Gainsboro;
+                chartArea1.AxisY.Title = "속도값";
+                chartArea1.BackColor = Color.White;
+                chartArea1.Name = "ChartArea1";
+                chtSpeedValue.ChartAreas.Add(chartArea1);
+                legend1.Enabled = false;
+                legend1.Name = "Legend1";
+                chtSpeedValue.Legends.Add(legend1);
+                chtSpeedValue.Location = new Point(12, 533);
+                chtSpeedValue.Name = "chtSpeedValue";
+                series1.BorderWidth = 2;
+                series1.ChartArea = "ChartArea1";
+                series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+                series1.Color = Color.FromArgb(255, 114, 16);
+                series1.Legend = "Legend1";
+                series1.MarkerSize = 6;
+                series1.MarkerStyle = System.Windows.Forms.DataVisualization.Charting.MarkerStyle.Circle;
+                series1.Name = "속도값";
+                series1.Points.AddXY(0, 0);
+                series1.Points.AddXY(1, 1);
+                chtSpeedValue.Series.Add(series1);
+                chtSpeedValue.Size = new Size(762, 125);
+                chtSpeedValue.TabIndex = 16;
+                title1.Alignment = System.Drawing.ContentAlignment.TopLeft;
+                title1.ForeColor = Color.FromArgb(255, 114, 16);
+                title1.Name = "Title1";
+                title1.Text = "속도값";
+                chtSpeedValue.Titles.Add(title1);
+            }
+            // 
+            // chtSteeringValue
+            // 
+            {
+                var chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+                var legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+                var series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+                var title2 = new System.Windows.Forms.DataVisualization.Charting.Title();
+                chtSteeringValue.BackColor = Color.WhiteSmoke;
+                chtSteeringValue.BorderlineColor = Color.FromArgb(14, 61, 156);
+                chtSteeringValue.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
+                chtSteeringValue.BorderlineWidth = 2;
+                chartArea2.AxisX.MajorGrid.Enabled = false;
+                chartArea2.AxisX.LineColor = Color.DimGray;
+                chartArea2.AxisX.Title = "프레임";
+                chartArea2.AxisY.LineColor = Color.DimGray;
+                chartArea2.AxisY.MajorGrid.LineColor = Color.Gainsboro;
+                chartArea2.AxisY.Title = "조향값";
+                chartArea2.BackColor = Color.White;
+                chartArea2.Name = "ChartArea1";
+                chtSteeringValue.ChartAreas.Add(chartArea2);
+                legend2.Enabled = false;
+                legend2.Name = "Legend1";
+                chtSteeringValue.Legends.Add(legend2);
+                chtSteeringValue.Location = new Point(12, 402);
+                chtSteeringValue.Name = "chtSteeringValue";
+                series2.BorderWidth = 2;
+                series2.ChartArea = "ChartArea1";
+                series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+                series2.Color = Color.FromArgb(14, 61, 156);
+                series2.Legend = "Legend1";
+                series2.MarkerSize = 6;
+                series2.MarkerStyle = System.Windows.Forms.DataVisualization.Charting.MarkerStyle.Circle;
+                series2.Name = "조향값";
+                series2.Points.AddXY(0, 0);
+                series2.Points.AddXY(1, 1);
+                chtSteeringValue.Series.Add(series2);
+                chtSteeringValue.Size = new Size(762, 125);
+                chtSteeringValue.TabIndex = 15;
+                title2.Alignment = System.Drawing.ContentAlignment.TopLeft;
+                title2.ForeColor = Color.FromArgb(14, 61, 156);
+                title2.Name = "Title1";
+                title2.Text = "조향값";
+                chtSteeringValue.Titles.Add(title2);
+            }
+            // 
+            // btnSetRange
+            // 
+            btnSetRange.ForeColor = Color.Black;
+            btnSetRange.Location = new Point(540, 318);
+            btnSetRange.Name = "btnSetRange";
+            btnSetRange.Size = new Size(111, 34);
+            btnSetRange.TabIndex = 14;
+            btnSetRange.Text = "범위 설정";
+            btnSetRange.UseVisualStyleBackColor = true;
+            btnSetRange.Click += btnSetRange_Click;
             // 
             // btnCancelRange
             // 
@@ -168,36 +281,36 @@
             tbImageNavigator.TabIndex = 11;
             tbImageNavigator.MouseUp += tbImageNavigator_MouseUp;
             // 
-            // button3
+            // btnCancelDelete
             // 
-            button3.ForeColor = Color.Black;
-            button3.Location = new Point(319, 234);
-            button3.Name = "button3";
-            button3.Size = new Size(208, 34);
-            button3.TabIndex = 10;
-            button3.Text = "삭제 취소";
-            button3.UseVisualStyleBackColor = true;
+            btnCancelDelete.ForeColor = Color.Black;
+            btnCancelDelete.Location = new Point(319, 234);
+            btnCancelDelete.Name = "btnCancelDelete";
+            btnCancelDelete.Size = new Size(208, 34);
+            btnCancelDelete.TabIndex = 10;
+            btnCancelDelete.Text = "삭제 취소";
+            btnCancelDelete.UseVisualStyleBackColor = true;
             // 
-            // button2
+            // btnDeleteRange
             // 
-            button2.ForeColor = Color.Black;
-            button2.Location = new Point(431, 194);
-            button2.Name = "button2";
-            button2.Size = new Size(96, 34);
-            button2.TabIndex = 9;
-            button2.Text = "삭제";
-            button2.UseVisualStyleBackColor = true;
-            button2.Click += button2_Click;
+            btnDeleteRange.ForeColor = Color.Black;
+            btnDeleteRange.Location = new Point(431, 194);
+            btnDeleteRange.Name = "btnDeleteRange";
+            btnDeleteRange.Size = new Size(96, 34);
+            btnDeleteRange.TabIndex = 9;
+            btnDeleteRange.Text = "삭제";
+            btnDeleteRange.UseVisualStyleBackColor = true;
+            btnDeleteRange.Click += btnDeleteRange_Click;
             // 
-            // button1
+            // btnFilter
             // 
-            button1.ForeColor = Color.Black;
-            button1.Location = new Point(319, 194);
-            button1.Name = "button1";
-            button1.Size = new Size(96, 34);
-            button1.TabIndex = 8;
-            button1.Text = "필터링";
-            button1.UseVisualStyleBackColor = true;
+            btnFilter.ForeColor = Color.Black;
+            btnFilter.Location = new Point(319, 194);
+            btnFilter.Name = "btnFilter";
+            btnFilter.Size = new Size(96, 34);
+            btnFilter.TabIndex = 8;
+            btnFilter.Text = "필터링";
+            btnFilter.UseVisualStyleBackColor = true;
             // 
             // lblPlaybackSpeed
             // 
@@ -389,17 +502,6 @@
             lblTitle.TabIndex = 0;
             lblTitle.Text = "Data Manager";
             // 
-            // btnSetRange
-            // 
-            btnSetRange.ForeColor = Color.Black;
-            btnSetRange.Location = new Point(540, 318);
-            btnSetRange.Name = "btnSetRange";
-            btnSetRange.Size = new Size(111, 34);
-            btnSetRange.TabIndex = 14;
-            btnSetRange.Text = "범위 설정";
-            btnSetRange.UseVisualStyleBackColor = true;
-            btnSetRange.Click += btnSetRange_Click;
-            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -413,6 +515,8 @@
             tpDataManager.ResumeLayout(false);
             gbDataContent.ResumeLayout(false);
             gbDataContent.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)chtSpeedValue).EndInit();
+            ((System.ComponentModel.ISupportInitialize)chtSteeringValue).EndInit();
             ((System.ComponentModel.ISupportInitialize)tbImageNavigator).EndInit();
             ((System.ComponentModel.ISupportInitialize)tbPlaybackSpeed).EndInit();
             ((System.ComponentModel.ISupportInitialize)dgvDataInfo).EndInit();
@@ -424,9 +528,5 @@
         }
 
         #endregion
-
-        private Button button2;
-        private Button button1;
-        private Button button3;
     }
 }

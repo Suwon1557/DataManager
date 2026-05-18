@@ -91,6 +91,24 @@ namespace DataManager
             UpdatePlaybackSpeedLabel();
             _isRangeSettingMode = false;
             pnlImageRangeMarker.Visible = false;
+
+            // 디자이너/런타임 상태가 꼬여도 차트는 항상 표시되게 강제로 맞춘다.
+            chtSteeringValue.Visible = true;
+            chtSpeedValue.Visible = true;
+            chtSteeringValue.BringToFront();
+            chtSpeedValue.BringToFront();
+
+            if (chtSteeringValue.Series.Count > 0 && chtSteeringValue.Series[0].Points.Count == 0)
+            {
+                chtSteeringValue.Series[0].Points.AddXY(0, 0);
+                chtSteeringValue.Series[0].Points.AddXY(1, 1);
+            }
+
+            if (chtSpeedValue.Series.Count > 0 && chtSpeedValue.Series[0].Points.Count == 0)
+            {
+                chtSpeedValue.Series[0].Points.AddXY(0, 0);
+                chtSpeedValue.Series[0].Points.AddXY(1, 1);
+            }
         }
 
         private void tpDataManager_Click(object sender, EventArgs e)
@@ -133,7 +151,7 @@ namespace DataManager
             AddImageRangeMarker();
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void btnDeleteRange_Click(object sender, EventArgs e)
         {
             ClearImageRangeMarkers();
         }
@@ -141,6 +159,11 @@ namespace DataManager
         private void btnCancelRange_Click(object sender, EventArgs e)
         {
             ClearImageRangeMarkers();
+        }
+
+        private void gbDataContent_Enter(object sender, EventArgs e)
+        {
+
         }
     }
 }
