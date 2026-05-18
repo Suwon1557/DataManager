@@ -24,7 +24,8 @@ namespace DataManager
 
         private void UpdatePlaybackSpeedLabel()
         {
-            decimal playbackSpeed = tbPlaybackSpeed.Value / 100m;
+            decimal[] playbackSpeeds = { 0.25m, 0.5m, 1m, 1.5m, 2m };
+            decimal playbackSpeed = playbackSpeeds[tbPlaybackSpeed.Value];
             lblPlaybackSpeed.Text = $"x{playbackSpeed:0.##}";
         }
 
@@ -109,7 +110,7 @@ namespace DataManager
         {
             dgvDataInfo.ClearSelection();
             dgvDataInfo.CurrentCell = null;
-            tbPlaybackSpeed.Value = 100;
+            tbPlaybackSpeed.Value = 2;
             UpdatePlaybackSpeedLabel();
             _isRangeSettingMode = false;
             pnlImageRangeMarker.Visible = false;

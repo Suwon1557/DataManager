@@ -289,16 +289,16 @@
             // 
             // tbPlaybackSpeed
             // 
-            tbPlaybackSpeed.LargeChange = 25;
+            tbPlaybackSpeed.LargeChange = 1;
             tbPlaybackSpeed.Location = new Point(12, 307);
-            tbPlaybackSpeed.Maximum = 200;
-            tbPlaybackSpeed.Minimum = 25;
+            tbPlaybackSpeed.Maximum = 4;
+            tbPlaybackSpeed.Minimum = 0;
             tbPlaybackSpeed.Name = "tbPlaybackSpeed";
             tbPlaybackSpeed.Size = new Size(300, 45);
-            tbPlaybackSpeed.SmallChange = 25;
+            tbPlaybackSpeed.SmallChange = 1;
             tbPlaybackSpeed.TabIndex = 6;
-            tbPlaybackSpeed.TickFrequency = 25;
-            tbPlaybackSpeed.Value = 100;
+            tbPlaybackSpeed.TickFrequency = 1;
+            tbPlaybackSpeed.Value = 2;
             tbPlaybackSpeed.Scroll += tbPlaybackSpeed_Scroll;
             // 
             // btnReverse
