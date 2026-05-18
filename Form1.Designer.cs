@@ -69,6 +69,20 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend3 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend4 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series5 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series6 = new System.Windows.Forms.DataVisualization.Charting.Series();
             tcMain = new TabControl();
             tpDataManager = new TabPage();
             gbDataContent = new GroupBox();
@@ -101,10 +115,14 @@
             btnStartTest = new Button();
             tlpTestCharts = new TableLayoutPanel();
             tbTestImageNavigator = new TrackBar();
+            chtTestSteeringValue = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            chtTestSpeedValue = new System.Windows.Forms.DataVisualization.Charting.Chart();
             gbTrainingSetup = new GroupBox();
             txtTrainingLog = new TextBox();
             btnTrain = new Button();
             lblTitle = new Label();
+            chtSteeringValue = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            chtSpeedValue = new System.Windows.Forms.DataVisualization.Charting.Chart();
             tcMain.SuspendLayout();
             tpDataManager.SuspendLayout();
             gbDataContent.SuspendLayout();
@@ -119,7 +137,11 @@
             tlpTestPreview.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pbTestPreview).BeginInit();
             ((System.ComponentModel.ISupportInitialize)tbTestImageNavigator).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)chtTestSteeringValue).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)chtTestSpeedValue).BeginInit();
             gbTrainingSetup.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)chtSteeringValue).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)chtSpeedValue).BeginInit();
             SuspendLayout();
             // 
             // tcMain
@@ -164,6 +186,8 @@
             gbDataContent.Controls.Add(dgvDataInfo);
             gbDataContent.Controls.Add(lvDataItems);
             gbDataContent.Controls.Add(pbDataPreview);
+            gbDataContent.Controls.Add(chtSpeedValue);
+            gbDataContent.Controls.Add(chtSteeringValue);
             gbDataContent.Font = new Font("함초롬바탕 확장", 14.2499981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             gbDataContent.ForeColor = Color.FromArgb(14, 61, 156);
             gbDataContent.Location = new Point(3, 109);
@@ -368,6 +392,54 @@
             pbDataPreview.TabIndex = 0;
             pbDataPreview.TabStop = false;
             // 
+            // chtSteeringValue
+            // 
+            chtSteeringValue.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
+            chartArea1.AxisX.Maximum = 1000D;
+            chartArea1.AxisX.Minimum = 0D;
+            chartArea1.Name = "ChartArea1";
+            chtSteeringValue.ChartAreas.Add(chartArea1);
+            legend1.Enabled = false;
+            legend1.Name = "Legend1";
+            chtSteeringValue.Legends.Add(legend1);
+            chtSteeringValue.Location = new Point(12, 430);
+            chtSteeringValue.Name = "chtSteeringValue";
+            series1.BorderWidth = 2;
+            series1.ChartArea = "ChartArea1";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series1.Color = Color.FromArgb(14, 61, 156);
+            series1.Legend = "Legend1";
+            series1.Name = "조향값";
+            series1.Points.AddXY(0D, 0D);
+            series1.Points.AddXY(1000D, 0D);
+            chtSteeringValue.Series.Add(series1);
+            chtSteeringValue.Size = new Size(762, 105);
+            chtSteeringValue.TabIndex = 15;
+            // 
+            // chtSpeedValue
+            // 
+            chtSpeedValue.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
+            chartArea2.AxisX.Maximum = 1000D;
+            chartArea2.AxisX.Minimum = 0D;
+            chartArea2.Name = "ChartArea1";
+            chtSpeedValue.ChartAreas.Add(chartArea2);
+            legend2.Enabled = false;
+            legend2.Name = "Legend1";
+            chtSpeedValue.Legends.Add(legend2);
+            chtSpeedValue.Location = new Point(12, 547);
+            chtSpeedValue.Name = "chtSpeedValue";
+            series2.BorderWidth = 2;
+            series2.ChartArea = "ChartArea1";
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series2.Color = Color.FromArgb(255, 114, 16);
+            series2.Legend = "Legend1";
+            series2.Name = "속도값";
+            series2.Points.AddXY(0D, 0D);
+            series2.Points.AddXY(1000D, 0D);
+            chtSpeedValue.Series.Add(series2);
+            chtSpeedValue.Size = new Size(762, 105);
+            chtSpeedValue.TabIndex = 16;
+            // 
             // gbDataLoad
             // 
             gbDataLoad.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
@@ -400,9 +472,10 @@
             // 
             txtFolderPath.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtFolderPath.Font = new Font("한컴 고딕", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            txtFolderPath.ForeColor = Color.Black;
+            txtFolderPath.ForeColor = SystemColors.GrayText;
             txtFolderPath.Location = new Point(161, 37);
             txtFolderPath.Name = "txtFolderPath";
+            txtFolderPath.ReadOnly = true;
             txtFolderPath.Size = new Size(412, 35);
             txtFolderPath.TabIndex = 1;
             txtFolderPath.Text = "(폴더경로)";
@@ -438,9 +511,9 @@
             gbModelTest.Controls.Add(tlpModelTest);
             gbModelTest.Font = new Font("함초롬바탕 확장", 14.2499981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             gbModelTest.ForeColor = Color.FromArgb(14, 61, 156);
-            gbModelTest.Location = new Point(3, 109);
+            gbModelTest.Location = new Point(3, 139);
             gbModelTest.Name = "gbModelTest";
-            gbModelTest.Size = new Size(786, 670);
+            gbModelTest.Size = new Size(786, 640);
             gbModelTest.TabIndex = 1;
             gbModelTest.TabStop = false;
             gbModelTest.Text = "모델 테스트";
@@ -505,6 +578,8 @@
             // 
             tlpTestCharts.ColumnCount = 1;
             tlpTestCharts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tlpTestCharts.Controls.Add(chtTestSteeringValue, 0, 0);
+            tlpTestCharts.Controls.Add(chtTestSpeedValue, 0, 1);
             tlpTestCharts.Dock = DockStyle.Fill;
             tlpTestCharts.Location = new Point(324, 3);
             tlpTestCharts.Margin = new Padding(12, 3, 3, 3);
@@ -525,6 +600,74 @@
             tbTestImageNavigator.Size = new Size(774, 39);
             tbTestImageNavigator.TabIndex = 2;
             // 
+            // chtTestSteeringValue
+            // 
+            chartArea3.AxisX.Maximum = 1000D;
+            chartArea3.AxisX.Minimum = 0D;
+            chartArea3.Name = "ChartArea1";
+            chtTestSteeringValue.ChartAreas.Add(chartArea3);
+            chtTestSteeringValue.Dock = DockStyle.Fill;
+            legend3.Name = "Legend1";
+            chtTestSteeringValue.Legends.Add(legend3);
+            chtTestSteeringValue.Name = "chtTestSteeringValue";
+            series3.BorderWidth = 2;
+            series3.ChartArea = "ChartArea1";
+            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series3.Color = Color.FromArgb(255, 114, 16);
+            series3.Legend = "Legend1";
+            series3.Name = "실제값";
+            series3.Points.AddXY(0D, 0D);
+            series3.Points.AddXY(1000D, 0D);
+            series4.BorderWidth = 2;
+            series4.ChartArea = "ChartArea1";
+            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series4.Color = Color.FromArgb(14, 61, 156);
+            series4.Legend = "Legend1";
+            series4.Name = "예측값";
+            series4.Points.AddXY(0D, 0D);
+            series4.Points.AddXY(1000D, 0D);
+            chtTestSteeringValue.Series.Add(series3);
+            chtTestSteeringValue.Series.Add(series4);
+            chtTestSteeringValue.Size = new Size(453, 288);
+            chtTestSteeringValue.TabIndex = 0;
+            chtTestSteeringValue.BorderlineColor = Color.FromArgb(229, 231, 235);
+            chtTestSteeringValue.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
+            chtTestSteeringValue.BorderlineWidth = 1;
+            // 
+            // chtTestSpeedValue
+            // 
+            chartArea4.AxisX.Maximum = 1000D;
+            chartArea4.AxisX.Minimum = 0D;
+            chartArea4.Name = "ChartArea1";
+            chtTestSpeedValue.ChartAreas.Add(chartArea4);
+            chtTestSpeedValue.Dock = DockStyle.Fill;
+            legend4.Name = "Legend1";
+            chtTestSpeedValue.Legends.Add(legend4);
+            chtTestSpeedValue.Name = "chtTestSpeedValue";
+            series5.BorderWidth = 2;
+            series5.ChartArea = "ChartArea1";
+            series5.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series5.Color = Color.FromArgb(255, 114, 16);
+            series5.Legend = "Legend1";
+            series5.Name = "실제값";
+            series5.Points.AddXY(0D, 0D);
+            series5.Points.AddXY(1000D, 0D);
+            series6.BorderWidth = 2;
+            series6.ChartArea = "ChartArea1";
+            series6.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series6.Color = Color.FromArgb(14, 61, 156);
+            series6.Legend = "Legend1";
+            series6.Name = "예측값";
+            series6.Points.AddXY(0D, 0D);
+            series6.Points.AddXY(1000D, 0D);
+            chtTestSpeedValue.Series.Add(series5);
+            chtTestSpeedValue.Series.Add(series6);
+            chtTestSpeedValue.Size = new Size(453, 288);
+            chtTestSpeedValue.TabIndex = 1;
+            chtTestSpeedValue.BorderlineColor = Color.FromArgb(229, 231, 235);
+            chtTestSpeedValue.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
+            chtTestSpeedValue.BorderlineWidth = 1;
+            // 
             // gbTrainingSetup
             // 
             gbTrainingSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
@@ -534,7 +677,7 @@
             gbTrainingSetup.ForeColor = Color.FromArgb(14, 61, 156);
             gbTrainingSetup.Location = new Point(3, 3);
             gbTrainingSetup.Name = "gbTrainingSetup";
-            gbTrainingSetup.Size = new Size(786, 100);
+            gbTrainingSetup.Size = new Size(786, 130);
             gbTrainingSetup.TabIndex = 0;
             gbTrainingSetup.TabStop = false;
             gbTrainingSetup.Text = "데이터 학습";
@@ -545,10 +688,12 @@
             txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtTrainingLog.Font = new Font("한컴 고딕", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
             txtTrainingLog.ForeColor = Color.Black;
-            txtTrainingLog.Location = new Point(161, 37);
+            txtTrainingLog.Location = new Point(161, 34);
+            txtTrainingLog.Multiline = true;
             txtTrainingLog.Name = "txtTrainingLog";
             txtTrainingLog.ReadOnly = true;
-            txtTrainingLog.Size = new Size(607, 35);
+            txtTrainingLog.ScrollBars = ScrollBars.Vertical;
+            txtTrainingLog.Size = new Size(607, 72);
             txtTrainingLog.TabIndex = 1;
             // 
             // btnTrain
@@ -602,8 +747,12 @@
             tlpTestPreview.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pbTestPreview).EndInit();
             ((System.ComponentModel.ISupportInitialize)tbTestImageNavigator).EndInit();
+            ((System.ComponentModel.ISupportInitialize)chtTestSteeringValue).EndInit();
+            ((System.ComponentModel.ISupportInitialize)chtTestSpeedValue).EndInit();
             gbTrainingSetup.ResumeLayout(false);
             gbTrainingSetup.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)chtSteeringValue).EndInit();
+            ((System.ComponentModel.ISupportInitialize)chtSpeedValue).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }

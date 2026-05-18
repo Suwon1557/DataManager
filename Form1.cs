@@ -152,6 +152,7 @@ namespace DataManager
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
                 txtFolderPath.Text = folderBrowserDialog.SelectedPath;
+                txtFolderPath.ForeColor = Color.Black;
             }
         }
 
