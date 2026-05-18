@@ -15490,7 +15490,7 @@
   <data name="btnCancelDelete.BackgroundImage" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\icon_undo.png;System.Drawing.Bitmap, System.Drawing</value>
   </data>
-  <data name="btnFolderAdd.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+  <data name="btnSelectFolder.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAABOYAAATmCAIAAAAKnjl9AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
         YQUAAP+6SURBVHhe1L2Let04rjTa7/+yZ+z4lsROzkdcCoUCJDs9M/vvqVbHEghSC0UQJCQtrb8eHx+f

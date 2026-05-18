@@ -27,7 +27,7 @@
         private DataGridView dgvDataInfo;
         private DataGridViewTextBoxColumn colDataName;
         private DataGridViewTextBoxColumn colDataValue;
-        private Button btnFolderAdd;
+        private Button btnSelectFolder;
         private TextBox txtFolderPath;
         private Button btnCheckDataIntegrity;
         private Label lblTitle;
@@ -93,7 +93,7 @@
             gbDataLoad = new GroupBox();
             btnCheckDataIntegrity = new Button();
             txtFolderPath = new TextBox();
-            btnFolderAdd = new Button();
+            btnSelectFolder = new Button();
             tpTrainingTest = new TabPage();
             gbModelTest = new GroupBox();
             tlpModelTest = new TableLayoutPanel();
@@ -478,7 +478,7 @@
             gbDataLoad.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             gbDataLoad.Controls.Add(btnCheckDataIntegrity);
             gbDataLoad.Controls.Add(txtFolderPath);
-            gbDataLoad.Controls.Add(btnFolderAdd);
+            gbDataLoad.Controls.Add(btnSelectFolder);
             gbDataLoad.Font = new Font("함초롬바탕 확장", 14.2499981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             gbDataLoad.ForeColor = Color.FromArgb(14, 61, 156);
             gbDataLoad.Location = new Point(3, 3);
@@ -512,18 +512,18 @@
             txtFolderPath.TabIndex = 1;
             txtFolderPath.Text = "(폴더경로)";
             // 
-            // btnFolderAdd
+            // btnSelectFolder
             // 
-            btnFolderAdd.BackgroundImage = (Image)resources.GetObject("btnFolderAdd.BackgroundImage");
-            btnFolderAdd.BackgroundImageLayout = ImageLayout.Zoom;
-            btnFolderAdd.Font = new Font("한컴 고딕", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnFolderAdd.ForeColor = Color.Black;
-            btnFolderAdd.Location = new Point(12, 34);
-            btnFolderAdd.Name = "btnFolderAdd";
-            btnFolderAdd.Size = new Size(140, 38);
-            btnFolderAdd.TabIndex = 0;
-            btnFolderAdd.UseVisualStyleBackColor = true;
-            btnFolderAdd.Click += btnSelectAdd_Click;
+            btnSelectFolder.BackgroundImage = (Image)resources.GetObject("btnSelectFolder.BackgroundImage");
+            btnSelectFolder.BackgroundImageLayout = ImageLayout.Zoom;
+            btnSelectFolder.Font = new Font("한컴 고딕", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnSelectFolder.ForeColor = Color.Black;
+            btnSelectFolder.Location = new Point(12, 34);
+            btnSelectFolder.Name = "btnSelectFolder";
+            btnSelectFolder.Size = new Size(140, 38);
+            btnSelectFolder.TabIndex = 0;
+            btnSelectFolder.UseVisualStyleBackColor = true;
+            btnSelectFolder.Click += btnSelectAdd_Click;
             // 
             // tpTrainingTest
             // 
