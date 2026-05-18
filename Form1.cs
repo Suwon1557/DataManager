@@ -28,6 +28,28 @@ namespace DataManager
             lblPlaybackSpeed.Text = $"x{playbackSpeed:0.##}";
         }
 
+        private int GetImageNavigatorMarkerLeft(int value, Size markerSize)
+        {
+            int minimum = tbImageNavigator.Minimum;
+            int maximum = tbImageNavigator.Maximum;
+
+            double ratio = maximum == minimum
+                ? 0
+                : (double)(value - minimum) / (maximum - minimum);
+
+            const int horizontalPadding = 10;
+            int usableWidth = Math.Max(1, tbImageNavigator.Width - (horizontalPadding * 2));
+            int markerCenterX = tbImageNavigator.Left + horizontalPadding + (int)Math.Round(usableWidth * ratio);
+
+            return markerCenterX - (markerSize.Width / 2);
+        }
+
+        private void PositionImageRangeMarker(Panel marker, int value)
+        {
+            marker.Left = GetImageNavigatorMarkerLeft(value, marker.Size);
+            marker.Top = tbImageNavigator.Top + 13;
+        }
+
         private Panel CreateImageRangeMarker()
         {
             return new Panel
@@ -40,21 +62,11 @@ namespace DataManager
 
         private void AddImageRangeMarker()
         {
-            int minimum = tbImageNavigator.Minimum;
-            int maximum = tbImageNavigator.Maximum;
             int value = tbImageNavigator.Value;
 
-            double ratio = maximum == minimum
-                ? 0
-                : (double)(value - minimum) / (maximum - minimum);
-
-            const int horizontalPadding = 10;
-            int usableWidth = Math.Max(1, tbImageNavigator.Width - (horizontalPadding * 2));
-            int markerCenterX = tbImageNavigator.Left + horizontalPadding + (int)Math.Round(usableWidth * ratio);
-
             Panel marker = CreateImageRangeMarker();
-            marker.Left = markerCenterX - (marker.Width / 2);
-            marker.Top = tbImageNavigator.Top + 13;
+            marker.Tag = value;
+            PositionImageRangeMarker(marker, value);
 
             _imageRangeMarkers.Add(marker);
 
@@ -69,6 +81,17 @@ namespace DataManager
 
             gbDataContent.Controls.Add(marker);
             marker.BringToFront();
+        }
+
+        private void UpdateImageRangeMarkerPositions()
+        {
+            foreach (Panel marker in _imageRangeMarkers)
+            {
+                if (marker.Tag is int value)
+                {
+                    PositionImageRangeMarker(marker, value);
+                }
+            }
         }
 
         private void ClearImageRangeMarkers()
@@ -164,6 +187,11 @@ namespace DataManager
         private void gbDataContent_Enter(object sender, EventArgs e)
         {
 
+        }
+
+        private void gbDataContent_Resize(object sender, EventArgs e)
+        {
+            UpdateImageRangeMarkerPositions();
         }
     }
 }

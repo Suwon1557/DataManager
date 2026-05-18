@@ -149,6 +149,7 @@
             gbDataContent.TabStop = false;
             gbDataContent.Text = "데이터 탐색";
             gbDataContent.Enter += gbDataContent_Enter;
+            gbDataContent.Resize += gbDataContent_Resize;
             // 
             // chtSpeedValue
             // 
@@ -173,6 +174,7 @@
                 legend1.Enabled = false;
                 legend1.Name = "Legend1";
                 chtSpeedValue.Legends.Add(legend1);
+                chtSpeedValue.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
                 chtSpeedValue.Location = new Point(12, 533);
                 chtSpeedValue.Name = "chtSpeedValue";
                 series1.BorderWidth = 2;
@@ -218,6 +220,7 @@
                 legend2.Enabled = false;
                 legend2.Name = "Legend1";
                 chtSteeringValue.Legends.Add(legend2);
+                chtSteeringValue.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
                 chtSteeringValue.Location = new Point(12, 402);
                 chtSteeringValue.Name = "chtSteeringValue";
                 series2.BorderWidth = 2;
@@ -242,6 +245,7 @@
             // 
             // btnSetRange
             // 
+            btnSetRange.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnSetRange.ForeColor = Color.Black;
             btnSetRange.Location = new Point(540, 318);
             btnSetRange.Name = "btnSetRange";
@@ -253,6 +257,7 @@
             // 
             // btnCancelRange
             // 
+            btnCancelRange.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnCancelRange.ForeColor = Color.Black;
             btnCancelRange.Location = new Point(663, 318);
             btnCancelRange.Name = "btnCancelRange";
@@ -405,7 +410,7 @@
             // 
             // lvDataItems
             // 
-            lvDataItems.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            lvDataItems.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             lvDataItems.Font = new Font("맑은 고딕", 10.5F, FontStyle.Regular, GraphicsUnit.Point, 129);
             lvDataItems.ForeColor = Color.Black;
             lvDataItems.FullRowSelect = true;
@@ -419,7 +424,7 @@
             // 
             // pbDataPreview
             // 
-            pbDataPreview.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            pbDataPreview.Anchor = AnchorStyles.Top | AnchorStyles.Left;
             pbDataPreview.BackColor = Color.White;
             pbDataPreview.BorderStyle = BorderStyle.FixedSingle;
             pbDataPreview.Location = new Point(12, 36);
@@ -509,6 +514,7 @@
             ClientSize = new Size(800, 850);
             Controls.Add(lblTitle);
             Controls.Add(tcMain);
+            MinimumSize = new Size(760, 720);
             Name = "Form1";
             Text = "Form1";
             tcMain.ResumeLayout(false);
