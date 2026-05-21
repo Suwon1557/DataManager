@@ -197,7 +197,10 @@ namespace DataManager
         private void StartPlayback()
         {
             if (_allData.Count == 0) return;
-            _playTimer.Interval = (int)(200 / (tbPlaybackSpeed.Value / 100.0));
+
+            double speedRatio = tbPlaybackSpeed.Value / 100.0;
+            _playTimer.Interval = (int)(100 / speedRatio);
+
             _playTimer.Start();
         }
 
@@ -324,7 +327,16 @@ namespace DataManager
 
         private void ClearMarkers() { foreach (var m in _imageRangeMarkers) gbDataContent.Controls.Remove(m); _imageRangeMarkers.Clear(); _isRangeSettingMode = false; }
         private void UpdatePlaybackSpeedLabel() { lblPlaybackSpeed.Text = $"x{tbPlaybackSpeed.Value / 100.0:0.##}"; }
-        private void tbPlaybackSpeed_Scroll(object sender, EventArgs e) => UpdatePlaybackSpeedLabel();
+        private void tbPlaybackSpeed_Scroll(object sender, EventArgs e)
+        {
+            UpdatePlaybackSpeedLabel();
+
+            if (_playTimer.Enabled)
+            {
+                double speedRatio = tbPlaybackSpeed.Value / 100.0;
+                _playTimer.Interval = (int)(100 / speedRatio);
+            }
+        }
         private void InitializeDataInfoGrid() { dgvDataInfo.Rows.Clear(); dgvDataInfo.Rows.Add("데이터", "0"); dgvDataInfo.Rows.Add("이미지", "0"); dgvDataInfo.Rows.Add("조향값", "0"); dgvDataInfo.Rows.Add("속도값", "0"); }
         private void btnSetRange_Click(object sender, EventArgs e) => _isRangeSettingMode = true;
         private void btnCancelRange_Click(object sender, EventArgs e) => ClearMarkers();
