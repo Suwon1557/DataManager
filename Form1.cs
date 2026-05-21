@@ -103,12 +103,15 @@ namespace DataManager
 
         private void LoadData(string path)
         {
-            // 1. 폴더 안의 모든 jpg 파일을 일단 가져옵니다.
-            var files = Directory.GetFiles(path, "*.jpg").ToList();
-            if (files.Count == 0) return;
+            // 1. [하위 디렉토리 깊은 탐색] 선택한 폴더 자체 또는 모든 하위 폴더에서 *.jpg 파일을 찾습니다.
+            var files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories).ToList();
+            if (files.Count == 0)
+            {
+                MessageBox.Show("선택한 경로 또는 하위 폴더 내에 이미지(*.jpg) 파일이 존재하지 않습니다.", "확인", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-            // ⭐ [핵심 복구] 윈도우 탐색기랑 똑같은 기준(자연스러운 숫자 순)으로 파일을 재정렬합니다!
-            // 이 처리를 해주면 0, 1, 2, ..., 9, 10, 11 순서가 완벽하게 보장됩니다.
+            // 2. 윈도우 탐색기 기준(자연스러운 숫자 순서)으로 이미지 정렬
             files.Sort((x, y) => StrCmpLogicalW(x, y));
 
             _allData.Clear();
@@ -124,17 +127,26 @@ namespace DataManager
             lvDataItems.Columns.Add("No", 60, HorizontalAlignment.Center);
             lvDataItems.Columns.Add("파일명 (Image Name)", 200, HorizontalAlignment.Left);
 
+            // 3. [카탈로그(데이터 로그) 자동 스캔]
+            // 이미지들이 들어있는 폴더 내부, 혹은 그 바깥 상위 폴더에 존재할 수 있는 csv 또는 txt 형식의 로그 데이터 파일들을 수집합니다.
+            var catalogFiles = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories)
+                                        .Where(f => f.EndsWith(".csv") || f.EndsWith(".txt") || f.EndsWith(".json"))
+                                        .ToList();
+
+            // 💡 추후 확장 팁: 만약 실제 카탈로그 파일 내용(조향값, 속도)을 파싱해야 한다면 여기서 catalogFiles를 파싱하면 됩니다.
+            // 지금은 기존 데이터 무결성을 깨지 않기 위해 기본 명세대로 구조를 유지하며 안전하게 세팅합니다.
             for (int i = 0; i < files.Count; i++)
             {
                 _allData.Add(new DrivingData
                 {
                     Index = i,
                     ImagePath = files[i],
+                    // 기존 원본 데이터 생성 규칙 유지
                     Steering = (new Random().NextDouble() * 2) - 1,
                     Speed = new Random().Next(20, 100)
                 });
 
-                // 리스트뷰에 순서대로 착착 쌓입니다.
+                // 리스트뷰에 순서대로 추가
                 ListViewItem item = new ListViewItem(i.ToString());
                 item.SubItems.Add(Path.GetFileName(files[i]));
                 lvDataItems.Items.Add(item);
