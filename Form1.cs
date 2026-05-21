@@ -98,22 +98,29 @@ namespace DataManager
             }
         }
 
+        [System.Runtime.InteropServices.DllImport("shlwapi.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+        private static extern int StrCmpLogicalW(string psz1, string psz2);
+
         private void LoadData(string path)
         {
-            var files = Directory.GetFiles(path, "*.jpg").OrderBy(f => f).ToList();
+            // 1. 폴더 안의 모든 jpg 파일을 일단 가져옵니다.
+            var files = Directory.GetFiles(path, "*.jpg").ToList();
             if (files.Count == 0) return;
+
+            // ⭐ [핵심 복구] 윈도우 탐색기랑 똑같은 기준(자연스러운 숫자 순)으로 파일을 재정렬합니다!
+            // 이 처리를 해주면 0, 1, 2, ..., 9, 10, 11 순서가 완벽하게 보장됩니다.
+            files.Sort((x, y) => StrCmpLogicalW(x, y));
 
             _allData.Clear();
 
-            // ⭐ [리스트뷰 초기화 및 UI 스타일 설정] 
-            // 이 설정이 들어가야 테이블 형태로 데이터가 눈에 보입니다.
+            // [리스트뷰 초기화 및 UI 스타일 설정] 
             lvDataItems.Items.Clear();
             lvDataItems.Columns.Clear();
-            lvDataItems.View = View.Details;           // 상세 보기 모드로 변경 (필수!)
-            lvDataItems.FullRowSelect = true;          // 한 줄 전체 선택 가능하게 설정
-            lvDataItems.GridLines = true;              // 깔끔하게 격자선 표시
+            lvDataItems.View = View.Details;
+            lvDataItems.FullRowSelect = true;
+            lvDataItems.GridLines = true;
 
-            // ⭐ [컬럼 헤더 추가] 크기는 UI에 맞게 자동 조절됩니다.
+            // [컬럼 헤더 추가]
             lvDataItems.Columns.Add("No", 60, HorizontalAlignment.Center);
             lvDataItems.Columns.Add("파일명 (Image Name)", 200, HorizontalAlignment.Left);
 
@@ -127,8 +134,7 @@ namespace DataManager
                     Speed = new Random().Next(20, 100)
                 });
 
-                // ⭐ [리스트뷰에 데이터 행 추가] 
-                // 첫 번째 칸(No)에는 인덱스를, 두 번째 칸에는 순수한 파일명을 넣습니다.
+                // 리스트뷰에 순서대로 착착 쌓입니다.
                 ListViewItem item = new ListViewItem(i.ToString());
                 item.SubItems.Add(Path.GetFileName(files[i]));
                 lvDataItems.Items.Add(item);
