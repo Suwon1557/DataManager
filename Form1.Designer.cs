@@ -128,7 +128,7 @@
             tcMain.Controls.Add(tpDataManager);
             tcMain.Controls.Add(tpTrainingTest);
             tcMain.Location = new Point(0, 85);
-            tcMain.Margin = new Padding(6, 6, 6, 6);
+            tcMain.Margin = new Padding(6);
             tcMain.Name = "tcMain";
             tcMain.SelectedIndex = 0;
             tcMain.Size = new Size(1600, 1728);
@@ -139,9 +139,9 @@
             tpDataManager.Controls.Add(gbDataContent);
             tpDataManager.Controls.Add(gbDataLoad);
             tpDataManager.Location = new Point(8, 46);
-            tpDataManager.Margin = new Padding(6, 6, 6, 6);
+            tpDataManager.Margin = new Padding(6);
             tpDataManager.Name = "tpDataManager";
-            tpDataManager.Padding = new Padding(6, 6, 6, 6);
+            tpDataManager.Padding = new Padding(6);
             tpDataManager.Size = new Size(1584, 1674);
             tpDataManager.TabIndex = 0;
             tpDataManager.Text = "데이터 관리";
@@ -169,9 +169,9 @@
             gbDataContent.Font = new Font("Microsoft Sans Serif", 14.2499981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             gbDataContent.ForeColor = Color.FromArgb(14, 61, 156);
             gbDataContent.Location = new Point(6, 233);
-            gbDataContent.Margin = new Padding(6, 6, 6, 6);
+            gbDataContent.Margin = new Padding(6);
             gbDataContent.Name = "gbDataContent";
-            gbDataContent.Padding = new Padding(6, 6, 6, 6);
+            gbDataContent.Padding = new Padding(6);
             gbDataContent.Size = new Size(1572, 1429);
             gbDataContent.TabIndex = 1;
             gbDataContent.TabStop = false;
@@ -184,7 +184,7 @@
             btnSetRange.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnSetRange.ForeColor = Color.Black;
             btnSetRange.Location = new Point(1080, 678);
-            btnSetRange.Margin = new Padding(6, 6, 6, 6);
+            btnSetRange.Margin = new Padding(6);
             btnSetRange.Name = "btnSetRange";
             btnSetRange.Size = new Size(222, 73);
             btnSetRange.TabIndex = 14;
@@ -197,7 +197,7 @@
             btnCancelRange.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnCancelRange.ForeColor = Color.Black;
             btnCancelRange.Location = new Point(1326, 678);
-            btnCancelRange.Margin = new Padding(6, 6, 6, 6);
+            btnCancelRange.Margin = new Padding(6);
             btnCancelRange.Name = "btnCancelRange";
             btnCancelRange.Size = new Size(222, 73);
             btnCancelRange.TabIndex = 12;
@@ -209,7 +209,7 @@
             // 
             pnlImageRangeMarker.BackColor = Color.FromArgb(255, 114, 16);
             pnlImageRangeMarker.Location = new Point(24, 783);
-            pnlImageRangeMarker.Margin = new Padding(6, 6, 6, 6);
+            pnlImageRangeMarker.Margin = new Padding(6);
             pnlImageRangeMarker.Name = "pnlImageRangeMarker";
             pnlImageRangeMarker.Size = new Size(24, 26);
             pnlImageRangeMarker.TabIndex = 13;
@@ -219,7 +219,7 @@
             // 
             tbImageNavigator.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             tbImageNavigator.Location = new Point(24, 755);
-            tbImageNavigator.Margin = new Padding(6, 6, 6, 6);
+            tbImageNavigator.Margin = new Padding(6);
             tbImageNavigator.Maximum = 100;
             tbImageNavigator.Name = "tbImageNavigator";
             tbImageNavigator.Size = new Size(1524, 90);
@@ -232,7 +232,7 @@
             btnCancelDelete.BackgroundImageLayout = ImageLayout.Zoom;
             btnCancelDelete.ForeColor = Color.Black;
             btnCancelDelete.Location = new Point(638, 499);
-            btnCancelDelete.Margin = new Padding(6, 6, 6, 6);
+            btnCancelDelete.Margin = new Padding(6);
             btnCancelDelete.Name = "btnCancelDelete";
             btnCancelDelete.Size = new Size(416, 73);
             btnCancelDelete.TabIndex = 10;
@@ -245,7 +245,7 @@
             btnDelete.BackgroundImageLayout = ImageLayout.Zoom;
             btnDelete.ForeColor = Color.Black;
             btnDelete.Location = new Point(862, 414);
-            btnDelete.Margin = new Padding(6, 6, 6, 6);
+            btnDelete.Margin = new Padding(6);
             btnDelete.Name = "btnDelete";
             btnDelete.Size = new Size(192, 73);
             btnDelete.TabIndex = 9;
@@ -256,7 +256,7 @@
             // 
             btnFilter.ForeColor = Color.Black;
             btnFilter.Location = new Point(638, 414);
-            btnFilter.Margin = new Padding(6, 6, 6, 6);
+            btnFilter.Margin = new Padding(6);
             btnFilter.Name = "btnFilter";
             btnFilter.Size = new Size(192, 73);
             btnFilter.TabIndex = 8;
@@ -279,7 +279,7 @@
             // 
             tbPlaybackSpeed.LargeChange = 1;
             tbPlaybackSpeed.Location = new Point(24, 655);
-            tbPlaybackSpeed.Margin = new Padding(6, 6, 6, 6);
+            tbPlaybackSpeed.Margin = new Padding(6);
             tbPlaybackSpeed.Maximum = 4;
             tbPlaybackSpeed.Name = "tbPlaybackSpeed";
             tbPlaybackSpeed.Size = new Size(600, 90);
@@ -291,7 +291,7 @@
             // 
             btnReverse.ForeColor = Color.Black;
             btnReverse.Location = new Point(352, 574);
-            btnReverse.Margin = new Padding(6, 6, 6, 6);
+            btnReverse.Margin = new Padding(6);
             btnReverse.Name = "btnReverse";
             btnReverse.Size = new Size(152, 68);
             btnReverse.TabIndex = 5;
@@ -303,7 +303,7 @@
             // 
             btnStop.ForeColor = Color.Black;
             btnStop.Location = new Point(188, 574);
-            btnStop.Margin = new Padding(6, 6, 6, 6);
+            btnStop.Margin = new Padding(6);
             btnStop.Name = "btnStop";
             btnStop.Size = new Size(152, 68);
             btnStop.TabIndex = 4;
@@ -315,7 +315,7 @@
             // 
             btnPlay.ForeColor = Color.Black;
             btnPlay.Location = new Point(24, 574);
-            btnPlay.Margin = new Padding(6, 6, 6, 6);
+            btnPlay.Margin = new Padding(6);
             btnPlay.Name = "btnPlay";
             btnPlay.Size = new Size(152, 68);
             btnPlay.TabIndex = 3;
@@ -334,7 +334,7 @@
             dgvDataInfo.Columns.AddRange(new DataGridViewColumn[] { colDataName, colDataValue });
             dgvDataInfo.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 129);
             dgvDataInfo.Location = new Point(636, 77);
-            dgvDataInfo.Margin = new Padding(6, 6, 6, 6);
+            dgvDataInfo.Margin = new Padding(6);
             dgvDataInfo.MultiSelect = false;
             dgvDataInfo.Name = "dgvDataInfo";
             dgvDataInfo.ReadOnly = true;
@@ -344,6 +344,7 @@
             dgvDataInfo.Size = new Size(432, 294);
             dgvDataInfo.TabIndex = 2;
             dgvDataInfo.Text = "(폴더경로)";
+            dgvDataInfo.CellContentClick += dgvDataInfo_CellContentClick;
             // 
             // colDataName
             // 
@@ -371,7 +372,7 @@
             lvDataItems.FullRowSelect = true;
             lvDataItems.GridLines = true;
             lvDataItems.Location = new Point(1080, 77);
-            lvDataItems.Margin = new Padding(6, 6, 6, 6);
+            lvDataItems.Margin = new Padding(6);
             lvDataItems.Name = "lvDataItems";
             lvDataItems.Size = new Size(464, 480);
             lvDataItems.TabIndex = 1;
@@ -383,7 +384,7 @@
             pbDataPreview.BackColor = Color.White;
             pbDataPreview.BorderStyle = BorderStyle.FixedSingle;
             pbDataPreview.Location = new Point(24, 77);
-            pbDataPreview.Margin = new Padding(6, 6, 6, 6);
+            pbDataPreview.Margin = new Padding(6);
             pbDataPreview.Name = "pbDataPreview";
             pbDataPreview.Size = new Size(598, 482);
             pbDataPreview.SizeMode = PictureBoxSizeMode.Zoom;
@@ -399,9 +400,9 @@
             gbDataLoad.Font = new Font("Microsoft Sans Serif", 14.2499981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             gbDataLoad.ForeColor = Color.FromArgb(14, 61, 156);
             gbDataLoad.Location = new Point(6, 6);
-            gbDataLoad.Margin = new Padding(6, 6, 6, 6);
+            gbDataLoad.Margin = new Padding(6);
             gbDataLoad.Name = "gbDataLoad";
-            gbDataLoad.Padding = new Padding(6, 6, 6, 6);
+            gbDataLoad.Padding = new Padding(6);
             gbDataLoad.Size = new Size(1572, 213);
             gbDataLoad.TabIndex = 0;
             gbDataLoad.TabStop = false;
@@ -413,7 +414,7 @@
             btnCheckDataIntegrity.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnCheckDataIntegrity.ForeColor = Color.Black;
             btnCheckDataIntegrity.Location = new Point(1164, 73);
-            btnCheckDataIntegrity.Margin = new Padding(6, 6, 6, 6);
+            btnCheckDataIntegrity.Margin = new Padding(6);
             btnCheckDataIntegrity.Name = "btnCheckDataIntegrity";
             btnCheckDataIntegrity.Size = new Size(384, 81);
             btnCheckDataIntegrity.TabIndex = 2;
@@ -427,7 +428,7 @@
             txtFolderPath.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 129);
             txtFolderPath.ForeColor = SystemColors.GrayText;
             txtFolderPath.Location = new Point(322, 79);
-            txtFolderPath.Margin = new Padding(6, 6, 6, 6);
+            txtFolderPath.Margin = new Padding(6);
             txtFolderPath.Name = "txtFolderPath";
             txtFolderPath.ReadOnly = true;
             txtFolderPath.Size = new Size(820, 55);
@@ -441,7 +442,7 @@
             btnSelectFolder.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnSelectFolder.ForeColor = Color.Black;
             btnSelectFolder.Location = new Point(24, 73);
-            btnSelectFolder.Margin = new Padding(6, 6, 6, 6);
+            btnSelectFolder.Margin = new Padding(6);
             btnSelectFolder.Name = "btnSelectFolder";
             btnSelectFolder.Size = new Size(280, 81);
             btnSelectFolder.TabIndex = 0;
@@ -453,9 +454,9 @@
             tpTrainingTest.Controls.Add(gbModelTest);
             tpTrainingTest.Controls.Add(gbTrainingSetup);
             tpTrainingTest.Location = new Point(8, 46);
-            tpTrainingTest.Margin = new Padding(6, 6, 6, 6);
+            tpTrainingTest.Margin = new Padding(6);
             tpTrainingTest.Name = "tpTrainingTest";
-            tpTrainingTest.Padding = new Padding(6, 6, 6, 6);
+            tpTrainingTest.Padding = new Padding(6);
             tpTrainingTest.Size = new Size(1584, 1674);
             tpTrainingTest.TabIndex = 1;
             tpTrainingTest.Text = "학습/테스트";
@@ -468,9 +469,9 @@
             gbModelTest.Font = new Font("Microsoft Sans Serif", 14.2499981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             gbModelTest.ForeColor = Color.FromArgb(14, 61, 156);
             gbModelTest.Location = new Point(6, 297);
-            gbModelTest.Margin = new Padding(6, 6, 6, 6);
+            gbModelTest.Margin = new Padding(6);
             gbModelTest.Name = "gbModelTest";
-            gbModelTest.Padding = new Padding(6, 6, 6, 6);
+            gbModelTest.Padding = new Padding(6);
             gbModelTest.Size = new Size(1572, 1365);
             gbModelTest.TabIndex = 1;
             gbModelTest.TabStop = false;
@@ -486,7 +487,7 @@
             tlpModelTest.Controls.Add(tbTestImageNavigator, 0, 1);
             tlpModelTest.Dock = DockStyle.Fill;
             tlpModelTest.Location = new Point(6, 50);
-            tlpModelTest.Margin = new Padding(6, 6, 6, 6);
+            tlpModelTest.Margin = new Padding(6);
             tlpModelTest.Name = "tlpModelTest";
             tlpModelTest.RowCount = 2;
             tlpModelTest.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
@@ -502,7 +503,7 @@
             tlpTestPreview.Controls.Add(btnStartTest, 0, 1);
             tlpTestPreview.Dock = DockStyle.Fill;
             tlpTestPreview.Location = new Point(6, 6);
-            tlpTestPreview.Margin = new Padding(6, 6, 6, 6);
+            tlpTestPreview.Margin = new Padding(6);
             tlpTestPreview.Name = "tlpTestPreview";
             tlpTestPreview.RowCount = 3;
             tlpTestPreview.RowStyles.Add(new RowStyle(SizeType.Absolute, 617F));
@@ -517,7 +518,7 @@
             pbTestPreview.BackColor = Color.White;
             pbTestPreview.BorderStyle = BorderStyle.FixedSingle;
             pbTestPreview.Location = new Point(6, 6);
-            pbTestPreview.Margin = new Padding(6, 6, 6, 6);
+            pbTestPreview.Margin = new Padding(6);
             pbTestPreview.Name = "pbTestPreview";
             pbTestPreview.Size = new Size(598, 601);
             pbTestPreview.SizeMode = PictureBoxSizeMode.Zoom;
@@ -529,7 +530,7 @@
             btnStartTest.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnStartTest.ForeColor = Color.Black;
             btnStartTest.Location = new Point(6, 623);
-            btnStartTest.Margin = new Padding(6, 6, 6, 6);
+            btnStartTest.Margin = new Padding(6);
             btnStartTest.Name = "btnStartTest";
             btnStartTest.Size = new Size(600, 94);
             btnStartTest.TabIndex = 1;
@@ -555,7 +556,7 @@
             tlpModelTest.SetColumnSpan(tbTestImageNavigator, 2);
             tbTestImageNavigator.Dock = DockStyle.Fill;
             tbTestImageNavigator.Location = new Point(6, 1219);
-            tbTestImageNavigator.Margin = new Padding(6, 6, 6, 6);
+            tbTestImageNavigator.Margin = new Padding(6);
             tbTestImageNavigator.Maximum = 100;
             tbTestImageNavigator.Name = "tbTestImageNavigator";
             tbTestImageNavigator.Size = new Size(1548, 84);
@@ -569,9 +570,9 @@
             gbTrainingSetup.Font = new Font("Microsoft Sans Serif", 14.2499981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             gbTrainingSetup.ForeColor = Color.FromArgb(14, 61, 156);
             gbTrainingSetup.Location = new Point(6, 6);
-            gbTrainingSetup.Margin = new Padding(6, 6, 6, 6);
+            gbTrainingSetup.Margin = new Padding(6);
             gbTrainingSetup.Name = "gbTrainingSetup";
-            gbTrainingSetup.Padding = new Padding(6, 6, 6, 6);
+            gbTrainingSetup.Padding = new Padding(6);
             gbTrainingSetup.Size = new Size(1572, 277);
             gbTrainingSetup.TabIndex = 0;
             gbTrainingSetup.TabStop = false;
@@ -584,7 +585,7 @@
             txtTrainingLog.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
             txtTrainingLog.ForeColor = Color.Black;
             txtTrainingLog.Location = new Point(322, 73);
-            txtTrainingLog.Margin = new Padding(6, 6, 6, 6);
+            txtTrainingLog.Margin = new Padding(6);
             txtTrainingLog.Multiline = true;
             txtTrainingLog.Name = "txtTrainingLog";
             txtTrainingLog.ReadOnly = true;
@@ -597,7 +598,7 @@
             btnTrain.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnTrain.ForeColor = Color.Black;
             btnTrain.Location = new Point(24, 73);
-            btnTrain.Margin = new Padding(6, 6, 6, 6);
+            btnTrain.Margin = new Padding(6);
             btnTrain.Name = "btnTrain";
             btnTrain.Size = new Size(280, 81);
             btnTrain.TabIndex = 0;
@@ -625,7 +626,7 @@
             ClientSize = new Size(1600, 1813);
             Controls.Add(lblTitle);
             Controls.Add(tcMain);
-            Margin = new Padding(6, 6, 6, 6);
+            Margin = new Padding(6);
             MinimumSize = new Size(1334, 1242);
             Name = "Form1";
             Text = "Form1";
