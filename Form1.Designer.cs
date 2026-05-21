@@ -290,7 +290,7 @@
             // btnReverse
             // 
             btnReverse.ForeColor = Color.Black;
-            btnReverse.Location = new Point(1088, 655);
+            btnReverse.Location = new Point(1198, 658);
             btnReverse.Margin = new Padding(6);
             btnReverse.Name = "btnReverse";
             btnReverse.Size = new Size(152, 68);
@@ -302,7 +302,7 @@
             // btnStop
             // 
             btnStop.ForeColor = Color.Black;
-            btnStop.Location = new Point(924, 658);
+            btnStop.Location = new Point(1019, 658);
             btnStop.Margin = new Padding(6);
             btnStop.Name = "btnStop";
             btnStop.Size = new Size(152, 68);
@@ -314,7 +314,7 @@
             // btnPlay
             // 
             btnPlay.ForeColor = Color.Black;
-            btnPlay.Location = new Point(748, 658);
+            btnPlay.Location = new Point(843, 658);
             btnPlay.Margin = new Padding(6);
             btnPlay.Name = "btnPlay";
             btnPlay.Size = new Size(152, 68);
