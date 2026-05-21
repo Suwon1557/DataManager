@@ -160,11 +160,37 @@ namespace DataManager
 
         private void btnCheckDataIntegrity_Click(object sender, EventArgs e)
         {
-            if (_allData.Count == 0) return;
+            if (_allData.Count == 0)
+            {
+                MessageBox.Show("검사할 데이터가 로드되지 않았습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // [조건 1] index 번호 중복 검사
             bool isDup = _allData.GroupBy(x => x.Index).Any(g => g.Count() > 1);
-            bool isMissingFile = _allData.Any(x => !File.Exists(x.ImagePath));
-            MessageBox.Show($"검사 완료\n중복 인덱스: {(isDup ? "발견" : "없음")}\n파일 누락: {(isMissingFile ? "발견" : "없음")}");
+
+            // [조건 2] catalog(메모리/파일 스캔 리스트)에는 존재하지만, 실제 물리적인 이미지 파일이 유실되었는지 검사
+            bool isMissingFile = _allData.Any(x => string.IsNullOrEmpty(x.ImagePath) || !File.Exists(x.ImagePath));
+
+            // [조건 3] image 파일은 연결되어 있으나, 자율주행 angle(Steering)이나 throttle(Speed) 값이 누락되었는지 검사
+            // (초기 랜덤/데이터 생성 혹은 파싱 과정에서 데이터가 비어있거나 시스템 에러 등으로 유실된 케이스를 찾아냅니다)
+            bool isMissingValue = _allData.Any(x => x.Steering == 0.0 && x.Speed == 0.0);
+            // 만약 완벽한 0이 아니라 아예 값이 주어지지 않은 상태(예: null 대용)를 검사하려면 
+            // 프로젝트 데이터셋 구조에 따라 x.Steering == double.NaN 등으로 세분화할 수 있으나, 
+            // 현재 명세 기준으로는 비정상 유실 데이터를 골라내도록 설계했습니다.
+
+            // 4. 요구사항 명세에 맞게 각 조건별 상태를 MessageBox로 명확하게 사용자에게 전달합니다.
+            string reportMessage = $"[데이터 무결성 검사 결과]\n\n" +
+                                   $"1. 인덱스 중복 발생: {(isDup ? "⚠️ 발견 (위험)" : "정상 (없음)")}\n" +
+                                   $"2. 이미지 파일 누락 (카탈로그 내 존재): {(isMissingFile ? "⚠️ 발견 (유실 파일 있음)" : "정상 (없음)")}\n" +
+                                   $"3. 데이터(Angle/Throttle) 누락: {(isMissingValue ? "⚠️ 발견 (값 없음)" : "정상 (없음)")}";
+
+            // 검사 결과에 따라 아이콘을 다르게 주어 가시성을 높입니다.
+            var alertIcon = (isDup || isMissingFile || isMissingValue) ? MessageBoxIcon.Warning : MessageBoxIcon.Information;
+
+            MessageBox.Show(reportMessage, "무결성 검사 완료", MessageBoxButtons.OK, alertIcon);
         }
+       
 
         #endregion
 
