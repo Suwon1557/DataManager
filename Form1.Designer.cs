@@ -11,9 +11,6 @@
         private TabPage tpTrainingTest;
         private GroupBox gbTrainingSetup;
         private GroupBox gbModelTest;
-        private TableLayoutPanel tlpModelTest;
-        private TableLayoutPanel tlpTestPreview;
-        private TableLayoutPanel tlpTestCharts;
         private TrackBar tbTestImageNavigator;
         private PictureBox pbTestPreview;
         private Button btnStartTest;
@@ -95,12 +92,9 @@
             btnSelectFolder = new Button();
             tpTrainingTest = new TabPage();
             gbModelTest = new GroupBox();
-            tlpModelTest = new TableLayoutPanel();
-            tlpTestPreview = new TableLayoutPanel();
-            pbTestPreview = new PictureBox();
-            btnStartTest = new Button();
-            tlpTestCharts = new TableLayoutPanel();
             tbTestImageNavigator = new TrackBar();
+            btnStartTest = new Button();
+            pbTestPreview = new PictureBox();
             gbTrainingSetup = new GroupBox();
             txtTrainingLog = new TextBox();
             btnTrain = new Button();
@@ -115,10 +109,8 @@
             gbDataLoad.SuspendLayout();
             tpTrainingTest.SuspendLayout();
             gbModelTest.SuspendLayout();
-            tlpModelTest.SuspendLayout();
-            tlpTestPreview.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)pbTestPreview).BeginInit();
             ((System.ComponentModel.ISupportInitialize)tbTestImageNavigator).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pbTestPreview).BeginInit();
             gbTrainingSetup.SuspendLayout();
             SuspendLayout();
             // 
@@ -467,102 +459,54 @@
             // gbModelTest
             // 
             gbModelTest.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            gbModelTest.Controls.Add(tlpModelTest);
+            gbModelTest.Controls.Add(tbTestImageNavigator);
+            gbModelTest.Controls.Add(btnStartTest);
+            gbModelTest.Controls.Add(pbTestPreview);
             gbModelTest.Font = new Font("Microsoft Sans Serif", 14.2499981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             gbModelTest.ForeColor = Color.FromArgb(14, 61, 156);
             gbModelTest.Location = new Point(6, 297);
             gbModelTest.Margin = new Padding(6);
             gbModelTest.Name = "gbModelTest";
             gbModelTest.Padding = new Padding(6);
-            gbModelTest.Size = new Size(1572, 1365);
+            gbModelTest.Size = new Size(2588, 1365);
             gbModelTest.TabIndex = 1;
             gbModelTest.TabStop = false;
             gbModelTest.Text = "모델 테스트";
             // 
-            // tlpModelTest
+            // tbTestImageNavigator
             // 
-            tlpModelTest.ColumnCount = 2;
-            tlpModelTest.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 624F));
-            tlpModelTest.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tlpModelTest.Controls.Add(tlpTestPreview, 0, 0);
-            tlpModelTest.Controls.Add(tlpTestCharts, 1, 0);
-            tlpModelTest.Controls.Add(tbTestImageNavigator, 0, 1);
-            tlpModelTest.Dock = DockStyle.Fill;
-            tlpModelTest.Location = new Point(6, 50);
-            tlpModelTest.Margin = new Padding(6);
-            tlpModelTest.Name = "tlpModelTest";
-            tlpModelTest.RowCount = 2;
-            tlpModelTest.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tlpModelTest.RowStyles.Add(new RowStyle(SizeType.Absolute, 96F));
-            tlpModelTest.Size = new Size(1560, 1309);
-            tlpModelTest.TabIndex = 0;
-            // 
-            // tlpTestPreview
-            // 
-            tlpTestPreview.ColumnCount = 1;
-            tlpTestPreview.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tlpTestPreview.Controls.Add(pbTestPreview, 0, 0);
-            tlpTestPreview.Controls.Add(btnStartTest, 0, 1);
-            tlpTestPreview.Dock = DockStyle.Fill;
-            tlpTestPreview.Location = new Point(6, 6);
-            tlpTestPreview.Margin = new Padding(6);
-            tlpTestPreview.Name = "tlpTestPreview";
-            tlpTestPreview.RowCount = 3;
-            tlpTestPreview.RowStyles.Add(new RowStyle(SizeType.Absolute, 617F));
-            tlpTestPreview.RowStyles.Add(new RowStyle(SizeType.Absolute, 107F));
-            tlpTestPreview.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tlpTestPreview.Size = new Size(612, 1201);
-            tlpTestPreview.TabIndex = 0;
-            tlpTestPreview.Paint += tlpTestPreview_Paint;
-            // 
-            // pbTestPreview
-            // 
-            pbTestPreview.BackColor = Color.White;
-            pbTestPreview.BorderStyle = BorderStyle.FixedSingle;
-            pbTestPreview.Location = new Point(6, 6);
-            pbTestPreview.Margin = new Padding(6);
-            pbTestPreview.Name = "pbTestPreview";
-            pbTestPreview.Size = new Size(598, 601);
-            pbTestPreview.SizeMode = PictureBoxSizeMode.Zoom;
-            pbTestPreview.TabIndex = 0;
-            pbTestPreview.TabStop = false;
+            tbTestImageNavigator.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            tbTestImageNavigator.Location = new Point(24, 1250);
+            tbTestImageNavigator.Margin = new Padding(6);
+            tbTestImageNavigator.Maximum = 100;
+            tbTestImageNavigator.Name = "tbTestImageNavigator";
+            tbTestImageNavigator.Size = new Size(2540, 90);
+            tbTestImageNavigator.TabIndex = 2;
             // 
             // btnStartTest
             // 
             btnStartTest.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnStartTest.ForeColor = Color.Black;
-            btnStartTest.Location = new Point(6, 623);
+            btnStartTest.Location = new Point(24, 870);
             btnStartTest.Margin = new Padding(6);
             btnStartTest.Name = "btnStartTest";
-            btnStartTest.Size = new Size(600, 94);
+            btnStartTest.Size = new Size(794, 94);
             btnStartTest.TabIndex = 1;
             btnStartTest.Text = "테스트 시작";
             btnStartTest.UseVisualStyleBackColor = true;
+            btnStartTest.Click += btnStartTest_Click;
             // 
-            // tlpTestCharts
+            // pbTestPreview
             // 
-            tlpTestCharts.ColumnCount = 1;
-            tlpTestCharts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tlpTestCharts.Dock = DockStyle.Fill;
-            tlpTestCharts.Location = new Point(648, 6);
-            tlpTestCharts.Margin = new Padding(24, 6, 6, 6);
-            tlpTestCharts.Name = "tlpTestCharts";
-            tlpTestCharts.RowCount = 2;
-            tlpTestCharts.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tlpTestCharts.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tlpTestCharts.Size = new Size(906, 1201);
-            tlpTestCharts.TabIndex = 1;
-            // 
-            // tbTestImageNavigator
-            // 
-            tlpModelTest.SetColumnSpan(tbTestImageNavigator, 2);
-            tbTestImageNavigator.Dock = DockStyle.Fill;
-            tbTestImageNavigator.Location = new Point(6, 1219);
-            tbTestImageNavigator.Margin = new Padding(6);
-            tbTestImageNavigator.Maximum = 100;
-            tbTestImageNavigator.Name = "tbTestImageNavigator";
-            tbTestImageNavigator.Size = new Size(1548, 84);
-            tbTestImageNavigator.TabIndex = 2;
+            pbTestPreview.BackColor = Color.White;
+            pbTestPreview.BorderStyle = BorderStyle.FixedSingle;
+            pbTestPreview.Location = new Point(24, 73);
+            pbTestPreview.Margin = new Padding(6);
+            pbTestPreview.Name = "pbTestPreview";
+            pbTestPreview.Size = new Size(794, 769);
+            pbTestPreview.SizeMode = PictureBoxSizeMode.Zoom;
+            pbTestPreview.TabIndex = 0;
+            pbTestPreview.TabStop = false;
             // 
             // gbTrainingSetup
             // 
@@ -575,7 +519,7 @@
             gbTrainingSetup.Margin = new Padding(6);
             gbTrainingSetup.Name = "gbTrainingSetup";
             gbTrainingSetup.Padding = new Padding(6);
-            gbTrainingSetup.Size = new Size(1572, 277);
+            gbTrainingSetup.Size = new Size(2588, 277);
             gbTrainingSetup.TabIndex = 0;
             gbTrainingSetup.TabStop = false;
             gbTrainingSetup.Text = "데이터 학습";
@@ -592,7 +536,7 @@
             txtTrainingLog.Name = "txtTrainingLog";
             txtTrainingLog.ReadOnly = true;
             txtTrainingLog.ScrollBars = ScrollBars.Vertical;
-            txtTrainingLog.Size = new Size(1210, 149);
+            txtTrainingLog.Size = new Size(2226, 149);
             txtTrainingLog.TabIndex = 1;
             // 
             // btnTrain
@@ -602,7 +546,7 @@
             btnTrain.Location = new Point(24, 73);
             btnTrain.Margin = new Padding(6);
             btnTrain.Name = "btnTrain";
-            btnTrain.Size = new Size(280, 81);
+            btnTrain.Size = new Size(280, 149);
             btnTrain.TabIndex = 0;
             btnTrain.Text = "학습";
             btnTrain.UseVisualStyleBackColor = true;
@@ -644,11 +588,9 @@
             gbDataLoad.PerformLayout();
             tpTrainingTest.ResumeLayout(false);
             gbModelTest.ResumeLayout(false);
-            tlpModelTest.ResumeLayout(false);
-            tlpModelTest.PerformLayout();
-            tlpTestPreview.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)pbTestPreview).EndInit();
+            gbModelTest.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)tbTestImageNavigator).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pbTestPreview).EndInit();
             gbTrainingSetup.ResumeLayout(false);
             gbTrainingSetup.PerformLayout();
             ResumeLayout(false);

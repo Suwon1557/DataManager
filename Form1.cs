@@ -190,7 +190,7 @@ namespace DataManager
 
             MessageBox.Show(reportMessage, "무결성 검사 완료", MessageBoxButtons.OK, alertIcon);
         }
-       
+
 
         #endregion
 
@@ -454,6 +454,16 @@ namespace DataManager
             {
                 MessageBox.Show("필터링 조건(조향각 0 또는 스로틀 0)에 해당하는 데이터가 없습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
+        }
+
+        private void tlpTestCharts_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void btnStartTest_Click(object sender, EventArgs e)
+        {
+
         }
     }
 
