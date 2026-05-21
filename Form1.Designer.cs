@@ -378,6 +378,7 @@
             lvDataItems.TabIndex = 1;
             lvDataItems.UseCompatibleStateImageBehavior = false;
             lvDataItems.View = View.Details;
+            lvDataItems.SelectedIndexChanged += lvDataItems_SelectedIndexChanged;
             // 
             // pbDataPreview
             // 

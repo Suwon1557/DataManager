@@ -22,6 +22,7 @@ namespace DataManager
         private readonly List<Panel> _imageRangeMarkers = new List<Panel>();
         private System.Windows.Forms.Timer _playTimer = new System.Windows.Forms.Timer();
 
+
         public Form1()
         {
             InitializeComponent();
@@ -36,6 +37,8 @@ namespace DataManager
 
             _playTimer.Tick += PlayTimer_Tick;
             this.Shown += Form1_Shown;
+
+            lvDataItems.SelectedIndexChanged += lvDataItems_SelectedIndexChanged;
         }
 
         #region [1. 초기화 및 차트 안전 장치]
@@ -101,7 +104,18 @@ namespace DataManager
             if (files.Count == 0) return;
 
             _allData.Clear();
+
+            // ⭐ [리스트뷰 초기화 및 UI 스타일 설정] 
+            // 이 설정이 들어가야 테이블 형태로 데이터가 눈에 보입니다.
             lvDataItems.Items.Clear();
+            lvDataItems.Columns.Clear();
+            lvDataItems.View = View.Details;           // 상세 보기 모드로 변경 (필수!)
+            lvDataItems.FullRowSelect = true;          // 한 줄 전체 선택 가능하게 설정
+            lvDataItems.GridLines = true;              // 깔끔하게 격자선 표시
+
+            // ⭐ [컬럼 헤더 추가] 크기는 UI에 맞게 자동 조절됩니다.
+            lvDataItems.Columns.Add("No", 60, HorizontalAlignment.Center);
+            lvDataItems.Columns.Add("파일명 (Image Name)", 200, HorizontalAlignment.Left);
 
             for (int i = 0; i < files.Count; i++)
             {
@@ -112,6 +126,9 @@ namespace DataManager
                     Steering = (new Random().NextDouble() * 2) - 1,
                     Speed = new Random().Next(20, 100)
                 });
+
+                // ⭐ [리스트뷰에 데이터 행 추가] 
+                // 첫 번째 칸(No)에는 인덱스를, 두 번째 칸에는 순수한 파일명을 넣습니다.
                 ListViewItem item = new ListViewItem(i.ToString());
                 item.SubItems.Add(Path.GetFileName(files[i]));
                 lvDataItems.Items.Add(item);
@@ -318,6 +335,41 @@ namespace DataManager
         private void dgvDataInfo_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
 
+        }
+
+        private void lvDataItems_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // 리스트뷰에서 선택된 아이템이 없으면 리턴 (예외 처리)
+            if (lvDataItems.SelectedItems.Count == 0) return;
+
+            // 1. 선택된 행의 첫 번째 컬럼(SubItems[0])에 적힌 인덱스 문자열을 숫자로 변환합니다.
+            string strIndex = lvDataItems.SelectedItems[0].SubItems[0].Text;
+            if (int.TryParse(strIndex, out int targetIndex))
+            {
+                // 2. 현재 재생 중인 타이머가 있다면 오작동 방지를 위해 잠시 멈춥니다.
+                if (_playTimer.Enabled)
+                {
+                    _playTimer.Stop();
+                }
+
+                // 3. 변환한 실제 인덱스가 현재 메모리에 있는 데이터 범위 내에 있는지 확인 후 이동
+                // (삭제 기능 등으로 데이터가 유실되었을 수 있으므로 FindIndex로 정확한 위치를 찾습니다)
+                int listPosition = _allData.FindIndex(x => x.Index == targetIndex);
+
+                if (listPosition != -1)
+                {
+                    _currentIndex = listPosition;
+
+                    // 4. 화면 이미지, 텍스트 정보, 트랙바 위치 등 일제히 갱신
+                    UpdateDisplay();
+
+                    // 5. 범위 지정 모드(_) 상태라면 리스트뷰 클릭으로도 마커가 찍히도록 연동
+                    if (_isRangeSettingMode)
+                    {
+                        AddMarker();
+                    }
+                }
+            }
         }
     }
 
