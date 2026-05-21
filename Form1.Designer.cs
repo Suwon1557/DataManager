@@ -131,7 +131,7 @@
             tcMain.Margin = new Padding(6);
             tcMain.Name = "tcMain";
             tcMain.SelectedIndex = 0;
-            tcMain.Size = new Size(1600, 1728);
+            tcMain.Size = new Size(2636, 1728);
             tcMain.TabIndex = 0;
             // 
             // tpDataManager
@@ -142,7 +142,7 @@
             tpDataManager.Margin = new Padding(6);
             tpDataManager.Name = "tpDataManager";
             tpDataManager.Padding = new Padding(6);
-            tpDataManager.Size = new Size(1584, 1674);
+            tpDataManager.Size = new Size(2620, 1674);
             tpDataManager.TabIndex = 0;
             tpDataManager.Text = "데이터 관리";
             tpDataManager.UseVisualStyleBackColor = true;
@@ -172,7 +172,7 @@
             gbDataContent.Margin = new Padding(6);
             gbDataContent.Name = "gbDataContent";
             gbDataContent.Padding = new Padding(6);
-            gbDataContent.Size = new Size(1572, 1429);
+            gbDataContent.Size = new Size(2608, 1429);
             gbDataContent.TabIndex = 1;
             gbDataContent.TabStop = false;
             gbDataContent.Text = "데이터 탐색";
@@ -183,7 +183,7 @@
             // 
             btnSetRange.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnSetRange.ForeColor = Color.Black;
-            btnSetRange.Location = new Point(1080, 678);
+            btnSetRange.Location = new Point(2116, 678);
             btnSetRange.Margin = new Padding(6);
             btnSetRange.Name = "btnSetRange";
             btnSetRange.Size = new Size(222, 73);
@@ -196,7 +196,7 @@
             // 
             btnCancelRange.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnCancelRange.ForeColor = Color.Black;
-            btnCancelRange.Location = new Point(1326, 678);
+            btnCancelRange.Location = new Point(2362, 678);
             btnCancelRange.Margin = new Padding(6);
             btnCancelRange.Name = "btnCancelRange";
             btnCancelRange.Size = new Size(222, 73);
@@ -222,7 +222,7 @@
             tbImageNavigator.Margin = new Padding(6);
             tbImageNavigator.Maximum = 100;
             tbImageNavigator.Name = "tbImageNavigator";
-            tbImageNavigator.Size = new Size(1524, 90);
+            tbImageNavigator.Size = new Size(2560, 90);
             tbImageNavigator.TabIndex = 11;
             tbImageNavigator.MouseUp += tbImageNavigator_MouseUp;
             // 
@@ -231,10 +231,10 @@
             btnCancelDelete.BackgroundImage = (Image)resources.GetObject("btnCancelDelete.BackgroundImage");
             btnCancelDelete.BackgroundImageLayout = ImageLayout.Zoom;
             btnCancelDelete.ForeColor = Color.Black;
-            btnCancelDelete.Location = new Point(638, 499);
+            btnCancelDelete.Location = new Point(1052, 399);
             btnCancelDelete.Margin = new Padding(6);
             btnCancelDelete.Name = "btnCancelDelete";
-            btnCancelDelete.Size = new Size(416, 73);
+            btnCancelDelete.Size = new Size(364, 73);
             btnCancelDelete.TabIndex = 10;
             btnCancelDelete.UseVisualStyleBackColor = true;
             btnCancelDelete.Click += btnCancelDelete_Click;
@@ -244,10 +244,10 @@
             btnDelete.BackgroundImage = (Image)resources.GetObject("btnDelete.BackgroundImage");
             btnDelete.BackgroundImageLayout = ImageLayout.Zoom;
             btnDelete.ForeColor = Color.Black;
-            btnDelete.Location = new Point(862, 414);
+            btnDelete.Location = new Point(1428, 399);
             btnDelete.Margin = new Padding(6);
             btnDelete.Name = "btnDelete";
-            btnDelete.Size = new Size(192, 73);
+            btnDelete.Size = new Size(290, 73);
             btnDelete.TabIndex = 9;
             btnDelete.UseVisualStyleBackColor = true;
             btnDelete.Click += btnDelete_Click;
@@ -255,10 +255,10 @@
             // btnFilter
             // 
             btnFilter.ForeColor = Color.Black;
-            btnFilter.Location = new Point(638, 414);
+            btnFilter.Location = new Point(711, 399);
             btnFilter.Margin = new Padding(6);
             btnFilter.Name = "btnFilter";
-            btnFilter.Size = new Size(192, 73);
+            btnFilter.Size = new Size(329, 73);
             btnFilter.TabIndex = 8;
             btnFilter.Text = "필터링";
             btnFilter.UseVisualStyleBackColor = true;
@@ -290,7 +290,7 @@
             // btnReverse
             // 
             btnReverse.ForeColor = Color.Black;
-            btnReverse.Location = new Point(352, 574);
+            btnReverse.Location = new Point(1088, 655);
             btnReverse.Margin = new Padding(6);
             btnReverse.Name = "btnReverse";
             btnReverse.Size = new Size(152, 68);
@@ -302,7 +302,7 @@
             // btnStop
             // 
             btnStop.ForeColor = Color.Black;
-            btnStop.Location = new Point(188, 574);
+            btnStop.Location = new Point(924, 658);
             btnStop.Margin = new Padding(6);
             btnStop.Name = "btnStop";
             btnStop.Size = new Size(152, 68);
@@ -314,7 +314,7 @@
             // btnPlay
             // 
             btnPlay.ForeColor = Color.Black;
-            btnPlay.Location = new Point(24, 574);
+            btnPlay.Location = new Point(748, 658);
             btnPlay.Margin = new Padding(6);
             btnPlay.Name = "btnPlay";
             btnPlay.Size = new Size(152, 68);
@@ -333,7 +333,7 @@
             dgvDataInfo.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvDataInfo.Columns.AddRange(new DataGridViewColumn[] { colDataName, colDataValue });
             dgvDataInfo.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dgvDataInfo.Location = new Point(636, 77);
+            dgvDataInfo.Location = new Point(788, 77);
             dgvDataInfo.Margin = new Padding(6);
             dgvDataInfo.MultiSelect = false;
             dgvDataInfo.Name = "dgvDataInfo";
@@ -341,7 +341,7 @@
             dgvDataInfo.RowHeadersVisible = false;
             dgvDataInfo.RowHeadersWidth = 82;
             dgvDataInfo.ScrollBars = ScrollBars.None;
-            dgvDataInfo.Size = new Size(432, 294);
+            dgvDataInfo.Size = new Size(930, 294);
             dgvDataInfo.TabIndex = 2;
             dgvDataInfo.Text = "(폴더경로)";
             dgvDataInfo.CellContentClick += dgvDataInfo_CellContentClick;
@@ -371,10 +371,10 @@
             lvDataItems.ForeColor = Color.Black;
             lvDataItems.FullRowSelect = true;
             lvDataItems.GridLines = true;
-            lvDataItems.Location = new Point(1080, 77);
+            lvDataItems.Location = new Point(1750, 77);
             lvDataItems.Margin = new Padding(6);
             lvDataItems.Name = "lvDataItems";
-            lvDataItems.Size = new Size(464, 480);
+            lvDataItems.Size = new Size(830, 480);
             lvDataItems.TabIndex = 1;
             lvDataItems.UseCompatibleStateImageBehavior = false;
             lvDataItems.View = View.Details;
@@ -386,7 +386,7 @@
             pbDataPreview.Location = new Point(24, 77);
             pbDataPreview.Margin = new Padding(6);
             pbDataPreview.Name = "pbDataPreview";
-            pbDataPreview.Size = new Size(598, 482);
+            pbDataPreview.Size = new Size(675, 482);
             pbDataPreview.SizeMode = PictureBoxSizeMode.Zoom;
             pbDataPreview.TabIndex = 0;
             pbDataPreview.TabStop = false;
@@ -403,7 +403,7 @@
             gbDataLoad.Margin = new Padding(6);
             gbDataLoad.Name = "gbDataLoad";
             gbDataLoad.Padding = new Padding(6);
-            gbDataLoad.Size = new Size(1572, 213);
+            gbDataLoad.Size = new Size(2608, 213);
             gbDataLoad.TabIndex = 0;
             gbDataLoad.TabStop = false;
             gbDataLoad.Text = "데이터 불러오기";
@@ -413,7 +413,7 @@
             btnCheckDataIntegrity.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnCheckDataIntegrity.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnCheckDataIntegrity.ForeColor = Color.Black;
-            btnCheckDataIntegrity.Location = new Point(1164, 73);
+            btnCheckDataIntegrity.Location = new Point(2200, 73);
             btnCheckDataIntegrity.Margin = new Padding(6);
             btnCheckDataIntegrity.Name = "btnCheckDataIntegrity";
             btnCheckDataIntegrity.Size = new Size(384, 81);
@@ -431,7 +431,7 @@
             txtFolderPath.Margin = new Padding(6);
             txtFolderPath.Name = "txtFolderPath";
             txtFolderPath.ReadOnly = true;
-            txtFolderPath.Size = new Size(820, 55);
+            txtFolderPath.Size = new Size(1856, 55);
             txtFolderPath.TabIndex = 1;
             txtFolderPath.Text = "(폴더경로)";
             // 
@@ -457,7 +457,7 @@
             tpTrainingTest.Margin = new Padding(6);
             tpTrainingTest.Name = "tpTrainingTest";
             tpTrainingTest.Padding = new Padding(6);
-            tpTrainingTest.Size = new Size(1584, 1674);
+            tpTrainingTest.Size = new Size(2620, 1674);
             tpTrainingTest.TabIndex = 1;
             tpTrainingTest.Text = "학습/테스트";
             tpTrainingTest.UseVisualStyleBackColor = true;
@@ -623,7 +623,7 @@
             // 
             AutoScaleDimensions = new SizeF(14F, 32F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1600, 1813);
+            ClientSize = new Size(2636, 1759);
             Controls.Add(lblTitle);
             Controls.Add(tcMain);
             Margin = new Padding(6);
