@@ -377,6 +377,34 @@ namespace DataManager
                 }
             }
         }
+
+        private void btnFilter_Click_1(object sender, EventArgs e)
+        {
+            if (_allData.Count == 0) return;
+
+            // 1. 조향각(Steering)이 0이거나 속도(Speed)가 0인 타겟 데이터만 골라냅니다.
+            // (실수령(double) 비교이므로 완벽한 0 값 외에 미세한 오차까지 잡아내려면 Math.Abs(x.Steering) < 0.001 등을 쓸 수 있지만, 여기서는 요청하신 대로 명확한 0을 기준으로 잡았습니다)
+            var targetData = _allData.Where(x => x.Steering == 0 || x.Speed == 0).ToList();
+
+            if (targetData.Count > 0)
+            {
+                // 2. 복구 버튼을 눌렀을 때 되돌릴 수 있도록 기존 삭제 버퍼에 저장합니다.
+                _deletedDataBuffer = new List<DrivingData>(targetData);
+
+                // 3. 메인 데이터 리스트에서 해당 조건의 데이터를 일괄 삭제합니다.
+                _allData.RemoveAll(x => x.Steering == 0 || x.Speed == 0);
+
+                // 4. 리스트뷰 목록, 차트, 트랙바를 최신 상태로 새로고침 합니다.
+                RefreshUI();
+
+                // 5. 사용자에게 몇 건이 지워졌는지 알림창을 띄워줍니다.
+                MessageBox.Show($"필터링 완료: 조향각 또는 스로틀이 0인 데이터 {targetData.Count}건이 제거되었습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                MessageBox.Show("필터링 조건(조향각 0 또는 스로틀 0)에 해당하는 데이터가 없습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
     }
 
     public class DrivingData

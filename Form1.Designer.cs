@@ -262,6 +262,7 @@
             btnFilter.TabIndex = 8;
             btnFilter.Text = "필터링";
             btnFilter.UseVisualStyleBackColor = true;
+            btnFilter.Click += btnFilter_Click_1;
             // 
             // lblPlaybackSpeed
             // 
