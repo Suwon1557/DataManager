@@ -7,6 +7,8 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using System.Text.Json;
+using System.Runtime.InteropServices; // 🛠️ FIX: DllImport 사용을 위해 반드시 필요함!
 
 namespace DataManager
 {
@@ -15,12 +17,16 @@ namespace DataManager
     {
         // [필드 변수 선언 - 단 하나도 빠짐없이 100% 유지]
         private List<DrivingData> _allData = new List<DrivingData>();
-        private List<DrivingData> _deletedDataBuffer = new List<DrivingData>(); // 복구용 버퍼
+        private List<DrivingData> _deletedDataBuffer = new List<DrivingData>();
         private int _currentIndex = -1;
         private bool _isReversed = false;
         private bool _isRangeSettingMode = false;
         private readonly List<Panel> _imageRangeMarkers = new List<Panel>();
         private System.Windows.Forms.Timer _playTimer = new System.Windows.Forms.Timer();
+
+        // 🛠️ FIX: shlwapi.dll 임포트 위치 (클래스 바로 아래)
+        [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
+        private static extern int StrCmpLogicalW(string psz1, string psz2);
 
         public Form1()
         {
@@ -40,7 +46,10 @@ namespace DataManager
             // 이벤트 연결
             lvDataItems.SelectedIndexChanged += lvDataItems_SelectedIndexChanged;
 
-            // 🛠️ 디자이너 이벤트 안전 연결
+            // 🛠️ 데이터 관리 탭 슬라이더: 드래그 즉시 실시간 업데이트를 위해 Scroll 이벤트 연결
+            tbImageNavigator.Scroll += tbImageNavigator_Scroll;
+
+            // 🛠️ 학습 탭 슬라이더 안전 연결
             if (tbTestImageNavigator != null)
             {
                 tbTestImageNavigator.Scroll -= tbTestImageNavigator_Scroll_1;
@@ -48,7 +57,7 @@ namespace DataManager
             }
         }
 
-        #region [1. 탭별 차트 레이아웃 - 슬라이더 가림 방지 및 정중앙 배치]
+        #region [1. 탭별 차트 레이아웃 - 중앙 배치 및 슬라이더 보호]
 
         private void Form1_Shown(object? sender, EventArgs e)
         {
@@ -90,13 +99,11 @@ namespace DataManager
 
                 if (chtTestSteeringValue == null)
                 {
-                    // 첫 번째 차트를 상단 회색 공간 중앙에 배치
                     chtTestSteeringValue = new Chart { Location = new Point(p2_chartX, 180), Size = new Size(p2_chartWidth, p2_chartHeight) };
                     page2.Controls.Add(chtTestSteeringValue);
                 }
                 if (chtTestSpeedValue == null)
                 {
-                    // 두 번째 차트를 첫 번째 차트 바로 아래, 슬라이더 위쪽에 배치
                     chtTestSpeedValue = new Chart { Location = new Point(p2_chartX, 430), Size = new Size(p2_chartWidth, p2_chartHeight) };
                     page2.Controls.Add(chtTestSpeedValue);
                 }
@@ -108,11 +115,7 @@ namespace DataManager
             SetupSafeChart(chtTestSteeringValue, "실제/예측 조향값 비교 Chart", Color.Blue, "예측값", "Actual", Color.Green);
             SetupSafeChart(chtTestSpeedValue, "실제/예측 속도값 비교 Chart", Color.Red, "예측값", "Actual", Color.Green);
 
-            // 초기 더미 포인트
-            if (chtSteeringValue != null && chtSteeringValue.Series[0].Points.Count == 0) chtSteeringValue.Series[0].Points.AddXY(0, 0);
-            if (chtSpeedValue != null && chtSpeedValue.Series[0].Points.Count == 0) chtSpeedValue.Series[0].Points.AddXY(0, 0);
-            if (chtTestSteeringValue != null && chtTestSteeringValue.Series[0].Points.Count == 0) chtTestSteeringValue.Series[0].Points.AddXY(0, 0);
-            if (chtTestSpeedValue != null && chtTestSpeedValue.Series[0].Points.Count == 0) chtTestSpeedValue.Series[0].Points.AddXY(0, 0);
+            UpdateCharts();
         }
 
         private void SetupSafeChart(Chart? chart, string titleName, Color c1, string s1Name, string? s2Name = null, Color? c2 = null)
@@ -146,7 +149,7 @@ namespace DataManager
 
         #endregion
 
-        #region [2. 데이터 로드 및 무결성 검사]
+        #region [2. 카탈로그 및 메니페스트 파싱 데이터 로드]
 
         private void btnSelectAdd_Click(object sender, EventArgs e)
         {
@@ -154,52 +157,75 @@ namespace DataManager
                 if (fbd.ShowDialog() == DialogResult.OK) { txtFolderPath.Text = fbd.SelectedPath; LoadData(fbd.SelectedPath); }
         }
 
-        [System.Runtime.InteropServices.DllImport("shlwapi.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
-        private static extern int StrCmpLogicalW(string psz1, string psz2);
-
         private void LoadData(string path)
         {
-            var files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories).ToList();
-            if (files.Count == 0) { MessageBox.Show("이미지 파일이 없습니다."); return; }
-
-            files.Sort((x, y) => StrCmpLogicalW(x, y));
             _allData.Clear();
             lvDataItems.Items.Clear();
-            lvDataItems.Columns.Clear();
-            lvDataItems.View = View.Details;
-            lvDataItems.FullRowSelect = true;
-            lvDataItems.GridLines = true;
-            lvDataItems.Columns.Add("No", 60);
-            lvDataItems.Columns.Add("파일명", 200);
 
-            for (int i = 0; i < files.Count; i++)
+            var catalogFiles = Directory.GetFiles(path, "*.catalog");
+
+            if (catalogFiles.Length > 0)
             {
-                _allData.Add(new DrivingData { Index = i, ImagePath = files[i], Steering = (new Random().NextDouble() * 2) - 1, Speed = new Random().Next(20, 100) });
-                ListViewItem item = new ListViewItem(i.ToString());
-                item.SubItems.Add(Path.GetFileName(files[i]));
+                ParseCatalogData(path, catalogFiles);
+            }
+            else
+            {
+                var files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories).ToList();
+                files.Sort((x, y) => StrCmpLogicalW(x, y));
+                for (int i = 0; i < files.Count; i++)
+                    _allData.Add(new DrivingData { Index = i, ImagePath = files[i], Steering = 0, Speed = 0 });
+            }
+
+            lvDataItems.BeginUpdate();
+            foreach (var d in _allData)
+            {
+                var item = new ListViewItem(d.Index.ToString());
+                item.SubItems.Add(Path.GetFileName(d.ImagePath));
                 lvDataItems.Items.Add(item);
             }
+            lvDataItems.EndUpdate();
 
             _currentIndex = 0;
-            tbImageNavigator.Maximum = _allData.Count - 1;
-            if (tbTestImageNavigator != null)
-            {
-                tbTestImageNavigator.Value = 0;
-                tbTestImageNavigator.Maximum = _allData.Count - 1;
-            }
+            tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1);
+            if (tbTestImageNavigator != null) tbTestImageNavigator.Maximum = Math.Max(0, _allData.Count - 1);
 
             UpdateDisplay();
             UpdateCharts();
 
-            // 🛠️ 추가: 데이터를 불러오자마자 학습 탭 미리보기(pbTestPreview)에 0번 이미지 표시
-            if (_allData.Count > 0 && pbTestPreview != null)
+            // 데이터 로드 즉시 학습 탭 미리보기 이미지 출력
+            if (pbTestPreview != null && _allData.Count > 0)
+                if (File.Exists(_allData[0].ImagePath)) pbTestPreview.Image = Image.FromFile(_allData[0].ImagePath);
+        }
+
+        private void ParseCatalogData(string basePath, string[] catalogFiles)
+        {
+            int globalIdx = 0;
+            Array.Sort(catalogFiles, StrCmpLogicalW);
+            foreach (var catFile in catalogFiles)
             {
-                if (File.Exists(_allData[0].ImagePath))
+                string[] lines = File.ReadAllLines(catFile);
+                foreach (var line in lines)
                 {
-                    using (var fs = new FileStream(_allData[0].ImagePath, FileMode.Open, FileAccess.Read))
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    try
                     {
-                        pbTestPreview.Image = Image.FromStream(fs);
+                        using (JsonDocument doc = JsonDocument.Parse(line))
+                        {
+                            var root = doc.RootElement;
+                            string imgName = root.GetProperty("cam/image_array").GetString();
+                            double angle = root.GetProperty("user/angle").GetDouble();
+                            double throttle = root.GetProperty("user/throttle").GetDouble();
+
+                            _allData.Add(new DrivingData
+                            {
+                                Index = globalIdx++,
+                                ImagePath = Path.Combine(basePath, "images", imgName),
+                                Steering = angle,
+                                Speed = throttle * 100
+                            });
+                        }
                     }
+                    catch { }
                 }
             }
         }
@@ -208,9 +234,8 @@ namespace DataManager
         {
             if (_allData.Count == 0) return;
             bool isDup = _allData.GroupBy(x => x.Index).Any(g => g.Count() > 1);
-            bool isMissingFile = _allData.Any(x => string.IsNullOrEmpty(x.ImagePath) || !File.Exists(x.ImagePath));
-            string report = $"중복: {(isDup ? "⚠️ 발견" : "정상")}, 파일누락: {(isMissingFile ? "⚠️ 발견" : "정상")}";
-            MessageBox.Show(report, "무결성 검사");
+            bool isMissingFile = _allData.Any(x => !File.Exists(x.ImagePath));
+            MessageBox.Show($"중복: {(isDup ? "⚠️ 발견" : "정상")}\n파일 유실: {(isMissingFile ? "⚠️ 발견" : "정상")}", "데이터 무결성 검사");
         }
 
         #endregion
@@ -247,7 +272,7 @@ namespace DataManager
 
         #endregion
 
-        #region [4. 탭 2: 학습 및 테스트 구현]
+        #region [4. 탭 2: 학습 및 테스트]
 
         private void btnTrain_Click(object sender, EventArgs e)
         {
@@ -256,14 +281,14 @@ namespace DataManager
                 Process.Start("python", "manage.py train");
                 txtTrainingLog?.AppendText($"[{DateTime.Now:HH:mm:ss}] 학습 프로세스 시작...\r\n");
             }
-            catch (Exception ex) { MessageBox.Show("Python 실행 오류: " + ex.Message); }
+            catch (Exception ex) { MessageBox.Show("Python 실행 에러: " + ex.Message); }
         }
 
         private void btnStartTest_Click(object sender, EventArgs e)
         {
             if (_allData.Count == 0) return;
             UpdateCharts();
-            txtTrainingLog?.AppendText($"[{DateTime.Now:HH:mm:ss}] 모델 예측 테스트 결과 시각화 완료.\r\n");
+            txtTrainingLog?.AppendText($"[{DateTime.Now:HH:mm:ss}] 실제 데이터 차트 반영 완료.\r\n");
         }
 
         private void tbTestImageNavigator_Scroll_1(object sender, EventArgs e)
@@ -279,7 +304,14 @@ namespace DataManager
 
         #endregion
 
-        #region [5. 필터링, 삭제, 마커 로직 100% 보존]
+        #region [5. 필터링, 삭제, 마커 및 실시간 슬라이더 로직]
+
+        // 🛠️ 추가: 데이터 관리 탭 슬라이더 실시간 업데이트 메서드
+        private void tbImageNavigator_Scroll(object sender, EventArgs e)
+        {
+            _currentIndex = tbImageNavigator.Value;
+            UpdateDisplay();
+        }
 
         private void btnFilter_Click(object sender, EventArgs e)
         {
@@ -321,9 +353,17 @@ namespace DataManager
         private void ClearMarkers() { foreach (var m in _imageRangeMarkers) gbDataContent?.Controls.Remove(m); _imageRangeMarkers.Clear(); _isRangeSettingMode = false; }
         private int GetImageNavigatorMarkerLeft(int value, Size markerSize) { int min = tbImageNavigator.Minimum, max = tbImageNavigator.Maximum; double ratio = (max == min) ? 0 : (double)(value - min) / (max - min); return tbImageNavigator.Left + 10 + (int)((tbImageNavigator.Width - 20) * ratio) - (markerSize.Width / 2); }
 
+        // 마커 배치를 위한 MouseUp 로직은 유지
+        private void tbImageNavigator_MouseUp(object sender, MouseEventArgs e)
+        {
+            _currentIndex = tbImageNavigator.Value;
+            UpdateDisplay();
+            if (_isRangeSettingMode) AddMarker();
+        }
+
         #endregion
 
-        #region [6. 차트 데이터 업데이트]
+        #region [6. 차트 업데이트 및 기타]
 
         private void UpdateCharts()
         {
@@ -334,16 +374,8 @@ namespace DataManager
             if (chtSteeringValue != null) chtSteeringValue.Series[0].Points.Clear();
             if (chtSpeedValue != null) chtSpeedValue.Series[0].Points.Clear();
 
-            if (chtTestSteeringValue != null)
-            {
-                chtTestSteeringValue.Series[0].Points.Clear();
-                chtTestSteeringValue.Series[1].Points.Clear();
-            }
-            if (chtTestSpeedValue != null)
-            {
-                chtTestSpeedValue.Series[0].Points.Clear();
-                chtTestSpeedValue.Series[1].Points.Clear();
-            }
+            if (chtTestSteeringValue != null) { chtTestSteeringValue.Series[0].Points.Clear(); chtTestSteeringValue.Series[1].Points.Clear(); }
+            if (chtTestSpeedValue != null) { chtTestSpeedValue.Series[0].Points.Clear(); chtTestSpeedValue.Series[1].Points.Clear(); }
 
             for (int i = 0; i < _allData.Count; i += step)
             {
@@ -354,12 +386,12 @@ namespace DataManager
                 if (chtTestSteeringValue != null)
                 {
                     chtTestSteeringValue.Series["Actual"].Points.AddXY(d.Index, d.Steering);
-                    chtTestSteeringValue.Series[0].Points.AddXY(d.Index, d.Steering + (new Random(i).NextDouble() * 0.2 - 0.1));
+                    chtTestSteeringValue.Series[0].Points.AddXY(d.Index, d.PredictedSteering);
                 }
                 if (chtTestSpeedValue != null)
                 {
                     chtTestSpeedValue.Series["Actual"].Points.AddXY(d.Index, d.Speed);
-                    chtTestSpeedValue.Series[0].Points.AddXY(d.Index, d.Speed + new Random(i).Next(-5, 5));
+                    chtTestSpeedValue.Series[0].Points.AddXY(d.Index, d.PredictedSpeed);
                 }
             }
 
@@ -377,7 +409,6 @@ namespace DataManager
         private void tbPlaybackSpeed_Scroll(object sender, EventArgs e) { UpdatePlaybackSpeedLabel(); if (_playTimer.Enabled) _playTimer.Interval = (int)(150 / (tbPlaybackSpeed.Value / 100.0)); }
         private void btnSetRange_Click(object sender, EventArgs e) => _isRangeSettingMode = true;
         private void btnCancelRange_Click(object sender, EventArgs e) => ClearMarkers();
-        private void tbImageNavigator_MouseUp(object sender, MouseEventArgs e) { _currentIndex = tbImageNavigator.Value; UpdateDisplay(); if (_isRangeSettingMode) AddMarker(); }
         private void gbDataContent_Resize(object sender, EventArgs e) { foreach (var m in _imageRangeMarkers) if (m.Tag is int val) m.Left = GetImageNavigatorMarkerLeft(val, m.Size); if (_allData.Count > 0) UpdateCharts(); }
 
         #endregion
@@ -400,5 +431,7 @@ namespace DataManager
         public string ImagePath { get; set; } = "";
         public double Steering { get; set; }
         public double Speed { get; set; }
+        public double PredictedSteering { get; set; }
+        public double PredictedSpeed { get; set; }
     }
 }
