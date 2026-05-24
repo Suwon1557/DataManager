@@ -49,21 +49,66 @@ namespace DataManager
             _isRangeSettingMode = false;
             pnlImageRangeMarker.Visible = false;
 
-            // 차트 강제 활성화 (시언 님 원본 로직 기반)
+            // 차트 영역 공간 확보용 스크롤바 허용
+            this.AutoScroll = true;
+
+            // 📍 하단 빈 공간 절대 좌표 및 배치 규격 설정
+            int chartStartX = 20;
+            int chartWidth = 460;
+            int chartHeight = 200;
+            int row1Y = 640;
+            int col2X = 510;
+
+            // 🛠️ 코드로 하드코딩 레이아웃 정렬
+            // 1. [chtSteeringValue] - 이미지 번호에 따른 조향값 차트
+            if (chtSteeringValue == null)
+            {
+                chtSteeringValue = new Chart();
+                chtSteeringValue.Location = new Point(chartStartX, row1Y);
+                chtSteeringValue.Size = new Size(chartWidth, chartHeight);
+                chtSteeringValue.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+
+                this.Controls.Add(chtSteeringValue);
+            }
+
+            // 2. [chtSpeedValue] - 이미지 번호에 따른 속도값 차트
+            if (chtSpeedValue == null)
+            {
+                chtSpeedValue = new Chart();
+                chtSpeedValue.Location = new Point(col2X, row1Y);
+                chtSpeedValue.Size = new Size(chartWidth, chartHeight);
+                chtSpeedValue.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+
+                this.Controls.Add(chtSpeedValue);
+            }
+
+            // 필수 차트 2개 시리즈 플롯 커스텀 빌드
             SetupSafeChart(chtSteeringValue, "Steering", Color.DodgerBlue);
             SetupSafeChart(chtSpeedValue, "Speed", Color.OrangeRed);
-            SetupSafeChart(chtTestSteeringValue, "Predict", Color.Blue, "Actual", Color.Green);
-            SetupSafeChart(chtTestSpeedValue, "Predict", Color.Red, "Actual", Color.Green);
+
+            // 초기 기본 더미 포인트 배치로 형태 확보
+            if (chtSteeringValue.Series[0].Points.Count == 0) chtSteeringValue.Series[0].Points.AddXY(0, 0);
+            if (chtSpeedValue.Series[0].Points.Count == 0) chtSpeedValue.Series[0].Points.AddXY(0, 0);
         }
 
         private void SetupSafeChart(Chart? chart, string s1Name, Color c1, string? s2Name = null, Color? c2 = null)
         {
             if (chart == null) return;
-            chart.ChartAreas.Clear();
-            chart.ChartAreas.Add(new ChartArea("Main"));
+
+            ChartArea ca = chart.ChartAreas.Count > 0 ? chart.ChartAreas[0] : chart.ChartAreas.Add("Main");
+            ca.AxisX.Title = s1Name;
+            string areaName = ca.Name;
+
+            // 차트 최상단 메인 타이틀 명시
+            chart.Titles.Clear();
+            var mainTitle = chart.Titles.Add($"[{s1Name} Data Graph]");
+            mainTitle.Font = new Font("Malgun Gothic", 10, FontStyle.Bold);
+            mainTitle.ForeColor = Color.FromArgb(50, 50, 50);
+
             chart.Series.Clear();
 
             var s1 = chart.Series.Add(s1Name);
+            s1.ChartArea = areaName;
             s1.ChartType = SeriesChartType.Line;
             s1.Color = c1;
             s1.BorderWidth = 2;
@@ -71,13 +116,12 @@ namespace DataManager
             if (s2Name != null)
             {
                 var s2 = chart.Series.Add(s2Name);
+                s2.ChartArea = areaName;
                 s2.ChartType = SeriesChartType.Line;
                 s2.Color = c2 ?? Color.Green;
                 s2.BorderWidth = 2;
             }
 
-            // 형체 확보용 더미 포인트 (이게 없으면 차트가 안 뜸)
-            chart.Series[0].Points.AddXY(0, 0);
             chart.Visible = true;
             chart.BringToFront();
         }
@@ -103,7 +147,6 @@ namespace DataManager
 
         private void LoadData(string path)
         {
-            // 1. [하위 디렉토리 깊은 탐색] 선택한 폴더 자체 또는 모든 하위 폴더에서 *.jpg 파일을 찾습니다.
             var files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories).ToList();
             if (files.Count == 0)
             {
@@ -111,42 +154,32 @@ namespace DataManager
                 return;
             }
 
-            // 2. 윈도우 탐색기 기준(자연스러운 숫자 순서)으로 이미지 정렬
             files.Sort((x, y) => StrCmpLogicalW(x, y));
-
             _allData.Clear();
 
-            // [리스트뷰 초기화 및 UI 스타일 설정] 
             lvDataItems.Items.Clear();
             lvDataItems.Columns.Clear();
             lvDataItems.View = View.Details;
             lvDataItems.FullRowSelect = true;
             lvDataItems.GridLines = true;
 
-            // [컬럼 헤더 추가]
             lvDataItems.Columns.Add("No", 60, HorizontalAlignment.Center);
             lvDataItems.Columns.Add("파일명 (Image Name)", 200, HorizontalAlignment.Left);
 
-            // 3. [카탈로그(데이터 로그) 자동 스캔]
-            // 이미지들이 들어있는 폴더 내부, 혹은 그 바깥 상위 폴더에 존재할 수 있는 csv 또는 txt 형식의 로그 데이터 파일들을 수집합니다.
             var catalogFiles = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories)
                                         .Where(f => f.EndsWith(".csv") || f.EndsWith(".txt") || f.EndsWith(".json"))
                                         .ToList();
 
-            // 💡 추후 확장 팁: 만약 실제 카탈로그 파일 내용(조향값, 속도)을 파싱해야 한다면 여기서 catalogFiles를 파싱하면 됩니다.
-            // 지금은 기존 데이터 무결성을 깨지 않기 위해 기본 명세대로 구조를 유지하며 안전하게 세팅합니다.
             for (int i = 0; i < files.Count; i++)
             {
                 _allData.Add(new DrivingData
                 {
                     Index = i,
                     ImagePath = files[i],
-                    // 기존 원본 데이터 생성 규칙 유지
                     Steering = (new Random().NextDouble() * 2) - 1,
                     Speed = new Random().Next(20, 100)
                 });
 
-                // 리스트뷰에 순서대로 추가
                 ListViewItem item = new ListViewItem(i.ToString());
                 item.SubItems.Add(Path.GetFileName(files[i]));
                 lvDataItems.Items.Add(item);
@@ -166,31 +199,19 @@ namespace DataManager
                 return;
             }
 
-            // [조건 1] index 번호 중복 검사
             bool isDup = _allData.GroupBy(x => x.Index).Any(g => g.Count() > 1);
-
-            // [조건 2] catalog(메모리/파일 스캔 리스트)에는 존재하지만, 실제 물리적인 이미지 파일이 유실되었는지 검사
             bool isMissingFile = _allData.Any(x => string.IsNullOrEmpty(x.ImagePath) || !File.Exists(x.ImagePath));
-
-            // [조건 3] image 파일은 연결되어 있으나, 자율주행 angle(Steering)이나 throttle(Speed) 값이 누락되었는지 검사
-            // (초기 랜덤/데이터 생성 혹은 파싱 과정에서 데이터가 비어있거나 시스템 에러 등으로 유실된 케이스를 찾아냅니다)
             bool isMissingValue = _allData.Any(x => x.Steering == 0.0 && x.Speed == 0.0);
-            // 만약 완벽한 0이 아니라 아예 값이 주어지지 않은 상태(예: null 대용)를 검사하려면 
-            // 프로젝트 데이터셋 구조에 따라 x.Steering == double.NaN 등으로 세분화할 수 있으나, 
-            // 현재 명세 기준으로는 비정상 유실 데이터를 골라내도록 설계했습니다.
 
-            // 4. 요구사항 명세에 맞게 각 조건별 상태를 MessageBox로 명확하게 사용자에게 전달합니다.
             string reportMessage = $"[데이터 무결성 검사 결과]\n\n" +
                                    $"1. 인덱스 중복 발생: {(isDup ? "⚠️ 발견 (위험)" : "정상 (없음)")}\n" +
                                    $"2. 이미지 파일 누락 (카탈로그 내 존재): {(isMissingFile ? "⚠️ 발견 (유실 파일 있음)" : "정상 (없음)")}\n" +
                                    $"3. 데이터(Angle/Throttle) 누락: {(isMissingValue ? "⚠️ 발견 (값 없음)" : "정상 (없음)")}";
 
-            // 검사 결과에 따라 아이콘을 다르게 주어 가시성을 높입니다.
             var alertIcon = (isDup || isMissingFile || isMissingValue) ? MessageBoxIcon.Warning : MessageBoxIcon.Information;
 
             MessageBox.Show(reportMessage, "무결성 검사 완료", MessageBoxButtons.OK, alertIcon);
         }
-
 
         #endregion
 
@@ -225,7 +246,7 @@ namespace DataManager
             if (_allData.Count == 0) return;
 
             double speedRatio = tbPlaybackSpeed.Value / 100.0;
-            _playTimer.Interval = (int)(100 / speedRatio);
+            _playTimer.Interval = (int)(150 / speedRatio);
 
             _playTimer.Start();
         }
@@ -239,9 +260,8 @@ namespace DataManager
 
         #endregion
 
-        #region [4. 에러 났던 메서드 3인방 구현]
+        #region [4. 에러 대처 로직]
 
-        // 1. 빨간줄 해결: gbDataContent_Resize
         private void gbDataContent_Resize(object sender, EventArgs e)
         {
             foreach (Panel marker in _imageRangeMarkers)
@@ -252,7 +272,6 @@ namespace DataManager
             if (_allData.Count > 0) UpdateCharts();
         }
 
-        // 2. 빨간줄 해결: btnCancelDelete_Click (복구)
         private void btnCancelDelete_Click(object sender, EventArgs e)
         {
             if (_deletedDataBuffer.Count > 0)
@@ -265,7 +284,6 @@ namespace DataManager
             }
         }
 
-        // 3. 빨간줄 해결: btnTrain_Click (파이썬 연동)
         private void btnTrain_Click(object sender, EventArgs e)
         {
             try
@@ -275,7 +293,7 @@ namespace DataManager
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Python 실행 오류: " + ex.Message);
+                MessageBox.Show("Python run error: " + ex.Message);
             }
         }
 
@@ -360,7 +378,7 @@ namespace DataManager
             if (_playTimer.Enabled)
             {
                 double speedRatio = tbPlaybackSpeed.Value / 100.0;
-                _playTimer.Interval = (int)(100 / speedRatio);
+                _playTimer.Interval = (int)(150 / speedRatio);
             }
         }
         private void InitializeDataInfoGrid() { dgvDataInfo.Rows.Clear(); dgvDataInfo.Rows.Add("데이터", "0"); dgvDataInfo.Rows.Add("이미지", "0"); dgvDataInfo.Rows.Add("조향값", "0"); dgvDataInfo.Rows.Add("속도값", "0"); }
@@ -369,18 +387,52 @@ namespace DataManager
 
         private void UpdateCharts()
         {
-            if (chtSteeringValue == null || chtSteeringValue.Series.Count == 0 || _allData.Count == 0) return;
-            chtSteeringValue.Series[0].Points.Clear();
-            chtSpeedValue.Series[0].Points.Clear();
+            if (_allData.Count == 0) return;
+
             int step = Math.Max(1, _allData.Count / 100);
-            for (int i = 0; i < _allData.Count; i += step)
+            int maxImgNo = _allData.Count - 1;
+
+            // 📊 1. [chtSteeringValue] 이미지 번호에 따른 데이터 조향값 바인딩
+            if (chtSteeringValue != null && chtSteeringValue.Series.Count > 0)
             {
-                chtSteeringValue.Series[0].Points.AddXY(i, _allData[i].Steering);
-                chtSpeedValue.Series[0].Points.AddXY(i, _allData[i].Speed);
+                chtSteeringValue.Series[0].Points.Clear();
+                for (int i = 0; i < _allData.Count; i += step)
+                {
+                    chtSteeringValue.Series[0].Points.AddXY(_allData[i].Index, _allData[i].Steering);
+                }
+                if (chtSteeringValue.ChartAreas.Count > 0)
+                {
+                    var ca = chtSteeringValue.ChartAreas[0];
+                    ca.RecalculateAxesScale();
+                    ca.AxisX.Minimum = 0;
+                    ca.AxisX.Maximum = maxImgNo;
+                    ca.AxisX.LabelStyle.Format = "0;0;0"; // 🛠️ FIX: 음수 오차로 인해 생기는 '-0' 표기를 '0'으로 강제 보정
+                    ca.AxisX.Title = $"[Steering] (0 ~ {maxImgNo})";
+                }
+                chtSteeringValue.Invalidate();
+            }
+
+            // 📊 2. [chtSpeedValue] 이미지 번호에 따른 데이터 속도값 바인딩
+            if (chtSpeedValue != null && chtSpeedValue.Series.Count > 0)
+            {
+                chtSpeedValue.Series[0].Points.Clear();
+                for (int i = 0; i < _allData.Count; i += step)
+                {
+                    chtSpeedValue.Series[0].Points.AddXY(_allData[i].Index, _allData[i].Speed);
+                }
+                if (chtSpeedValue.ChartAreas.Count > 0)
+                {
+                    var ca = chtSpeedValue.ChartAreas[0];
+                    ca.RecalculateAxesScale();
+                    ca.AxisX.Minimum = 0;
+                    ca.AxisX.Maximum = maxImgNo;
+                    ca.AxisX.LabelStyle.Format = "0;0;0"; // 🛠️ FIX: 음수 오차로 인해 생기는 '-0' 표기를 '0'으로 강제 보정
+                    ca.AxisX.Title = $"[Speed] (0 ~ {maxImgNo})";
+                }
+                chtSpeedValue.Invalidate();
             }
         }
 
-        // 빈 핸들러
         private void tpDataManager_Click(object sender, EventArgs e) { }
         private void gbDataContent_Enter(object sender, EventArgs e) { }
         private void gbTrainingSetup_Enter(object sender, EventArgs e) { }
@@ -395,31 +447,23 @@ namespace DataManager
 
         private void lvDataItems_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // 리스트뷰에서 선택된 아이템이 없으면 리턴 (예외 처리)
             if (lvDataItems.SelectedItems.Count == 0) return;
 
-            // 1. 선택된 행의 첫 번째 컬럼(SubItems[0])에 적힌 인덱스 문자열을 숫자로 변환합니다.
             string strIndex = lvDataItems.SelectedItems[0].SubItems[0].Text;
             if (int.TryParse(strIndex, out int targetIndex))
             {
-                // 2. 현재 재생 중인 타이머가 있다면 오작동 방지를 위해 잠시 멈춥니다.
                 if (_playTimer.Enabled)
                 {
                     _playTimer.Stop();
                 }
 
-                // 3. 변환한 실제 인덱스가 현재 메모리에 있는 데이터 범위 내에 있는지 확인 후 이동
-                // (삭제 기능 등으로 데이터가 유실되었을 수 있으므로 FindIndex로 정확한 위치를 찾습니다)
                 int listPosition = _allData.FindIndex(x => x.Index == targetIndex);
 
                 if (listPosition != -1)
                 {
                     _currentIndex = listPosition;
-
-                    // 4. 화면 이미지, 텍스트 정보, 트랙바 위치 등 일제히 갱신
                     UpdateDisplay();
 
-                    // 5. 범위 지정 모드(_) 상태라면 리스트뷰 클릭으로도 마커가 찍히도록 연동
                     if (_isRangeSettingMode)
                     {
                         AddMarker();
@@ -432,22 +476,14 @@ namespace DataManager
         {
             if (_allData.Count == 0) return;
 
-            // 1. 조향각(Steering)이 0이거나 속도(Speed)가 0인 타겟 데이터만 골라냅니다.
-            // (실수령(double) 비교이므로 완벽한 0 값 외에 미세한 오차까지 잡아내려면 Math.Abs(x.Steering) < 0.001 등을 쓸 수 있지만, 여기서는 요청하신 대로 명확한 0을 기준으로 잡았습니다)
             var targetData = _allData.Where(x => x.Steering == 0 || x.Speed == 0).ToList();
 
             if (targetData.Count > 0)
             {
-                // 2. 복구 버튼을 눌렀을 때 되돌릴 수 있도록 기존 삭제 버퍼에 저장합니다.
                 _deletedDataBuffer = new List<DrivingData>(targetData);
-
-                // 3. 메인 데이터 리스트에서 해당 조건의 데이터를 일괄 삭제합니다.
                 _allData.RemoveAll(x => x.Steering == 0 || x.Speed == 0);
-
-                // 4. 리스트뷰 목록, 차트, 트랙바를 최신 상태로 새로고침 합니다.
                 RefreshUI();
 
-                // 5. 사용자에게 몇 건이 지워졌는지 알림창을 띄워줍니다.
                 MessageBox.Show($"필터링 완료: 조향각 또는 스로틀이 0인 데이터 {targetData.Count}건이 제거되었습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
@@ -462,6 +498,11 @@ namespace DataManager
         }
 
         private void btnStartTest_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
         {
 
         }
