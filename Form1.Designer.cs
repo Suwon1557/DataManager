@@ -426,7 +426,7 @@
             tpTrainingTest.Location = new Point(4, 24);
             tpTrainingTest.Name = "tpTrainingTest";
             tpTrainingTest.Padding = new Padding(3);
-            tpTrainingTest.Size = new Size(1310, 782);
+            tpTrainingTest.Size = new Size(1310, 952);
             tpTrainingTest.TabIndex = 1;
             tpTrainingTest.Text = "학습/테스트";
             tpTrainingTest.UseVisualStyleBackColor = true;
@@ -454,6 +454,7 @@
             tbTestImageNavigator.Name = "tbTestImageNavigator";
             tbTestImageNavigator.Size = new Size(1270, 45);
             tbTestImageNavigator.TabIndex = 2;
+            tbTestImageNavigator.Scroll += tbTestImageNavigator_Scroll_1;
             // 
             // btnStartTest
             // 
