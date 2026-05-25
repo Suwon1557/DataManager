@@ -278,17 +278,131 @@ namespace DataManager
         {
             try
             {
-                Process.Start("python", "manage.py train");
-                txtTrainingLog?.AppendText($"[{DateTime.Now:HH:mm:ss}] 학습 프로세스 시작...\r\n");
+                // 1. 리눅스 환경 설정
+                string envName = "e2e_env";
+                string projectPath = "~/mysim";
+
+                // 2. 실행할 전체 명령어 (라이브러리 점검 및 학습 시작)
+                string installCmd = "pip install numpy==1.24.3 pandas==2.0.3 tensorflow==2.13.0 albumentations imgaug";
+                string trainCmd = "python train.py --tub ./data --model ./models/mypilot.h5";
+
+                // bash -i 모드로 실행하여 .bashrc 설정을 자동으로 로드합니다.
+                string bashCmd = $"conda activate {envName} && cd {projectPath} && {installCmd} && {trainCmd}";
+
+                // 3. 프로세스 실행 설정 (외부 CMD 창 모드)
+                ProcessStartInfo start = new ProcessStartInfo();
+                start.FileName = "cmd.exe";
+
+                // /k 옵션으로 명령 실행 후 창을 유지하고, wsl 명령을 안전하게 전달합니다.
+                start.Arguments = "/k wsl bash -i -c \"" + bashCmd + "\"";
+
+                // 외부 창을 띄우기 위한 핵심 설정
+                start.UseShellExecute = true;
+                start.CreateNoWindow = false;
+
+                Process.Start(start);
+
+                txtTrainingLog?.AppendText($"[{DateTime.Now:HH:mm:ss}] 외부 터미널에서 WSL 학습 프로세스가 시작되었습니다.\r\n");
             }
-            catch (Exception ex) { MessageBox.Show("Python 실행 에러: " + ex.Message); }
+            catch (Exception ex)
+            {
+                MessageBox.Show("프로세스 실행 중 오류: " + ex.Message);
+            }
         }
 
         private void btnStartTest_Click(object sender, EventArgs e)
         {
             if (_allData.Count == 0) return;
-            UpdateCharts();
-            txtTrainingLog?.AppendText($"[{DateTime.Now:HH:mm:ss}] 실제 데이터 차트 반영 완료.\r\n");
+
+            try
+            {
+                txtTrainingLog?.AppendText($"[{DateTime.Now:HH:mm:ss}] 테스트 세션 시작 (경로 동기화 중...)\r\n");
+
+                string envName = "e2e_env";
+                string projectPath = "/home/gorhanhee/mysim";
+                string modelFile = "models/mypilot.h5";
+
+                // 1. 윈도우 경로 설정
+                string appDir = Application.StartupPath;
+                string winPathsFile = Path.Combine(appDir, "win_paths.txt");
+                string winResultsFile = Path.Combine(appDir, "results.csv");
+
+                // 2. 리눅스용 이미지 경로 목록 작성 (Windows 파일 생성)
+                var linuxPaths = _allData.Select(d => {
+                    string drive = Path.GetPathRoot(d.ImagePath).Substring(0, 1).ToLower();
+                    string subPath = d.ImagePath.Substring(Path.GetPathRoot(d.ImagePath).Length).Replace("\\", "/");
+                    return $"/mnt/{drive}/{subPath}";
+                }).ToList();
+                File.WriteAllLines(winPathsFile, linuxPaths);
+
+                // 3. [핵심] WSL이 이해하는 현재 폴더의 진짜 경로를 'wslpath'로 가져오기
+                Process wslPathProc = new Process();
+                wslPathProc.StartInfo.FileName = "wsl.exe";
+                wslPathProc.StartInfo.Arguments = $"wslpath '{appDir.Replace("\\", "/")}'";
+                wslPathProc.StartInfo.UseShellExecute = false;
+                wslPathProc.StartInfo.RedirectStandardOutput = true;
+                wslPathProc.Start();
+                string wslAppDir = wslPathProc.StandardOutput.ReadToEnd().Trim();
+                wslPathProc.WaitForExit();
+
+                string wslPathsFile = $"{wslAppDir}/win_paths.txt";
+                string wslResultsFile = $"{wslAppDir}/results.csv";
+
+                // 4. 파이썬 예측 스크립트 (직접 파일 읽고 쓰기)
+                string pythonPredictScript =
+                    "import tensorflow as tf; import numpy as np; from PIL import Image; import os; " +
+                    $"model = tf.keras.models.load_model('{modelFile}'); " +
+                    $"with open('{wslPathsFile}', 'r') as f: paths = f.read().splitlines(); " +
+                    "results = []; " +
+                    "for p in paths: " +
+                    "    if not os.path.exists(p): results.append('0,0'); continue; " +
+                    "    img = np.array(Image.open(p).convert('RGB').resize((160, 120))) / 255.0; " +
+                    "    pred = model.predict(img[None, :], verbose=0); " +
+                    "    results.append(f'{pred[0][0][0]},{pred[1][0][0]}'); " +
+                    $"with open('{wslResultsFile}', 'w') as f: f.write('\\n'.join(results))";
+
+                // 5. WSL 명령어 실행
+                ProcessStartInfo start = new ProcessStartInfo();
+                start.FileName = "wsl.exe";
+                start.Arguments = $"bash -i -c \"conda activate {envName} && cd {projectPath} && python -c \\\"{pythonPredictScript}\\\"\"";
+                start.UseShellExecute = false;
+                start.RedirectStandardError = true; // 에러 확인용
+                start.CreateNoWindow = true;
+
+                Process process = Process.Start(start);
+                string error = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+
+                if (!string.IsNullOrEmpty(error))
+                {
+                    txtTrainingLog?.AppendText($"[파이썬 에러] {error}\r\n");
+                }
+
+                // 6. 결과 파일(results.csv) 읽기
+                if (File.Exists(winResultsFile))
+                {
+                    string[] lines = File.ReadAllLines(winResultsFile);
+                    for (int i = 0; i < Math.Min(lines.Length, _allData.Count); i++)
+                    {
+                        string[] vals = lines[i].Split(',');
+                        if (vals.Length == 2)
+                        {
+                            _allData[i].PredictedSteering = double.Parse(vals[0]);
+                            _allData[i].PredictedSpeed = double.Parse(vals[1]) * 100;
+                        }
+                    }
+                    UpdateCharts();
+                    txtTrainingLog?.AppendText($"[{DateTime.Now:HH:mm:ss}] 예측 완료! 차트를 확인하세요.\r\n");
+                }
+                else
+                {
+                    txtTrainingLog?.AppendText($"[{DateTime.Now:HH:mm:ss}] 오류: results.csv가 생성되지 않았습니다.\r\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("테스트 실패: " + ex.Message);
+            }
         }
 
         private void tbTestImageNavigator_Scroll_1(object sender, EventArgs e)
