@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Text.Json;
+using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices; // 🛠️ FIX: DllImport 사용을 위해 반드시 필요함!
 
 namespace DataManager
@@ -45,6 +46,7 @@ namespace DataManager
 
             InitializeDataInfoGrid();
             UpdatePlaybackSpeedLabel();
+            ApplyPolishedTheme();
 
             _playTimer.Tick += PlayTimer_Tick;
             this.Shown += Form1_Shown;
@@ -528,6 +530,149 @@ namespace DataManager
                 c.ChartAreas[0].AxisX.LabelStyle.Format = "0;0;0";
                 c.Invalidate();
             }
+        }
+
+        private void ApplyPolishedTheme()
+        {
+            Color ink = Color.FromArgb(18, 24, 38);
+            Color surface = Color.FromArgb(28, 36, 54);
+            Color panel = Color.FromArgb(39, 50, 72);
+            Color panelSoft = Color.FromArgb(49, 62, 88);
+            Color field = Color.FromArgb(246, 248, 252);
+            Color text = Color.FromArgb(238, 243, 249);
+            Color darkText = Color.FromArgb(31, 41, 55);
+            Color gold = Color.FromArgb(245, 176, 65);
+            Color teal = Color.FromArgb(45, 212, 191);
+            Color coral = Color.FromArgb(248, 113, 113);
+            Color line = Color.FromArgb(103, 119, 148);
+
+            BackColor = ink;
+            lblTitle.ForeColor = gold;
+            lblTitle.Font = new Font("Segoe UI", lblTitle.Font.Size, FontStyle.Bold);
+
+            tcMain.BackColor = ink;
+            tcMain.Font = new Font("Segoe UI", tcMain.Font.Size, FontStyle.Bold);
+            tcMain.DrawMode = TabDrawMode.OwnerDrawFixed;
+            tcMain.DrawItem -= tcMain_DrawItem;
+            tcMain.DrawItem += tcMain_DrawItem;
+
+            tpDataManager.BackColor = surface;
+            tpDataManager.UseVisualStyleBackColor = false;
+            tpTrainingTest.BackColor = surface;
+            tpTrainingTest.UseVisualStyleBackColor = false;
+
+            StyleGroupBox(gbDataLoad, panel, gold);
+            StyleGroupBox(gbDataContent, panel, gold);
+            StyleGroupBox(gbTrainingSetup, panel, gold);
+            StyleGroupBox(gbModelTest, panel, gold);
+
+            StyleButton(btnSelectFolder, teal, Color.FromArgb(6, 42, 43), teal);
+            StyleButton(btnTrain, gold, Color.FromArgb(48, 34, 8), gold);
+            StyleButton(btnStartTest, gold, Color.FromArgb(48, 34, 8), gold);
+            StyleButton(btnFilter, teal, Color.FromArgb(6, 42, 43), teal);
+
+            StyleButton(btnCheckDataIntegrity, panelSoft, text, teal);
+            StyleButton(btnPlay, panelSoft, text, teal);
+            StyleButton(btnStop, panelSoft, text, teal);
+            StyleButton(btnReverse, panelSoft, text, teal);
+            StyleButton(btnSetRange, panelSoft, text, teal);
+            StyleButton(btnCancelRange, panelSoft, gold, gold);
+            StyleButton(btnDelete, panelSoft, coral, coral);
+            StyleButton(btnCancelDelete, panelSoft, teal, teal);
+            ApplyIconButtonImages(gold, teal, coral);
+
+            txtFolderPath.BackColor = field;
+            txtFolderPath.ForeColor = darkText;
+            txtFolderPath.BorderStyle = BorderStyle.FixedSingle;
+            txtTrainingLog.BackColor = Color.FromArgb(12, 18, 30);
+            txtTrainingLog.ForeColor = text;
+            txtTrainingLog.BorderStyle = BorderStyle.FixedSingle;
+
+            StylePreview(pbDataPreview, line);
+            StylePreview(pbTestPreview, line);
+            StyleDataGrid(dgvDataInfo, field, panelSoft, gold, line, darkText);
+            StyleListView(lvDataItems, field, darkText);
+
+            lblPlaybackSpeed.ForeColor = teal;
+            tbPlaybackSpeed.BackColor = panel;
+            tbImageNavigator.BackColor = panel;
+            tbTestImageNavigator.BackColor = panel;
+            pnlImageRangeMarker.BackColor = gold;
+        }
+
+        private void StyleGroupBox(GroupBox box, Color backColor, Color titleColor)
+        {
+            box.BackColor = backColor;
+            box.ForeColor = titleColor;
+            box.Font = new Font("Segoe UI", box.Font.Size, FontStyle.Bold);
+        }
+
+        private void StyleButton(Button button, Color backColor, Color foreColor, Color borderColor)
+        {
+            button.BackColor = backColor;
+            button.ForeColor = foreColor;
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderColor = borderColor;
+            button.FlatAppearance.BorderSize = 1;
+            button.FlatAppearance.MouseOverBackColor = ControlPaint.Light(backColor, 0.18f);
+            button.FlatAppearance.MouseDownBackColor = ControlPaint.Dark(backColor, 0.08f);
+            button.UseVisualStyleBackColor = false;
+            button.Font = new Font("Segoe UI", button.Font.Size, FontStyle.Bold);
+        }
+
+        private void StylePreview(PictureBox preview, Color borderColor)
+        {
+            preview.BackColor = Color.FromArgb(12, 18, 30);
+            preview.BorderStyle = BorderStyle.FixedSingle;
+        }
+
+        private void StyleDataGrid(DataGridView grid, Color field, Color header, Color accent, Color line, Color darkText)
+        {
+            grid.BackgroundColor = field;
+            grid.BorderStyle = BorderStyle.FixedSingle;
+            grid.EnableHeadersVisualStyles = false;
+            grid.GridColor = line;
+            grid.DefaultCellStyle.BackColor = field;
+            grid.DefaultCellStyle.ForeColor = darkText;
+            grid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(223, 247, 244);
+            grid.DefaultCellStyle.SelectionForeColor = darkText;
+            grid.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(235, 240, 248);
+            grid.ColumnHeadersDefaultCellStyle.BackColor = header;
+            grid.ColumnHeadersDefaultCellStyle.ForeColor = accent;
+            grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = header;
+            grid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", grid.Font.Size, FontStyle.Bold);
+            grid.RowTemplate.DefaultCellStyle.Font = new Font("Segoe UI", grid.Font.Size, FontStyle.Regular);
+            grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            grid.AdvancedCellBorderStyle.Left = DataGridViewAdvancedCellBorderStyle.None;
+            grid.AdvancedCellBorderStyle.Right = DataGridViewAdvancedCellBorderStyle.None;
+        }
+
+        private void StyleListView(ListView listView, Color field, Color darkText)
+        {
+            listView.BackColor = field;
+            listView.ForeColor = darkText;
+            listView.BorderStyle = BorderStyle.FixedSingle;
+            listView.GridLines = true;
+            listView.Font = new Font("Segoe UI", listView.Font.Size, FontStyle.Regular);
+        }
+
+        private void tcMain_DrawItem(object? sender, DrawItemEventArgs e)
+        {
+            TabPage page = tcMain.TabPages[e.Index];
+            bool selected = e.Index == tcMain.SelectedIndex;
+            Color back = selected ? Color.FromArgb(245, 176, 65) : Color.FromArgb(39, 50, 72);
+            Color fore = selected ? Color.FromArgb(31, 41, 55) : Color.FromArgb(238, 243, 249);
+
+            using (SolidBrush bg = new SolidBrush(back))
+                e.Graphics.FillRectangle(bg, e.Bounds);
+
+            TextRenderer.DrawText(
+                e.Graphics,
+                page.Text,
+                new Font("Segoe UI", tcMain.Font.Size, FontStyle.Bold),
+                e.Bounds,
+                fore,
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
         }
 
         private void InitializeDataInfoGrid() { dgvDataInfo.Rows.Clear(); dgvDataInfo.Rows.Add("데이터 수", "0"); dgvDataInfo.Rows.Add("이미지", "0"); dgvDataInfo.Rows.Add("조향값", "0"); dgvDataInfo.Rows.Add("속도값", "0"); }
