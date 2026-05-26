@@ -24,6 +24,7 @@ namespace DataManager
         private bool _isRangeSettingMode = false;
         private readonly List<Panel> _imageRangeMarkers = new List<Panel>();
         private System.Windows.Forms.Timer _playTimer = new System.Windows.Forms.Timer();
+        private const string UiFontFamily = "맑은 고딕";
 
         private class DeleteAction
         {
@@ -772,10 +773,10 @@ namespace DataManager
 
             BackColor = ink;
             lblTitle.ForeColor = gold;
-            lblTitle.Font = new Font("Segoe UI", lblTitle.Font.Size, FontStyle.Bold);
+            lblTitle.Font = new Font(UiFontFamily, lblTitle.Font.Size, FontStyle.Bold);
 
             tcMain.BackColor = ink;
-            tcMain.Font = new Font("Segoe UI", tcMain.Font.Size, FontStyle.Bold);
+            tcMain.Font = new Font(UiFontFamily, tcMain.Font.Size, FontStyle.Bold);
             tcMain.DrawMode = TabDrawMode.OwnerDrawFixed;
             tcMain.DrawItem -= tcMain_DrawItem;
             tcMain.DrawItem += tcMain_DrawItem;
@@ -826,13 +827,62 @@ namespace DataManager
             tbImageNavigator.BackColor = panel;
             tbTestImageNavigator.BackColor = panel;
             pnlImageRangeMarker.BackColor = gold;
+
+            ApplyTextPolish();
+        }
+
+        private void ApplyTextPolish()
+        {
+            Text = "Data Manager";
+            btnFilter.Text = "필터링";
+            btnCheckDataIntegrity.Text = "무결성 검사";
+            btnTrain.Text = "학습";
+            btnStartTest.Text = "테스트 시작";
+            btnSetRange.Text = "범위 설정";
+            btnCancelRange.Text = "X";
+            btnPlay.Text = ">>";
+            btnStop.Text = "||";
+            btnReverse.Text = "<<";
+
+            Font regular = new Font(UiFontFamily, 10F, FontStyle.Regular);
+            Font button = new Font(UiFontFamily, 11F, FontStyle.Bold);
+            Font emphasis = new Font(UiFontFamily, 14F, FontStyle.Bold);
+
+            foreach (Control control in GetAllControls(this))
+            {
+                if (control is Button)
+                    control.Font = button;
+                else if (control is GroupBox)
+                    control.Font = emphasis;
+                else if (control is DataGridView || control is ListView || control is TextBox)
+                    control.Font = regular;
+                else if (control is Label)
+                    control.Font = new Font(UiFontFamily, control.Font.Size, control.Font.Style);
+            }
+
+            lblTitle.Font = new Font(UiFontFamily, 20F, FontStyle.Bold);
+            lblPlaybackSpeed.Font = new Font(UiFontFamily, 20F, FontStyle.Bold);
+            txtTrainingLog.Font = new Font(UiFontFamily, 10F, FontStyle.Bold);
+            dgvDataInfo.ColumnHeadersDefaultCellStyle.Font = new Font(UiFontFamily, 10F, FontStyle.Bold);
+            dgvDataInfo.DefaultCellStyle.Font = new Font(UiFontFamily, 10F, FontStyle.Regular);
+            lvDataItems.Font = new Font(UiFontFamily, 10F, FontStyle.Regular);
+        }
+
+        private IEnumerable<Control> GetAllControls(Control root)
+        {
+            foreach (Control child in root.Controls)
+            {
+                yield return child;
+                foreach (Control grandChild in GetAllControls(child))
+                    yield return grandChild;
+            }
         }
 
         private void StyleGroupBox(GroupBox box, Color backColor, Color titleColor)
         {
             box.BackColor = backColor;
             box.ForeColor = titleColor;
-            box.Font = new Font("Segoe UI", box.Font.Size, FontStyle.Bold);
+            box.Font = new Font(UiFontFamily, box.Font.Size, FontStyle.Bold);
         }
 
         private void StyleButton(Button button, Color backColor, Color foreColor, Color borderColor)
@@ -845,7 +895,7 @@ namespace DataManager
             button.FlatAppearance.MouseOverBackColor = ControlPaint.Light(backColor, 0.18f);
             button.FlatAppearance.MouseDownBackColor = ControlPaint.Dark(backColor, 0.08f);
             button.UseVisualStyleBackColor = false;
-            button.Font = new Font("Segoe UI", button.Font.Size, FontStyle.Bold);
+            button.Font = new Font(UiFontFamily, button.Font.Size, FontStyle.Bold);
         }
 
         private void ApplyIconButtonImages(Color folderAccent, Color undoAccent, Color deleteAccent)
@@ -899,8 +949,8 @@ namespace DataManager
             grid.ColumnHeadersDefaultCellStyle.BackColor = header;
             grid.ColumnHeadersDefaultCellStyle.ForeColor = accent;
             grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = header;
-            grid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", grid.Font.Size, FontStyle.Bold);
-            grid.RowTemplate.DefaultCellStyle.Font = new Font("Segoe UI", grid.Font.Size, FontStyle.Regular);
+            grid.ColumnHeadersDefaultCellStyle.Font = new Font(UiFontFamily, grid.Font.Size, FontStyle.Bold);
+            grid.RowTemplate.DefaultCellStyle.Font = new Font(UiFontFamily, grid.Font.Size, FontStyle.Regular);
             grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             grid.AdvancedCellBorderStyle.Left = DataGridViewAdvancedCellBorderStyle.None;
             grid.AdvancedCellBorderStyle.Right = DataGridViewAdvancedCellBorderStyle.None;
@@ -912,7 +962,7 @@ namespace DataManager
             listView.ForeColor = cellText;
             listView.BorderStyle = BorderStyle.FixedSingle;
             listView.GridLines = true;
-            listView.Font = new Font("Segoe UI", listView.Font.Size, FontStyle.Regular);
+            listView.Font = new Font(UiFontFamily, listView.Font.Size, FontStyle.Regular);
             listView.OwnerDraw = true;
             listView.DrawColumnHeader -= lvDataItems_DrawColumnHeader;
             listView.DrawItem -= lvDataItems_DrawItem;
@@ -949,7 +999,7 @@ namespace DataManager
             TextRenderer.DrawText(
                 e.Graphics,
                 e.Header?.Text ?? string.Empty,
-                new Font("Segoe UI", lvDataItems.Font.Size, FontStyle.Bold),
+                new Font(UiFontFamily, lvDataItems.Font.Size, FontStyle.Bold),
                 e.Bounds,
                 Color.FromArgb(245, 176, 65),
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
@@ -992,7 +1042,7 @@ namespace DataManager
             TextRenderer.DrawText(
                 e.Graphics,
                 page.Text,
-                new Font("Segoe UI", tcMain.Font.Size, FontStyle.Bold),
+                new Font(UiFontFamily, tcMain.Font.Size, FontStyle.Bold),
                 e.Bounds,
                 fore,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
