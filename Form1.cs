@@ -32,6 +32,12 @@ namespace DataManager
         {
             InitializeComponent();
 
+            if (lvDataItems.Columns.Count == 0)
+            {
+                lvDataItems.Columns.Add("번호", 70);
+                lvDataItems.Columns.Add("이미지 파일명", 320);
+            }
+
             // 1. 트랙바 범위 설정
             tbPlaybackSpeed.Minimum = 25;
             tbPlaybackSpeed.Maximum = 200;
@@ -176,14 +182,7 @@ namespace DataManager
                     _allData.Add(new DrivingData { Index = i, ImagePath = files[i], Steering = 0, Speed = 0 });
             }
 
-            lvDataItems.BeginUpdate();
-            foreach (var d in _allData)
-            {
-                var item = new ListViewItem(d.Index.ToString());
-                item.SubItems.Add(Path.GetFileName(d.ImagePath));
-                lvDataItems.Items.Add(item);
-            }
-            lvDataItems.EndUpdate();
+            RefreshDataListView();
 
             _currentIndex = 0;
             tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1);
@@ -453,7 +452,20 @@ namespace DataManager
             if (_deletedDataBuffer.Count > 0) { _allData.AddRange(_deletedDataBuffer); _allData = _allData.OrderBy(x => x.Index).ToList(); _deletedDataBuffer.Clear(); RefreshUI(); }
         }
 
-        private void RefreshUI() { _currentIndex = Math.Max(0, Math.Min(_currentIndex, _allData.Count - 1)); tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); UpdateDisplay(); UpdateCharts(); }
+        private void RefreshDataListView()
+        {
+            lvDataItems.BeginUpdate();
+            lvDataItems.Items.Clear();
+            foreach (var d in _allData.OrderBy(x => x.Index))
+            {
+                var item = new ListViewItem(d.Index.ToString());
+                item.SubItems.Add(Path.GetFileName(d.ImagePath));
+                lvDataItems.Items.Add(item);
+            }
+            lvDataItems.EndUpdate();
+        }
+
+        private void RefreshUI() { _currentIndex = Math.Max(0, Math.Min(_currentIndex, _allData.Count - 1)); tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); RefreshDataListView(); UpdateDisplay(); UpdateCharts(); }
 
         private void AddMarker()
         {
@@ -518,7 +530,7 @@ namespace DataManager
             }
         }
 
-        private void InitializeDataInfoGrid() { dgvDataInfo.Rows.Clear(); dgvDataInfo.Rows.Add("데이터", "0"); dgvDataInfo.Rows.Add("이미지", "0"); dgvDataInfo.Rows.Add("조향값", "0"); dgvDataInfo.Rows.Add("속도값", "0"); }
+        private void InitializeDataInfoGrid() { dgvDataInfo.Rows.Clear(); dgvDataInfo.Rows.Add("데이터 수", "0"); dgvDataInfo.Rows.Add("이미지", "0"); dgvDataInfo.Rows.Add("조향값", "0"); dgvDataInfo.Rows.Add("속도값", "0"); }
         private void UpdatePlaybackSpeedLabel() { if (lblPlaybackSpeed != null) lblPlaybackSpeed.Text = $"x{tbPlaybackSpeed.Value / 100.0:0.##}"; }
         private void tbPlaybackSpeed_Scroll(object sender, EventArgs e) { UpdatePlaybackSpeedLabel(); if (_playTimer.Enabled) _playTimer.Interval = (int)(150 / (tbPlaybackSpeed.Value / 100.0)); }
         private void btnSetRange_Click(object sender, EventArgs e) => _isRangeSettingMode = true;
