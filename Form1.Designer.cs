@@ -6,7 +6,7 @@
         ///  Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
-        private TabControl tcMain;
+        private ThemedTabControl tcMain;
         private TabPage tpDataManager;
         private TabPage tpTrainingTest;
         private GroupBox gbTrainingSetup;
@@ -66,7 +66,7 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            tcMain = new TabControl();
+            tcMain = new ThemedTabControl();
             tpDataManager = new TabPage();
             gbDataContent = new GroupBox();
             btnSetRange = new Button();
