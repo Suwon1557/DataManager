@@ -38,6 +38,7 @@ namespace DataManager
                 lvDataItems.Columns.Add("번호", 70);
                 lvDataItems.Columns.Add("이미지 파일명", 320);
             }
+            AdjustDataListColumns();
 
             // 1. 트랙바 범위 설정
             tbPlaybackSpeed.Minimum = 25;
@@ -578,20 +579,24 @@ namespace DataManager
             StyleButton(btnSetRange, panelSoft, text, teal);
             StyleButton(btnCancelRange, panelSoft, gold, gold);
             StyleButton(btnDelete, panelSoft, coral, coral);
-            StyleButton(btnCancelDelete, panelSoft, teal, teal);
+            StyleButton(btnCancelDelete, Color.FromArgb(22, 30, 46), teal, teal);
             ApplyIconButtonImages(gold, teal, coral);
 
             txtFolderPath.BackColor = field;
             txtFolderPath.ForeColor = darkText;
             txtFolderPath.BorderStyle = BorderStyle.FixedSingle;
+            txtFolderPath.ReadOnly = false;
+            txtFolderPath.BackColor = Color.FromArgb(22, 30, 46);
+            txtFolderPath.ForeColor = text;
+            txtFolderPath.ReadOnly = true;
             txtTrainingLog.BackColor = Color.FromArgb(12, 18, 30);
             txtTrainingLog.ForeColor = text;
             txtTrainingLog.BorderStyle = BorderStyle.FixedSingle;
 
             StylePreview(pbDataPreview, line);
             StylePreview(pbTestPreview, line);
-            StyleDataGrid(dgvDataInfo, field, panelSoft, gold, line, darkText);
-            StyleListView(lvDataItems, field, darkText);
+            StyleDataGrid(dgvDataInfo, Color.FromArgb(22, 30, 46), panelSoft, gold, line, text);
+            StyleListView(lvDataItems, Color.FromArgb(22, 30, 46), panelSoft, gold, text, line);
 
             lblPlaybackSpeed.ForeColor = teal;
             tbPlaybackSpeed.BackColor = panel;
@@ -620,23 +625,54 @@ namespace DataManager
             button.Font = new Font("Segoe UI", button.Font.Size, FontStyle.Bold);
         }
 
+        private void ApplyIconButtonImages(Color folderAccent, Color undoAccent, Color deleteAccent)
+        {
+            SetIconButtonImage(btnSelectFolder, "icon_folder_theme.png");
+            SetIconButtonImage(btnCancelDelete, "icon_undo_theme.png");
+            SetIconButtonImage(btnDelete, "icon_trash_theme.png");
+        }
+
+        private void SetIconButtonImage(Button button, string fileName)
+        {
+            Image? icon = LoadThemeIcon(fileName);
+            if (icon == null) return;
+
+            button.BackgroundImage = icon;
+            button.BackgroundImageLayout = ImageLayout.Zoom;
+            button.Text = string.Empty;
+        }
+
+        private Image? LoadThemeIcon(string fileName)
+        {
+            string? current = AppContext.BaseDirectory;
+            for (int i = 0; i < 6 && !string.IsNullOrEmpty(current); i++)
+            {
+                string candidate = Path.Combine(current, "Resources", fileName);
+                if (File.Exists(candidate)) return Image.FromFile(candidate);
+                current = Directory.GetParent(current)?.FullName;
+            }
+
+            string projectCandidate = Path.Combine(Application.StartupPath, "Resources", fileName);
+            return File.Exists(projectCandidate) ? Image.FromFile(projectCandidate) : null;
+        }
+
         private void StylePreview(PictureBox preview, Color borderColor)
         {
             preview.BackColor = Color.FromArgb(12, 18, 30);
             preview.BorderStyle = BorderStyle.FixedSingle;
         }
 
-        private void StyleDataGrid(DataGridView grid, Color field, Color header, Color accent, Color line, Color darkText)
+        private void StyleDataGrid(DataGridView grid, Color field, Color header, Color accent, Color line, Color cellText)
         {
             grid.BackgroundColor = field;
             grid.BorderStyle = BorderStyle.FixedSingle;
             grid.EnableHeadersVisualStyles = false;
             grid.GridColor = line;
             grid.DefaultCellStyle.BackColor = field;
-            grid.DefaultCellStyle.ForeColor = darkText;
-            grid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(223, 247, 244);
-            grid.DefaultCellStyle.SelectionForeColor = darkText;
-            grid.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(235, 240, 248);
+            grid.DefaultCellStyle.ForeColor = cellText;
+            grid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(49, 62, 88);
+            grid.DefaultCellStyle.SelectionForeColor = accent;
+            grid.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(28, 36, 54);
             grid.ColumnHeadersDefaultCellStyle.BackColor = header;
             grid.ColumnHeadersDefaultCellStyle.ForeColor = accent;
             grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = header;
@@ -647,13 +683,77 @@ namespace DataManager
             grid.AdvancedCellBorderStyle.Right = DataGridViewAdvancedCellBorderStyle.None;
         }
 
-        private void StyleListView(ListView listView, Color field, Color darkText)
+        private void StyleListView(ListView listView, Color field, Color header, Color accent, Color cellText, Color line)
         {
             listView.BackColor = field;
-            listView.ForeColor = darkText;
+            listView.ForeColor = cellText;
             listView.BorderStyle = BorderStyle.FixedSingle;
             listView.GridLines = true;
             listView.Font = new Font("Segoe UI", listView.Font.Size, FontStyle.Regular);
+            listView.OwnerDraw = true;
+            listView.DrawColumnHeader -= lvDataItems_DrawColumnHeader;
+            listView.DrawItem -= lvDataItems_DrawItem;
+            listView.DrawSubItem -= lvDataItems_DrawSubItem;
+            listView.DrawColumnHeader += lvDataItems_DrawColumnHeader;
+            listView.DrawItem += lvDataItems_DrawItem;
+            listView.DrawSubItem += lvDataItems_DrawSubItem;
+            listView.Resize -= lvDataItems_Resize;
+            listView.Resize += lvDataItems_Resize;
+            AdjustDataListColumns();
+        }
+
+        private void AdjustDataListColumns()
+        {
+            if (lvDataItems.Columns.Count < 2) return;
+
+            int firstWidth = lvDataItems.Columns[0].Width;
+            int fillWidth = Math.Max(120, lvDataItems.ClientSize.Width - firstWidth - 1);
+            lvDataItems.Columns[1].Width = fillWidth;
+        }
+
+        private void lvDataItems_Resize(object? sender, EventArgs e)
+        {
+            AdjustDataListColumns();
+        }
+
+        private void lvDataItems_DrawColumnHeader(object? sender, DrawListViewColumnHeaderEventArgs e)
+        {
+            using (SolidBrush bg = new SolidBrush(Color.FromArgb(49, 62, 88)))
+                e.Graphics.FillRectangle(bg, e.Bounds);
+            using (Pen pen = new Pen(Color.FromArgb(103, 119, 148)))
+                e.Graphics.DrawRectangle(pen, e.Bounds);
+
+            TextRenderer.DrawText(
+                e.Graphics,
+                e.Header?.Text ?? string.Empty,
+                new Font("Segoe UI", lvDataItems.Font.Size, FontStyle.Bold),
+                e.Bounds,
+                Color.FromArgb(245, 176, 65),
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+        }
+
+        private void lvDataItems_DrawItem(object? sender, DrawListViewItemEventArgs e)
+        {
+            e.DrawDefault = false;
+        }
+
+        private void lvDataItems_DrawSubItem(object? sender, DrawListViewSubItemEventArgs e)
+        {
+            Color back = e.Item.Selected ? Color.FromArgb(49, 62, 88) : Color.FromArgb(22, 30, 46);
+            Color fore = e.Item.Selected ? Color.FromArgb(45, 212, 191) : Color.FromArgb(238, 243, 249);
+
+            using (SolidBrush bg = new SolidBrush(back))
+                e.Graphics.FillRectangle(bg, e.Bounds);
+            using (Pen pen = new Pen(Color.FromArgb(103, 119, 148)))
+                e.Graphics.DrawRectangle(pen, e.Bounds);
+
+            TextRenderer.DrawText(
+                e.Graphics,
+                e.SubItem.Text,
+                lvDataItems.Font,
+                e.Bounds,
+                fore,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
         }
 
         private void tcMain_DrawItem(object? sender, DrawItemEventArgs e)

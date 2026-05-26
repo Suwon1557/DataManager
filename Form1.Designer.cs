@@ -384,7 +384,7 @@
             // btnCheckDataIntegrity
             // 
             btnCheckDataIntegrity.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnCheckDataIntegrity.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnCheckDataIntegrity.Font = new Font("Microsoft Sans Serif", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btnCheckDataIntegrity.ForeColor = Color.Black;
             btnCheckDataIntegrity.Location = new Point(1100, 34);
             btnCheckDataIntegrity.Name = "btnCheckDataIntegrity";

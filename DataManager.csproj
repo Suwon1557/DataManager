@@ -13,4 +13,10 @@
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Resources\icon_folder_theme.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Resources\icon_trash_theme.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Resources\icon_undo_theme.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
