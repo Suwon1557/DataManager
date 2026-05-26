@@ -122,7 +122,7 @@
             tcMain.Location = new Point(0, 40);
             tcMain.Name = "tcMain";
             tcMain.SelectedIndex = 0;
-            tcMain.Size = new Size(1318, 980);
+            tcMain.Size = new Size(1318, 748);
             tcMain.TabIndex = 0;
             // 
             // tpDataManager
@@ -535,7 +535,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1318, 836);
+            ClientSize = new Size(1318, 788);
             Controls.Add(lblTitle);
             Controls.Add(tcMain);
             MinimumSize = new Size(675, 603);

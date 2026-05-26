@@ -13,6 +13,9 @@ namespace DataManager
 
         public ThemedTabControl()
         {
+            SizeMode = TabSizeMode.Fixed;
+            ItemSize = new Size(160, 30);
+
             SetStyle(
                 ControlStyles.UserPaint
                 | ControlStyles.AllPaintingInWmPaint

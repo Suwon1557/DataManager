@@ -119,12 +119,78 @@ namespace DataManager
             }
 
             // 차트 제목 및 스타일 설정
+            EnsureDataChartsLayout();
+            EnsureTestChartsLayout();
+
             SetupSafeChart(chtSteeringValue, "Steering Data", Color.DodgerBlue, "실제 조향값");
             SetupSafeChart(chtSpeedValue, "Speed Data", Color.OrangeRed, "실제 속도값");
             SetupSafeChart(chtTestSteeringValue, "실제/예측 조향값 비교 Chart", Color.Blue, "예측값", "Actual", Color.Green);
             SetupSafeChart(chtTestSpeedValue, "실제/예측 속도값 비교 Chart", Color.Red, "예측값", "Actual", Color.Green);
 
             UpdateCharts();
+        }
+
+        private void EnsureDataChartsLayout()
+        {
+            TableLayoutPanel layout = GetOrCreateChartLayout(gbDataContent, "tlpDataCharts", 2, 1);
+            int chartTop = Math.Max(tbImageNavigator.Bottom + 16, pbDataPreview.Bottom + 16);
+            layout.Bounds = new Rectangle(12, chartTop, Math.Max(100, gbDataContent.ClientSize.Width - 24), Math.Max(160, gbDataContent.ClientSize.Height - chartTop - 18));
+            layout.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+
+            if (chtSteeringValue == null) chtSteeringValue = new Chart();
+            if (chtSpeedValue == null) chtSpeedValue = new Chart();
+
+            AddChartToLayout(layout, chtSteeringValue, 0, 0);
+            AddChartToLayout(layout, chtSpeedValue, 1, 0);
+        }
+
+        private void EnsureTestChartsLayout()
+        {
+            TableLayoutPanel layout = GetOrCreateChartLayout(gbModelTest, "tlpTestCharts", 1, 2);
+            int chartLeft = pbTestPreview.Right + 20;
+            int chartTop = pbTestPreview.Top;
+            int chartBottom = tbTestImageNavigator.Top - 12;
+            layout.Bounds = new Rectangle(chartLeft, chartTop, Math.Max(100, gbModelTest.ClientSize.Width - chartLeft - 12), Math.Max(160, chartBottom - chartTop));
+            layout.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+
+            if (chtTestSteeringValue == null) chtTestSteeringValue = new Chart();
+            if (chtTestSpeedValue == null) chtTestSpeedValue = new Chart();
+
+            AddChartToLayout(layout, chtTestSteeringValue, 0, 0);
+            AddChartToLayout(layout, chtTestSpeedValue, 0, 1);
+        }
+
+        private TableLayoutPanel GetOrCreateChartLayout(Control parent, string name, int columnCount, int rowCount)
+        {
+            TableLayoutPanel? layout = parent.Controls.Find(name, false).OfType<TableLayoutPanel>().FirstOrDefault();
+            if (layout == null)
+            {
+                layout = new TableLayoutPanel
+                {
+                    Name = name,
+                    ColumnCount = columnCount,
+                    RowCount = rowCount,
+                    Margin = Padding.Empty,
+                    Padding = Padding.Empty
+                };
+                parent.Controls.Add(layout);
+            }
+
+            layout.ColumnStyles.Clear();
+            layout.RowStyles.Clear();
+            for (int i = 0; i < columnCount; i++)
+                layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F / columnCount));
+            for (int i = 0; i < rowCount; i++)
+                layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F / rowCount));
+
+            return layout;
+        }
+
+        private void AddChartToLayout(TableLayoutPanel layout, Chart chart, int column, int row)
+        {
+            chart.Dock = DockStyle.Fill;
+            chart.Margin = new Padding(4);
+            layout.Controls.Add(chart, column, row);
         }
 
         private void SetupSafeChart(Chart? chart, string titleName, Color c1, string s1Name, string? s2Name = null, Color? c2 = null)
