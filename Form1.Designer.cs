@@ -119,20 +119,22 @@
             tcMain.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             tcMain.Controls.Add(tpDataManager);
             tcMain.Controls.Add(tpTrainingTest);
+            tcMain.ItemSize = new Size(160, 30);
             tcMain.Location = new Point(0, 40);
             tcMain.Name = "tcMain";
             tcMain.SelectedIndex = 0;
             tcMain.Size = new Size(1318, 748);
+            tcMain.SizeMode = TabSizeMode.Fixed;
             tcMain.TabIndex = 0;
             // 
             // tpDataManager
             // 
             tpDataManager.Controls.Add(gbDataContent);
             tpDataManager.Controls.Add(gbDataLoad);
-            tpDataManager.Location = new Point(4, 24);
+            tpDataManager.Location = new Point(4, 34);
             tpDataManager.Name = "tpDataManager";
             tpDataManager.Padding = new Padding(3);
-            tpDataManager.Size = new Size(1310, 952);
+            tpDataManager.Size = new Size(1310, 710);
             tpDataManager.TabIndex = 0;
             tpDataManager.Text = "데이터 관리";
             tpDataManager.UseVisualStyleBackColor = true;
@@ -362,7 +364,7 @@
             pbDataPreview.Location = new Point(12, 36);
             pbDataPreview.Name = "pbDataPreview";
             pbDataPreview.Size = new Size(338, 227);
-            pbDataPreview.SizeMode = PictureBoxSizeMode.Zoom;
+            pbDataPreview.SizeMode = PictureBoxSizeMode.StretchImage;
             pbDataPreview.TabIndex = 0;
             pbDataPreview.TabStop = false;
             // 
@@ -423,10 +425,10 @@
             // 
             tpTrainingTest.Controls.Add(gbModelTest);
             tpTrainingTest.Controls.Add(gbTrainingSetup);
-            tpTrainingTest.Location = new Point(4, 24);
+            tpTrainingTest.Location = new Point(4, 34);
             tpTrainingTest.Name = "tpTrainingTest";
             tpTrainingTest.Padding = new Padding(3);
-            tpTrainingTest.Size = new Size(1310, 952);
+            tpTrainingTest.Size = new Size(1310, 710);
             tpTrainingTest.TabIndex = 1;
             tpTrainingTest.Text = "학습/테스트";
             tpTrainingTest.UseVisualStyleBackColor = true;

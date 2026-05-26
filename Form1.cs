@@ -18,12 +18,25 @@ namespace DataManager
     {
         // [필드 변수 선언 - 단 하나도 빠짐없이 100% 유지]
         private List<DrivingData> _allData = new List<DrivingData>();
-        private List<DrivingData> _deletedDataBuffer = new List<DrivingData>();
+        private readonly Stack<DeleteAction> _deleteUndoStack = new Stack<DeleteAction>();
         private int _currentIndex = -1;
         private bool _isReversed = false;
         private bool _isRangeSettingMode = false;
         private readonly List<Panel> _imageRangeMarkers = new List<Panel>();
         private System.Windows.Forms.Timer _playTimer = new System.Windows.Forms.Timer();
+
+        private class DeleteAction
+        {
+            public List<DrivingData> Items { get; set; } = new List<DrivingData>();
+            public int RestoreIndex { get; set; }
+            public List<FileMoveInfo> MovedFiles { get; set; } = new List<FileMoveInfo>();
+        }
+
+        private class FileMoveInfo
+        {
+            public string OriginalPath { get; set; } = "";
+            public string TrashPath { get; set; } = "";
+        }
 
         // 🛠️ FIX: shlwapi.dll 임포트 위치 (클래스 바로 아래)
         [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
@@ -498,7 +511,10 @@ namespace DataManager
         private void btnFilter_Click(object sender, EventArgs e)
         {
             var targets = _allData.Where(x => x.Steering == 0 || x.Speed == 0).ToList();
-            if (targets.Count > 0) { _deletedDataBuffer = new List<DrivingData>(targets); _allData.RemoveAll(x => x.Steering == 0 || x.Speed == 0); RefreshUI(); }
+            if (targets.Count > 0)
+            {
+                DeleteDataItems(targets, _allData.IndexOf(targets[0]));
+            }
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
@@ -508,17 +524,158 @@ namespace DataManager
             {
                 int s = (int)_imageRangeMarkers[0].Tag, f = (int)_imageRangeMarkers[1].Tag;
                 int min = Math.Min(s, f), max = Math.Max(s, f);
-                _deletedDataBuffer = _allData.GetRange(min, max - min + 1);
-                _allData.RemoveRange(min, max - min + 1);
+                DeleteDataItems(_allData.GetRange(min, max - min + 1), min);
                 ClearMarkers();
             }
-            else { _deletedDataBuffer = new List<DrivingData> { _allData[_currentIndex] }; _allData.RemoveAt(_currentIndex); }
-            RefreshUI();
+            else
+            {
+                DeleteDataItems(new List<DrivingData> { _allData[_currentIndex] }, _currentIndex);
+            }
         }
 
         private void btnCancelDelete_Click(object sender, EventArgs e)
         {
-            if (_deletedDataBuffer.Count > 0) { _allData.AddRange(_deletedDataBuffer); _allData = _allData.OrderBy(x => x.Index).ToList(); _deletedDataBuffer.Clear(); RefreshUI(); }
+            if (_deleteUndoStack.Count == 0) return;
+
+            DeleteAction action = _deleteUndoStack.Pop();
+            try
+            {
+                foreach (var file in action.MovedFiles)
+                {
+                    if (!File.Exists(file.TrashPath)) continue;
+
+                    string? dir = Path.GetDirectoryName(file.OriginalPath);
+                    if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+
+                    string originalPath = file.OriginalPath;
+                    if (File.Exists(file.OriginalPath))
+                    {
+                        string duplicatePath = GetUniquePath(file.OriginalPath);
+                        File.Move(file.TrashPath, duplicatePath);
+                        file.OriginalPath = duplicatePath;
+                        foreach (var item in action.Items.Where(x => x.ImagePath == originalPath))
+                            item.ImagePath = duplicatePath;
+                    }
+                    else
+                    {
+                        File.Move(file.TrashPath, file.OriginalPath);
+                    }
+                }
+
+                int insertIndex = Math.Max(0, Math.Min(action.RestoreIndex, _allData.Count));
+                _allData.InsertRange(insertIndex, action.Items);
+                _currentIndex = insertIndex;
+                RefreshUI();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("복구 중 오류: " + ex.Message);
+            }
+        }
+
+        private void DeleteDataItems(List<DrivingData> items, int restoreIndex)
+        {
+            if (items.Count == 0) return;
+
+            ReleasePreviewImages();
+
+            DeleteAction action = new DeleteAction
+            {
+                Items = new List<DrivingData>(items),
+                RestoreIndex = restoreIndex
+            };
+
+            try
+            {
+                string trashDir = CreateTrashDirectory();
+                foreach (var item in items)
+                {
+                    if (!File.Exists(item.ImagePath)) continue;
+
+                    string trashPath = GetUniquePath(Path.Combine(trashDir, Path.GetFileName(item.ImagePath)));
+                    File.Move(item.ImagePath, trashPath);
+                    action.MovedFiles.Add(new FileMoveInfo
+                    {
+                        OriginalPath = item.ImagePath,
+                        TrashPath = trashPath
+                    });
+                }
+
+                foreach (var item in items)
+                    _allData.Remove(item);
+
+                _deleteUndoStack.Push(action);
+                _currentIndex = Math.Max(0, Math.Min(restoreIndex, _allData.Count - 1));
+                RefreshUI();
+            }
+            catch (Exception ex)
+            {
+                RollbackMovedFiles(action);
+                MessageBox.Show("삭제 중 오류: " + ex.Message);
+            }
+        }
+
+        private string CreateTrashDirectory()
+        {
+            string basePath = Directory.Exists(txtFolderPath.Text) ? txtFolderPath.Text : Application.StartupPath;
+            string trashRoot = Path.Combine(basePath, ".datamanager_trash");
+            string trashDir = Path.Combine(trashRoot, DateTime.Now.ToString("yyyyMMdd_HHmmss_fff"));
+            Directory.CreateDirectory(trashDir);
+
+            try
+            {
+                File.SetAttributes(trashRoot, File.GetAttributes(trashRoot) | FileAttributes.Hidden);
+            }
+            catch { }
+
+            return trashDir;
+        }
+
+        private string GetUniquePath(string path)
+        {
+            if (!File.Exists(path) && !Directory.Exists(path)) return path;
+
+            string dir = Path.GetDirectoryName(path) ?? "";
+            string name = Path.GetFileNameWithoutExtension(path);
+            string ext = Path.GetExtension(path);
+            int n = 1;
+            string candidate;
+            do
+            {
+                candidate = Path.Combine(dir, $"{name}_{n}{ext}");
+                n++;
+            } while (File.Exists(candidate) || Directory.Exists(candidate));
+
+            return candidate;
+        }
+
+        private void RollbackMovedFiles(DeleteAction action)
+        {
+            foreach (var file in action.MovedFiles)
+            {
+                try
+                {
+                    if (!File.Exists(file.TrashPath) || File.Exists(file.OriginalPath)) continue;
+                    string? dir = Path.GetDirectoryName(file.OriginalPath);
+                    if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                    File.Move(file.TrashPath, file.OriginalPath);
+                }
+                catch { }
+            }
+        }
+
+        private void ReleasePreviewImages()
+        {
+            Image? dataImage = pbDataPreview.Image;
+            pbDataPreview.Image = null;
+            dataImage?.Dispose();
+
+            if (pbTestPreview != null)
+            {
+                Image? testImage = pbTestPreview.Image;
+                pbTestPreview.Image = null;
+                testImage?.Dispose();
+            }
         }
 
         private void RefreshDataListView()
