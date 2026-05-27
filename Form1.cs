@@ -62,9 +62,11 @@ namespace DataManager
             InitializeDataInfoGrid();
             UpdatePlaybackSpeedLabel();
             ApplyPolishedTheme();
+            ConfigureResponsiveLayout();
 
             _playTimer.Tick += PlayTimer_Tick;
             this.Shown += Form1_Shown;
+            this.Resize += Form1_Resize;
 
             // 이벤트 연결
             lvDataItems.SelectedIndexChanged += lvDataItems_SelectedIndexChanged;
@@ -142,6 +144,34 @@ namespace DataManager
             SetupSafeChart(chtTestSpeedValue, "실제/예측 속도값 비교 Chart", Color.Red, "예측값", "Actual", Color.Green);
 
             UpdateCharts();
+        }
+
+        private void Form1_Resize(object? sender, EventArgs e)
+        {
+            EnsureDataChartsLayout();
+            EnsureTestChartsLayout();
+            AdjustDataListColumns();
+        }
+
+        private void ConfigureResponsiveLayout()
+        {
+            tcMain.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            gbDataLoad.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            gbDataContent.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            txtFolderPath.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            btnCheckDataIntegrity.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+
+            pbDataPreview.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            dgvDataInfo.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            lvDataItems.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            tbImageNavigator.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            btnSetRange.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnCancelRange.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+
+            gbTrainingSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            gbModelTest.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            tbTestImageNavigator.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         }
 
         private void EnsureDataChartsLayout()
@@ -979,7 +1009,9 @@ namespace DataManager
         {
             if (lvDataItems.Columns.Count < 2) return;
 
-            int firstWidth = lvDataItems.Columns[0].Width;
+            using Font headerFont = new Font(UiFontFamily, lvDataItems.Font.Size, FontStyle.Bold);
+            int firstWidth = Math.Max(90, TextRenderer.MeasureText(lvDataItems.Columns[0].Text, headerFont).Width + 28);
+            lvDataItems.Columns[0].Width = firstWidth;
             int fillWidth = Math.Max(120, lvDataItems.ClientSize.Width - firstWidth - 1);
             lvDataItems.Columns[1].Width = fillWidth;
         }

@@ -167,7 +167,7 @@
             gbDataContent.ForeColor = Color.FromArgb(245, 176, 65);
             gbDataContent.Location = new Point(3, 109);
             gbDataContent.Name = "gbDataContent";
-            gbDataContent.Size = new Size(1304, 840);
+            gbDataContent.Size = new Size(1304, 598);
             gbDataContent.TabIndex = 1;
             gbDataContent.TabStop = false;
             gbDataContent.Text = "데이터 탐색";
@@ -508,16 +508,16 @@
             gbModelTest.ForeColor = Color.FromArgb(245, 176, 65);
             gbModelTest.Location = new Point(3, 139);
             gbModelTest.Name = "gbModelTest";
-            gbModelTest.Size = new Size(1294, 640);
+            gbModelTest.Size = new Size(1294, 568);
             gbModelTest.TabIndex = 1;
             gbModelTest.TabStop = false;
             gbModelTest.Text = "모델 테스트";
             // 
             // tbTestImageNavigator
             // 
-            tbTestImageNavigator.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            tbTestImageNavigator.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             tbTestImageNavigator.BackColor = Color.FromArgb(39, 50, 72);
-            tbTestImageNavigator.Location = new Point(12, 586);
+            tbTestImageNavigator.Location = new Point(12, 464);
             tbTestImageNavigator.Maximum = 100;
             tbTestImageNavigator.Name = "tbTestImageNavigator";
             tbTestImageNavigator.Size = new Size(1270, 45);
