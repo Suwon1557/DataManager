@@ -171,7 +171,8 @@ namespace DataManager
             gbTrainingSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             gbModelTest.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            tbTestImageNavigator.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            tbTestImageNavigator.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            LayoutTestImageNavigatorAtBottom();
         }
 
         private void EnsureDataChartsLayout()
@@ -190,6 +191,8 @@ namespace DataManager
 
         private void EnsureTestChartsLayout()
         {
+            LayoutTestImageNavigatorAtBottom();
+
             TableLayoutPanel layout = GetOrCreateChartLayout(gbModelTest, "tlpTestCharts", 1, 2);
             int chartLeft = pbTestPreview.Right + 20;
             int chartTop = pbTestPreview.Top;
@@ -202,6 +205,16 @@ namespace DataManager
 
             AddChartToLayout(layout, chtTestSteeringValue, 0, 0);
             AddChartToLayout(layout, chtTestSpeedValue, 0, 1);
+        }
+
+        private void LayoutTestImageNavigatorAtBottom()
+        {
+            if (gbModelTest == null || tbTestImageNavigator == null) return;
+
+            const int margin = 12;
+            tbTestImageNavigator.Left = margin;
+            tbTestImageNavigator.Width = Math.Max(100, gbModelTest.ClientSize.Width - (margin * 2));
+            tbTestImageNavigator.Top = Math.Max(pbTestPreview.Bottom + 24, gbModelTest.ClientSize.Height - tbTestImageNavigator.Height - margin);
         }
 
         private TableLayoutPanel GetOrCreateChartLayout(Control parent, string name, int columnCount, int rowCount)
