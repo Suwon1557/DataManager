@@ -515,9 +515,9 @@
             // 
             // tbTestImageNavigator
             // 
-            tbTestImageNavigator.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            tbTestImageNavigator.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             tbTestImageNavigator.BackColor = Color.FromArgb(39, 50, 72);
-            tbTestImageNavigator.Location = new Point(12, 464);
+            tbTestImageNavigator.Location = new Point(12, 511);
             tbTestImageNavigator.Maximum = 100;
             tbTestImageNavigator.Name = "tbTestImageNavigator";
             tbTestImageNavigator.Size = new Size(1270, 45);
