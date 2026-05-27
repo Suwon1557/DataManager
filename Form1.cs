@@ -65,6 +65,7 @@ namespace DataManager
 
             _playTimer.Tick += PlayTimer_Tick;
             this.Shown += Form1_Shown;
+            this.Resize += Form1_Resize;
 
             // 이벤트 연결
             lvDataItems.SelectedIndexChanged += lvDataItems_SelectedIndexChanged;
@@ -142,6 +143,12 @@ namespace DataManager
             SetupSafeChart(chtTestSpeedValue, "실제/예측 속도값 비교 Chart", Color.Red, "예측값", "Actual", Color.Green);
 
             UpdateCharts();
+        }
+
+        private void Form1_Resize(object? sender, EventArgs e)
+        {
+            EnsureDataChartsLayout();
+            EnsureTestChartsLayout();
         }
 
         private void EnsureDataChartsLayout()
