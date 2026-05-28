@@ -248,7 +248,7 @@ namespace DataManager
             int height = gbDataContent.ClientSize.Height;
             int gap = 12;
 
-            int topRowHeight = Math.Min(220, Math.Max(110, height / 3));
+            int topRowHeight = Math.Min(224, Math.Max(196, height / 3));
             int previewWidth = Math.Min(514, Math.Max(240, (width - (gap * 4)) / 3));
             int rightWidth = Math.Min(425, Math.Max(260, (width - (gap * 4)) / 4));
             int gridLeft = margin + previewWidth + gap;
@@ -256,7 +256,7 @@ namespace DataManager
             int gridWidth = Math.Max(240, listLeft - gridLeft - gap);
 
             pbDataPreview.SetBounds(margin, 43, previewWidth, topRowHeight);
-            dgvDataInfo.SetBounds(gridLeft, 43, gridWidth, Math.Min(164, topRowHeight));
+            dgvDataInfo.SetBounds(gridLeft, 43, gridWidth, topRowHeight);
             lvDataItems.SetBounds(listLeft, 43, rightWidth, topRowHeight);
 
             int buttonTop = pbDataPreview.Bottom + 12;
@@ -1297,18 +1297,20 @@ namespace DataManager
             btnReverse.Text = "<<";
 
             dgvDataInfo.ColumnHeadersDefaultCellStyle.Font = new Font(
-                dgvDataInfo.Font.FontFamily,
-                dgvDataInfo.Font.Size,
+                UiFontFamily,
+                12F,
                 FontStyle.Bold);
-            dgvDataInfo.DefaultCellStyle.Font = dgvDataInfo.Font;
+            dgvDataInfo.DefaultCellStyle.Font = new Font(UiFontFamily, 12F, FontStyle.Regular);
+            dgvDataInfo.Font = dgvDataInfo.DefaultCellStyle.Font;
             dgvDataInfo.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
             dgvDataInfo.DefaultCellStyle.WrapMode = DataGridViewTriState.False;
             dgvDataInfo.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            dgvDataInfo.ColumnHeadersHeight = Math.Max(dgvDataInfo.ColumnHeadersHeight, 48);
-            dgvDataInfo.RowTemplate.Height = Math.Max(dgvDataInfo.RowTemplate.Height, 44);
+            dgvDataInfo.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
+            dgvDataInfo.ColumnHeadersHeight = 42;
+            dgvDataInfo.RowTemplate.Height = 38;
             foreach (DataGridViewRow row in dgvDataInfo.Rows)
             {
-                row.Height = Math.Max(row.Height, 44);
+                row.Height = 38;
             }
             colDataName.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
             colDataName.Width = Math.Max(colDataName.Width, 180);
@@ -1373,6 +1375,7 @@ namespace DataManager
         {
             listView.BackColor = field;
             listView.ForeColor = cellText;
+            listView.Font = new Font(UiFontFamily, 11F, FontStyle.Regular);
             listView.BorderStyle = BorderStyle.FixedSingle;
             listView.GridLines = true;
             listView.OwnerDraw = true;
@@ -1466,7 +1469,7 @@ namespace DataManager
         private void tbPlaybackSpeed_Scroll(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; UpdatePlaybackSpeedLabel(); if (_playTimer.Enabled) _playTimer.Interval = (int)(150 / (tbPlaybackSpeed.Value / 100.0)); }
         private void btnSetRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; _isRangeSettingMode = true; }
         private void btnCancelRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; ClearMarkers(); }
-        private void gbDataContent_Resize(object sender, EventArgs e) { foreach (var m in _imageRangeMarkers) if (m.Tag is int val) m.Left = GetImageNavigatorMarkerLeft(val, m.Size); if (_allData.Count > 0) UpdateCharts(); }
+        private void gbDataContent_Resize(object sender, EventArgs e) { LayoutDataContentControls(); foreach (var m in _imageRangeMarkers) if (m.Tag is int val) m.Left = GetImageNavigatorMarkerLeft(val, m.Size); if (_allData.Count > 0) UpdateCharts(); }
 
         #endregion
 
