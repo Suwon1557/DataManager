@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <None Include="Resources\icon_folder_theme.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Resources\icon_filter_theme_orange.png" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Resources\icon_trash_theme.png" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Resources\icon_undo_theme.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

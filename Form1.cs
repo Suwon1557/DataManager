@@ -501,7 +501,8 @@ namespace DataManager
                 string winResultsFile = Path.Combine(appDir, "results.csv");
 
                 // 2. 리눅스용 이미지 경로 목록 작성 (Windows 파일 생성)
-                var linuxPaths = _allData.Select(d => {
+                var linuxPaths = _allData.Select(d =>
+                {
                     string drive = Path.GetPathRoot(d.ImagePath).Substring(0, 1).ToLower();
                     string subPath = d.ImagePath.Substring(Path.GetPathRoot(d.ImagePath).Length).Replace("\\", "/");
                     return $"/mnt/{drive}/{subPath}";
@@ -789,7 +790,7 @@ namespace DataManager
 
         private void AddMarker()
         {
-            Panel m = new Panel { BackColor = Color.FromArgb(255, 114, 16), Size = pnlImageRangeMarker.Size, Tag = _currentIndex };
+            Panel m = new Panel { BackColor = Color.FromArgb(245, 176, 65), Size = pnlImageRangeMarker.Size, Tag = _currentIndex };
             m.Left = GetImageNavigatorMarkerLeft(_currentIndex, m.Size); m.Top = tbImageNavigator.Top + 13;
             _imageRangeMarkers.Add(m);
             if (_imageRangeMarkers.Count > 2) { gbDataContent?.Controls.Remove(_imageRangeMarkers[0]); _imageRangeMarkers.RemoveAt(0); }
@@ -866,10 +867,8 @@ namespace DataManager
 
             BackColor = ink;
             lblTitle.ForeColor = gold;
-            lblTitle.Font = new Font(UiFontFamily, lblTitle.Font.Size, FontStyle.Bold);
 
             tcMain.BackColor = ink;
-            tcMain.Font = new Font(UiFontFamily, tcMain.Font.Size, FontStyle.Bold);
             tcMain.DrawMode = TabDrawMode.OwnerDrawFixed;
             tcMain.DrawItem -= tcMain_DrawItem;
             tcMain.DrawItem += tcMain_DrawItem;
@@ -887,7 +886,7 @@ namespace DataManager
             StyleButton(btnSelectFolder, teal, Color.FromArgb(6, 42, 43), teal);
             StyleButton(btnTrain, gold, Color.FromArgb(48, 34, 8), gold);
             StyleButton(btnStartTest, gold, Color.FromArgb(48, 34, 8), gold);
-            StyleButton(btnFilter, teal, Color.FromArgb(6, 42, 43), teal);
+            StyleButton(btnFilter, panelSoft, teal, Color.FromArgb(255, 114, 16));
 
             StyleButton(btnCheckDataIntegrity, panelSoft, text, teal);
             StyleButton(btnPlay, panelSoft, text, teal);
@@ -897,8 +896,6 @@ namespace DataManager
             StyleButton(btnCancelRange, panelSoft, gold, gold);
             StyleButton(btnDelete, panelSoft, coral, coral);
             StyleButton(btnCancelDelete, Color.FromArgb(22, 30, 46), teal, teal);
-            ApplyIconButtonImages(gold, teal, coral);
-
             txtFolderPath.BackColor = field;
             txtFolderPath.ForeColor = darkText;
             txtFolderPath.BorderStyle = BorderStyle.FixedSingle;
@@ -927,7 +924,7 @@ namespace DataManager
         private void ApplyTextPolish()
         {
             Text = "Data Manager";
-            btnFilter.Text = "필터링";
+            btnFilter.Text = string.Empty;
             btnCheckDataIntegrity.Text = "무결성 검사";
             btnTrain.Text = "학습";
             btnStartTest.Text = "테스트 시작";
@@ -937,28 +934,24 @@ namespace DataManager
             btnStop.Text = "||";
             btnReverse.Text = "<<";
 
-            Font regular = new Font(UiFontFamily, 10F, FontStyle.Regular);
-            Font button = new Font(UiFontFamily, 11F, FontStyle.Bold);
-            Font emphasis = new Font(UiFontFamily, 14F, FontStyle.Bold);
-
-            foreach (Control control in GetAllControls(this))
+            dgvDataInfo.ColumnHeadersDefaultCellStyle.Font = new Font(
+                dgvDataInfo.Font.FontFamily,
+                dgvDataInfo.Font.Size,
+                FontStyle.Bold);
+            dgvDataInfo.DefaultCellStyle.Font = dgvDataInfo.Font;
+            dgvDataInfo.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
+            dgvDataInfo.DefaultCellStyle.WrapMode = DataGridViewTriState.False;
+            dgvDataInfo.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            dgvDataInfo.ColumnHeadersHeight = Math.Max(dgvDataInfo.ColumnHeadersHeight, 48);
+            dgvDataInfo.RowTemplate.Height = Math.Max(dgvDataInfo.RowTemplate.Height, 44);
+            foreach (DataGridViewRow row in dgvDataInfo.Rows)
             {
-                if (control is Button)
-                    control.Font = button;
-                else if (control is GroupBox)
-                    control.Font = emphasis;
-                else if (control is DataGridView || control is ListView || control is TextBox)
-                    control.Font = regular;
-                else if (control is Label)
-                    control.Font = new Font(UiFontFamily, control.Font.Size, control.Font.Style);
+                row.Height = Math.Max(row.Height, 44);
             }
-
-            lblTitle.Font = new Font(UiFontFamily, 20F, FontStyle.Bold);
-            lblPlaybackSpeed.Font = new Font(UiFontFamily, 20F, FontStyle.Bold);
-            txtTrainingLog.Font = new Font(UiFontFamily, 10F, FontStyle.Bold);
-            dgvDataInfo.ColumnHeadersDefaultCellStyle.Font = new Font(UiFontFamily, 10F, FontStyle.Bold);
-            dgvDataInfo.DefaultCellStyle.Font = new Font(UiFontFamily, 10F, FontStyle.Regular);
-            lvDataItems.Font = new Font(UiFontFamily, 10F, FontStyle.Regular);
+            colDataName.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            colDataName.Width = Math.Max(colDataName.Width, 180);
+            colDataValue.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            colDataValue.MinimumWidth = Math.Max(colDataValue.MinimumWidth, 80);
         }
 
         private IEnumerable<Control> GetAllControls(Control root)
@@ -975,7 +968,6 @@ namespace DataManager
         {
             box.BackColor = backColor;
             box.ForeColor = titleColor;
-            box.Font = new Font(UiFontFamily, box.Font.Size, FontStyle.Bold);
         }
 
         private void StyleButton(Button button, Color backColor, Color foreColor, Color borderColor)
@@ -988,38 +980,6 @@ namespace DataManager
             button.FlatAppearance.MouseOverBackColor = ControlPaint.Light(backColor, 0.18f);
             button.FlatAppearance.MouseDownBackColor = ControlPaint.Dark(backColor, 0.08f);
             button.UseVisualStyleBackColor = false;
-            button.Font = new Font(UiFontFamily, button.Font.Size, FontStyle.Bold);
-        }
-
-        private void ApplyIconButtonImages(Color folderAccent, Color undoAccent, Color deleteAccent)
-        {
-            SetIconButtonImage(btnSelectFolder, "icon_folder_theme.png");
-            SetIconButtonImage(btnCancelDelete, "icon_undo_theme.png");
-            SetIconButtonImage(btnDelete, "icon_trash_theme.png");
-        }
-
-        private void SetIconButtonImage(Button button, string fileName)
-        {
-            Image? icon = LoadThemeIcon(fileName);
-            if (icon == null) return;
-
-            button.BackgroundImage = icon;
-            button.BackgroundImageLayout = ImageLayout.Zoom;
-            button.Text = string.Empty;
-        }
-
-        private Image? LoadThemeIcon(string fileName)
-        {
-            string? current = AppContext.BaseDirectory;
-            for (int i = 0; i < 6 && !string.IsNullOrEmpty(current); i++)
-            {
-                string candidate = Path.Combine(current, "Resources", fileName);
-                if (File.Exists(candidate)) return Image.FromFile(candidate);
-                current = Directory.GetParent(current)?.FullName;
-            }
-
-            string projectCandidate = Path.Combine(Application.StartupPath, "Resources", fileName);
-            return File.Exists(projectCandidate) ? Image.FromFile(projectCandidate) : null;
         }
 
         private void StylePreview(PictureBox preview, Color borderColor)
@@ -1042,8 +1002,6 @@ namespace DataManager
             grid.ColumnHeadersDefaultCellStyle.BackColor = header;
             grid.ColumnHeadersDefaultCellStyle.ForeColor = accent;
             grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = header;
-            grid.ColumnHeadersDefaultCellStyle.Font = new Font(UiFontFamily, grid.Font.Size, FontStyle.Bold);
-            grid.RowTemplate.DefaultCellStyle.Font = new Font(UiFontFamily, grid.Font.Size, FontStyle.Regular);
             grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             grid.AdvancedCellBorderStyle.Left = DataGridViewAdvancedCellBorderStyle.None;
             grid.AdvancedCellBorderStyle.Right = DataGridViewAdvancedCellBorderStyle.None;
@@ -1055,7 +1013,6 @@ namespace DataManager
             listView.ForeColor = cellText;
             listView.BorderStyle = BorderStyle.FixedSingle;
             listView.GridLines = true;
-            listView.Font = new Font(UiFontFamily, listView.Font.Size, FontStyle.Regular);
             listView.OwnerDraw = true;
             listView.DrawColumnHeader -= lvDataItems_DrawColumnHeader;
             listView.DrawItem -= lvDataItems_DrawItem;
@@ -1072,7 +1029,7 @@ namespace DataManager
         {
             if (lvDataItems.Columns.Count < 2) return;
 
-            using Font headerFont = new Font(UiFontFamily, lvDataItems.Font.Size, FontStyle.Bold);
+            using Font headerFont = new Font(lvDataItems.Font.FontFamily, lvDataItems.Font.Size, FontStyle.Bold);
             int firstWidth = Math.Max(90, TextRenderer.MeasureText(lvDataItems.Columns[0].Text, headerFont).Width + 28);
             lvDataItems.Columns[0].Width = firstWidth;
             int fillWidth = Math.Max(120, lvDataItems.ClientSize.Width - firstWidth - 1);
@@ -1094,7 +1051,7 @@ namespace DataManager
             TextRenderer.DrawText(
                 e.Graphics,
                 e.Header?.Text ?? string.Empty,
-                new Font(UiFontFamily, lvDataItems.Font.Size, FontStyle.Bold),
+                new Font(lvDataItems.Font.FontFamily, lvDataItems.Font.Size, FontStyle.Bold),
                 e.Bounds,
                 Color.FromArgb(245, 176, 65),
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
@@ -1137,7 +1094,7 @@ namespace DataManager
             TextRenderer.DrawText(
                 e.Graphics,
                 page.Text,
-                new Font(UiFontFamily, tcMain.Font.Size, FontStyle.Bold),
+                tcMain.Font,
                 e.Bounds,
                 fore,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
@@ -1162,6 +1119,11 @@ namespace DataManager
         private void gbModelTest_Enter(object sender, EventArgs e) { }
         private void tlpTestCharts_Paint(object sender, PaintEventArgs e) { }
         private void Form1_Load(object sender, EventArgs e) { }
+
+        private void txtFolderPath_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 
     public class DrivingData
