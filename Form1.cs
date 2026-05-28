@@ -399,6 +399,53 @@ namespace DataManager
 
         #region [4. 탭 2: 학습 및 테스트]
 
+        private string BuildWslCondaCommand(string envName, string command)
+        {
+            string condaSetup =
+                "if [ -f ~/miniconda3/etc/profile.d/conda.sh ]; then source ~/miniconda3/etc/profile.d/conda.sh; " +
+                "elif [ -f ~/anaconda3/etc/profile.d/conda.sh ]; then source ~/anaconda3/etc/profile.d/conda.sh; " +
+                "else echo 'conda not found under ~/miniconda3 or ~/anaconda3' >&2; exit 1; fi";
+
+            return $"{condaSetup} && conda activate {envName} && {command}";
+        }
+
+        private string GetWslDistroArgument()
+        {
+            try
+            {
+                ProcessStartInfo start = new ProcessStartInfo();
+                start.FileName = "wsl.exe";
+                start.Arguments = "-l -q";
+                start.UseShellExecute = false;
+                start.RedirectStandardOutput = true;
+                start.CreateNoWindow = true;
+
+                using Process process = Process.Start(start);
+                string output = process.StandardOutput.ReadToEnd().Replace("\0", "");
+                process.WaitForExit();
+
+                string[] distros = output
+                    .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(d => d.Trim())
+                    .ToArray();
+
+                if (distros.Any(d => d.Equals("Ubuntu-24.04", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return "-d Ubuntu-24.04 -- ";
+                }
+
+                if (distros.Any(d => d.Equals("Ubuntu", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return "-d Ubuntu -- ";
+                }
+            }
+            catch
+            {
+            }
+
+            return "";
+        }
+
         private void btnTrain_Click(object sender, EventArgs e)
         {
             try
@@ -412,14 +459,15 @@ namespace DataManager
                 string trainCmd = "python train.py --tub ./data --model ./models/mypilot.h5";
 
                 // bash -i 모드로 실행하여 .bashrc 설정을 자동으로 로드합니다.
-                string bashCmd = $"conda activate {envName} && cd {projectPath} && {installCmd} && {trainCmd}";
+                string bashCmd = BuildWslCondaCommand(envName, $"cd {projectPath} && {installCmd} && {trainCmd}");
 
                 // 3. 프로세스 실행 설정 (외부 CMD 창 모드)
                 ProcessStartInfo start = new ProcessStartInfo();
                 start.FileName = "cmd.exe";
 
                 // /k 옵션으로 명령 실행 후 창을 유지하고, wsl 명령을 안전하게 전달합니다.
-                start.Arguments = "/k wsl bash -i -c \"" + bashCmd + "\"";
+                string wslDistroArgument = GetWslDistroArgument();
+                start.Arguments = "/k wsl " + wslDistroArgument + "bash -lc \"" + bashCmd + "\"";
 
                 // 외부 창을 띄우기 위한 핵심 설정
                 start.UseShellExecute = true;
@@ -444,7 +492,7 @@ namespace DataManager
                 txtTrainingLog?.AppendText($"[{DateTime.Now:HH:mm:ss}] 테스트 세션 시작 (경로 동기화 중...)\r\n");
 
                 string envName = "e2e_env";
-                string projectPath = "/home/gorhanhee/mysim";
+                string projectPath = "~/mysim";
                 string modelFile = "models/mypilot.h5";
 
                 // 1. 윈도우 경로 설정
@@ -463,7 +511,8 @@ namespace DataManager
                 // 3. [핵심] WSL이 이해하는 현재 폴더의 진짜 경로를 'wslpath'로 가져오기
                 Process wslPathProc = new Process();
                 wslPathProc.StartInfo.FileName = "wsl.exe";
-                wslPathProc.StartInfo.Arguments = $"wslpath '{appDir.Replace("\\", "/")}'";
+                string wslDistroArgument = GetWslDistroArgument();
+                wslPathProc.StartInfo.Arguments = $"{wslDistroArgument}wslpath '{appDir.Replace("\\", "/")}'";
                 wslPathProc.StartInfo.UseShellExecute = false;
                 wslPathProc.StartInfo.RedirectStandardOutput = true;
                 wslPathProc.Start();
@@ -489,7 +538,8 @@ namespace DataManager
                 // 5. WSL 명령어 실행
                 ProcessStartInfo start = new ProcessStartInfo();
                 start.FileName = "wsl.exe";
-                start.Arguments = $"bash -i -c \"conda activate {envName} && cd {projectPath} && python -c \\\"{pythonPredictScript}\\\"\"";
+                string bashCmd = BuildWslCondaCommand(envName, $"cd {projectPath} && python -c \\\"{pythonPredictScript}\\\"");
+                start.Arguments = $"{wslDistroArgument}bash -lc \"{bashCmd}\"";
                 start.UseShellExecute = false;
                 start.RedirectStandardError = true; // 에러 확인용
                 start.CreateNoWindow = true;
