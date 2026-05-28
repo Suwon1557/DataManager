@@ -279,7 +279,6 @@
             btnFilter.Name = "btnFilter";
             btnFilter.Size = new Size(375, 135);
             btnFilter.TabIndex = 8;
-            btnFilter.Text = "";
             btnFilter.UseVisualStyleBackColor = false;
             btnFilter.Click += btnFilter_Click_1;
             // 
@@ -584,7 +583,7 @@
             pbTestPreview.Margin = new Padding(7, 5, 7, 5);
             pbTestPreview.Name = "pbTestPreview";
             pbTestPreview.Size = new Size(907, 650);
-            pbTestPreview.SizeMode = PictureBoxSizeMode.Zoom;
+            pbTestPreview.SizeMode = PictureBoxSizeMode.StretchImage;
             pbTestPreview.TabIndex = 0;
             pbTestPreview.TabStop = false;
             // 
