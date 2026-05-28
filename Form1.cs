@@ -26,7 +26,7 @@ namespace DataManager
         private readonly Color _folderPathWarningColor = Color.FromArgb(248, 113, 113);
         private readonly List<Panel> _imageRangeMarkers = new List<Panel>();
         private System.Windows.Forms.Timer _playTimer = new System.Windows.Forms.Timer();
-        private const string UiFontFamily = "留묒? 怨좊뵓";
+        private const string UiFontFamily = "Malgun Gothic";
 
         private class DeleteAction
         {
@@ -55,6 +55,7 @@ namespace DataManager
         public Form1()
         {
             InitializeComponent();
+            AutoScaleMode = AutoScaleMode.None;
 
             if (lvDataItems.Columns.Count == 0)
             {
@@ -64,6 +65,12 @@ namespace DataManager
             AdjustDataListColumns();
 
             // Configure the playback speed range.
+            tbPlaybackSpeed.AutoSize = false;
+            tbImageNavigator.AutoSize = false;
+            tbTestImageNavigator.AutoSize = false;
+            tbPlaybackSpeed.TickStyle = TickStyle.None;
+            tbImageNavigator.TickStyle = TickStyle.BottomRight;
+            tbTestImageNavigator.TickStyle = TickStyle.BottomRight;
             tbPlaybackSpeed.Minimum = 25;
             tbPlaybackSpeed.Maximum = 200;
             tbPlaybackSpeed.Value = 100;
@@ -95,11 +102,12 @@ namespace DataManager
 
         private void Form1_Shown(object? sender, EventArgs e)
         {
+            FitFormToWorkingArea();
             dgvDataInfo.ClearSelection();
             _isRangeSettingMode = false;
             pnlImageRangeMarker.Visible = false;
 
-            this.AutoScroll = true;
+            this.AutoScroll = false;
 
             // Find the main tab control.
             var tabControl = this.Controls.OfType<TabControl>().FirstOrDefault();
@@ -144,6 +152,7 @@ namespace DataManager
             }
 
             // Apply chart layout and styling.
+            ApplyResponsiveLayout();
             EnsureDataChartsLayout();
             EnsureTestChartsLayout();
             SetupSafeChart(chtSteeringValue, "Steering Data", Color.DodgerBlue, "실제 조향값");
@@ -154,8 +163,27 @@ namespace DataManager
             UpdateCharts();
         }
 
+        private void FitFormToWorkingArea()
+        {
+            if (WindowState != FormWindowState.Normal)
+                return;
+
+            Rectangle workingArea = Screen.FromControl(this).WorkingArea;
+            int maxWidth = Math.Max(MinimumSize.Width, workingArea.Width);
+            int maxHeight = Math.Max(MinimumSize.Height, workingArea.Height - 12);
+
+            if (Width > maxWidth || Height > maxHeight)
+            {
+                Size = new Size(Math.Min(Width, maxWidth), Math.Min(Height, maxHeight));
+                Location = new Point(
+                    workingArea.Left + Math.Max(0, (workingArea.Width - Width) / 2),
+                    workingArea.Top + Math.Max(0, (workingArea.Height - Height) / 2));
+            }
+        }
+
         private void Form1_Resize(object? sender, EventArgs e)
         {
+            ApplyResponsiveLayout();
             EnsureDataChartsLayout();
             EnsureTestChartsLayout();
             AdjustDataListColumns();
@@ -180,14 +208,109 @@ namespace DataManager
             gbModelTest.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             tbTestImageNavigator.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            ApplyResponsiveLayout();
             LayoutTestImageNavigatorAtBottom();
+        }
+
+        private void ApplyResponsiveLayout()
+        {
+            if (tcMain == null || gbDataLoad == null || gbDataContent == null || gbTrainingSetup == null || gbModelTest == null)
+                return;
+
+            const int margin = 5;
+            int tabTop = Math.Max(48, lblTitle.Bottom + 8);
+            tcMain.SetBounds(0, tabTop, Math.Max(400, ClientSize.Width), Math.Max(300, ClientSize.Height - tabTop));
+
+            int pageWidth = Math.Max(400, tpDataManager.ClientSize.Width - (margin * 2));
+            int pageHeight = Math.Max(260, tpDataManager.ClientSize.Height);
+
+            int dataLoadHeight = Math.Min(96, Math.Max(76, pageHeight / 6));
+            gbDataLoad.SetBounds(margin, 3, pageWidth, dataLoadHeight);
+            gbDataContent.SetBounds(margin, gbDataLoad.Bottom + 8, pageWidth, Math.Max(220, pageHeight - gbDataLoad.Bottom - 16));
+
+            int trainingWidth = Math.Max(400, tpTrainingTest.ClientSize.Width - (margin * 2));
+            int trainingHeight = Math.Max(260, tpTrainingTest.ClientSize.Height);
+            int trainingBoxHeight = Math.Min(132, Math.Max(88, trainingHeight / 6));
+            gbTrainingSetup.SetBounds(margin, 3, trainingWidth, trainingBoxHeight);
+            gbModelTest.SetBounds(margin, gbTrainingSetup.Bottom + 8, trainingWidth, Math.Max(220, trainingHeight - gbTrainingSetup.Bottom - 16));
+
+            LayoutDataContentControls();
+            LayoutTrainingControls();
+            LayoutModelTestControls();
+        }
+
+        private void LayoutDataContentControls()
+        {
+            if (gbDataContent == null) return;
+
+            const int margin = 18;
+            int width = gbDataContent.ClientSize.Width;
+            int height = gbDataContent.ClientSize.Height;
+            int gap = 12;
+
+            int topRowHeight = Math.Min(220, Math.Max(110, height / 3));
+            int previewWidth = Math.Min(514, Math.Max(240, (width - (gap * 4)) / 3));
+            int rightWidth = Math.Min(425, Math.Max(260, (width - (gap * 4)) / 4));
+            int gridLeft = margin + previewWidth + gap;
+            int listLeft = width - rightWidth - margin;
+            int gridWidth = Math.Max(240, listLeft - gridLeft - gap);
+
+            pbDataPreview.SetBounds(margin, 43, previewWidth, topRowHeight);
+            dgvDataInfo.SetBounds(gridLeft, 43, gridWidth, Math.Min(164, topRowHeight));
+            lvDataItems.SetBounds(listLeft, 43, rightWidth, topRowHeight);
+
+            int buttonTop = pbDataPreview.Bottom + 12;
+            int buttonHeight = Math.Min(72, Math.Max(42, height / 10));
+            btnFilter.SetBounds(gridLeft, buttonTop, Math.Min(251, Math.Max(130, gridWidth / 3)), buttonHeight);
+            btnCancelDelete.SetBounds(btnFilter.Right + gap, buttonTop, Math.Min(278, Math.Max(130, gridWidth / 3)), buttonHeight);
+            btnDelete.SetBounds(btnCancelDelete.Right + gap, buttonTop, Math.Min(221, Math.Max(120, listLeft - btnCancelDelete.Right - (gap * 2))), buttonHeight);
+
+            int controlsTop = btnFilter.Bottom + 10;
+            tbPlaybackSpeed.SetBounds(margin, controlsTop + 8, Math.Min(458, Math.Max(180, previewWidth - 56)), 26);
+            lblPlaybackSpeed.Location = new Point(tbPlaybackSpeed.Right + 8, controlsTop + 2);
+            btnPlay.SetBounds(Math.Max(gridLeft, lblPlaybackSpeed.Right + 18), controlsTop, 145, 38);
+            btnStop.SetBounds(btnPlay.Right + gap, controlsTop, 148, 38);
+            btnReverse.SetBounds(btnStop.Right + gap, controlsTop, 146, 38);
+            btnSetRange.SetBounds(Math.Max(btnReverse.Right + gap, width - 452), controlsTop, 226, 38);
+            btnCancelRange.SetBounds(width - 216, controlsTop, 198, 38);
+
+            int navigatorTop = btnSetRange.Bottom + 8;
+            tbImageNavigator.SetBounds(margin, navigatorTop, Math.Max(120, width - (margin * 2)), 30);
+            pnlImageRangeMarker.Top = tbImageNavigator.Top + 6;
+        }
+
+        private void LayoutTrainingControls()
+        {
+            if (gbTrainingSetup == null) return;
+
+            const int margin = 18;
+            int height = gbTrainingSetup.ClientSize.Height;
+            int buttonHeight = Math.Max(50, height - 72);
+            btnTrain.SetBounds(margin, 41, 214, buttonHeight);
+            txtTrainingLog.SetBounds(btnTrain.Right + 14, 41, Math.Max(160, gbTrainingSetup.ClientSize.Width - btnTrain.Right - 43), buttonHeight + 2);
+        }
+
+        private void LayoutModelTestControls()
+        {
+            if (gbModelTest == null) return;
+
+            const int margin = 18;
+            int width = gbModelTest.ClientSize.Width;
+            int height = gbModelTest.ClientSize.Height;
+            int previewWidth = Math.Min(606, Math.Max(260, width / 3));
+            int previewHeight = Math.Min(360, Math.Max(110, height - 180));
+
+            pbTestPreview.SetBounds(margin, 41, previewWidth, previewHeight);
+            btnStartTest.SetBounds(margin, pbTestPreview.Bottom + 12, previewWidth, 46);
+            tbTestImageNavigator.SetBounds(margin, btnStartTest.Bottom + 10, Math.Max(120, width - (margin * 2)), 30);
         }
 
         private void EnsureDataChartsLayout()
         {
             TableLayoutPanel layout = GetOrCreateChartLayout(gbDataContent, "tlpDataCharts", 2, 1);
-            int chartTop = Math.Max(tbImageNavigator.Bottom + 16, pbDataPreview.Bottom + 16);
-            layout.Bounds = new Rectangle(12, chartTop, Math.Max(100, gbDataContent.ClientSize.Width - 24), Math.Max(160, gbDataContent.ClientSize.Height - chartTop - 18));
+            int chartTop = Math.Max(tbImageNavigator.Bottom + 10, btnSetRange.Bottom + 10);
+            int chartHeight = Math.Max(80, gbDataContent.ClientSize.Height - chartTop - 12);
+            layout.Bounds = new Rectangle(12, chartTop, Math.Max(100, gbDataContent.ClientSize.Width - 24), chartHeight);
             layout.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
             if (chtSteeringValue == null) chtSteeringValue = new Chart();
@@ -205,7 +328,7 @@ namespace DataManager
             int chartLeft = pbTestPreview.Right + 20;
             int chartTop = pbTestPreview.Top;
             int chartBottom = tbTestImageNavigator.Top - 12;
-            layout.Bounds = new Rectangle(chartLeft, chartTop, Math.Max(100, gbModelTest.ClientSize.Width - chartLeft - 12), Math.Max(160, chartBottom - chartTop));
+            layout.Bounds = new Rectangle(chartLeft, chartTop, Math.Max(100, gbModelTest.ClientSize.Width - chartLeft - 12), Math.Max(80, chartBottom - chartTop));
             layout.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
             if (chtTestSteeringValue == null) chtTestSteeringValue = new Chart();
@@ -220,9 +343,11 @@ namespace DataManager
             if (gbModelTest == null || tbTestImageNavigator == null) return;
 
             const int margin = 12;
-            tbTestImageNavigator.Left = margin;
-            tbTestImageNavigator.Width = Math.Max(100, gbModelTest.ClientSize.Width - (margin * 2));
-            tbTestImageNavigator.Top = Math.Max(pbTestPreview.Bottom + 24, gbModelTest.ClientSize.Height - tbTestImageNavigator.Height - margin);
+            tbTestImageNavigator.SetBounds(
+                margin,
+                btnStartTest.Bottom + 10,
+                Math.Max(100, gbModelTest.ClientSize.Width - (margin * 2)),
+                30);
         }
 
         private TableLayoutPanel GetOrCreateChartLayout(Control parent, string name, int columnCount, int rowCount)
