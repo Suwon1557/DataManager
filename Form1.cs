@@ -9,14 +9,14 @@ using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Text.Json;
 using System.Drawing.Drawing2D;
-using System.Runtime.InteropServices; // ?썱截?FIX: DllImport ?ъ슜???꾪빐 諛섎뱶???꾩슂??
+using System.Runtime.InteropServices; // Required for native logical string comparison.
 
 namespace DataManager
 {
-    // 狩?以묒슂: Form1 ?대옒?ㅺ? ?뚯씪 理쒖긽?⑥뿉 ?꾩튂?댁빞 ?붿옄?대꼫 ?먮윭媛 諛⑹??⑸땲??
+    // Implementation note.
     public partial class Form1 : Form
     {
-        // [?꾨뱶 蹂???좎뼵 - ???섎굹??鍮좎쭚?놁씠 100% ?좎?]
+        // Implementation note.
         private List<DrivingData> _allData = new List<DrivingData>();
         private readonly Stack<DeleteAction> _deleteUndoStack = new Stack<DeleteAction>();
         private int _currentIndex = -1;
@@ -48,7 +48,7 @@ namespace DataManager
             public string BackupPath { get; set; } = "";
         }
 
-        // ?썱截?FIX: shlwapi.dll ?꾪룷???꾩튂 (?대옒??諛붾줈 ?꾨옒)
+        // Required for native logical string comparison.
         [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
         private static extern int StrCmpLogicalW(string psz1, string psz2);
 
@@ -63,7 +63,7 @@ namespace DataManager
             }
             AdjustDataListColumns();
 
-            // 1. ?몃옓諛?踰붿쐞 ?ㅼ젙
+            // Configure the playback speed range.
             tbPlaybackSpeed.Minimum = 25;
             tbPlaybackSpeed.Maximum = 200;
             tbPlaybackSpeed.Value = 100;
@@ -77,13 +77,13 @@ namespace DataManager
             this.Shown += Form1_Shown;
             this.Resize += Form1_Resize;
 
-            // ?대깽???곌껐
+            // Wire runtime event handlers.
             lvDataItems.SelectedIndexChanged += lvDataItems_SelectedIndexChanged;
 
-            // ?썱截??곗씠??愿由????щ씪?대뜑: ?쒕옒洹?利됱떆 ?ㅼ떆媛??낅뜲?댄듃瑜??꾪빐 Scroll ?대깽???곌껐
+            // Wire runtime event handlers.
             tbImageNavigator.Scroll += tbImageNavigator_Scroll;
 
-            // ?썱截??숈뒿 ???щ씪?대뜑 ?덉쟾 ?곌껐
+            // Implementation note.
             if (tbTestImageNavigator != null)
             {
                 tbTestImageNavigator.Scroll -= tbTestImageNavigator_Scroll_1;
@@ -91,7 +91,7 @@ namespace DataManager
             }
         }
 
-        #region [1. ??퀎 李⑦듃 ?덉씠?꾩썐 - 以묒븰 諛곗튂 諛??щ씪?대뜑 蹂댄샇]
+        #region [1. Chart layout]
 
         private void Form1_Shown(object? sender, EventArgs e)
         {
@@ -101,14 +101,14 @@ namespace DataManager
 
             this.AutoScroll = true;
 
-            // ?뵇 ??而⑦듃濡?寃??
+            // Find the main tab control.
             var tabControl = this.Controls.OfType<TabControl>().FirstOrDefault();
             if (tabControl != null && tabControl.TabPages.Count >= 2)
             {
-                TabPage page1 = tabControl.TabPages[0]; // ?곗씠??愿由?
-                TabPage page2 = tabControl.TabPages[1]; // ?숈뒿/?뚯뒪??
+                TabPage page1 = tabControl.TabPages[0]; // Find the main tab control.
+                TabPage page2 = tabControl.TabPages[1]; // Create fallback charts for the data tab.
 
-                // --- [??1: ?곗씠??愿由?李⑦듃 (?섎떒 ?뺤쨷??] ---
+                // Create fallback charts for the data tab.
                 int p1_chartY = 540;
                 int p1_chartWidth = 480;
                 int p1_chartHeight = 200;
@@ -126,7 +126,7 @@ namespace DataManager
                     page1.Controls.Add(chtSpeedValue);
                 }
 
-                // --- [??2: ?숈뒿/?뚯뒪??李⑦듃 (?꾩쟾??以묒븰 & ?щ씪?대뜑 媛由?諛⑹?)] ---
+                // Create fallback charts for the training tab.
                 int p2_chartX = 520;
                 int p2_chartWidth = 720;
                 int p2_chartHeight = 230;
@@ -143,7 +143,7 @@ namespace DataManager
                 }
             }
 
-            // 李⑦듃 ?쒕ぉ 諛??ㅽ????ㅼ젙
+            // Apply chart layout and styling.
             EnsureDataChartsLayout();
             EnsureTestChartsLayout();
             SetupSafeChart(chtSteeringValue, "Steering Data", Color.DodgerBlue, "실제 조향값");
@@ -263,7 +263,7 @@ namespace DataManager
             if (chart == null) return;
             ChartArea ca = chart.ChartAreas.Count > 0 ? chart.ChartAreas[0] : chart.ChartAreas.Add("Main");
             ca.AxisX.Title = "";
-            ca.AxisX.LabelStyle.Format = "0;0;0"; // -0 諛⑹?
+            ca.AxisX.LabelStyle.Format = "0;0;0"; // Avoid displaying negative zero.
 
             chart.Titles.Clear();
             var title = chart.Titles.Add(titleName);
@@ -289,7 +289,7 @@ namespace DataManager
 
         #endregion
 
-        #region [2. 移댄깉濡쒓렇 諛?硫붾땲?섏뒪???뚯떛 ?곗씠??濡쒕뱶]
+        #region [2. Data loading]
 
         private void btnSelectAdd_Click(object sender, EventArgs e)
         {
@@ -332,7 +332,7 @@ namespace DataManager
             UpdateDisplay();
             UpdateCharts();
 
-            // ?곗씠??濡쒕뱶 利됱떆 ?숈뒿 ??誘몃━蹂닿린 ?대?吏 異쒕젰
+            // Show the first loaded image in the test preview.
             if (pbTestPreview != null && _allData.Count > 0)
                 if (File.Exists(_allData[0].ImagePath)) pbTestPreview.Image = Image.FromFile(_allData[0].ImagePath);
         }
@@ -384,7 +384,7 @@ namespace DataManager
 
         #endregion
 
-        #region [3. ?먯깋 諛??ъ깮 ?쒖뼱]
+        #region [3. Navigation and playback]
 
         private void UpdateDisplay()
         {
@@ -430,7 +430,7 @@ namespace DataManager
 
         #endregion
 
-        #region [4. ??2: ?숈뒿 諛??뚯뒪??
+        #region [4. Training and testing]
 
         private string BuildWslCondaCommand(string envName, string command)
         {
@@ -542,26 +542,26 @@ namespace DataManager
             {
                 btnTrain.Enabled = false;
 
-                // 1. 由щ늼???섍꼍 ?ㅼ젙
+                // Configure the WSL training environment.
                 string envName = "e2e_env";
                 string projectPath = "~/mysim";
 
-                // 2. ?ㅽ뻾???꾩껜 紐낅졊??(?쇱씠釉뚮윭由??먭? 諛??숈뒿 ?쒖옉)
+                // Build the training commands.
                 string installCmd = "pip install numpy==1.24.3 pandas==2.0.3 tensorflow==2.13.0 albumentations imgaug";
                 string trainCmd = "python train.py --tub ./data --model ./models/mypilot.h5";
 
-                // bash -i 紐⑤뱶濡??ㅽ뻾?섏뿬 .bashrc ?ㅼ젙???먮룞?쇰줈 濡쒕뱶?⑸땲??
+                // Configure the WSL training environment.
                 string bashCmd = BuildWslCondaCommand(envName, $"cd {projectPath} && {installCmd} && {trainCmd}");
 
-                // 3. ?꾨줈?몄뒪 ?ㅽ뻾 ?ㅼ젙 (?몃? CMD 李?紐⑤뱶)
+                // Configure the WSL process.
                 ProcessStartInfo start = new ProcessStartInfo();
                 start.FileName = "wsl.exe";
 
-                // /k ?듭뀡?쇰줈 紐낅졊 ?ㅽ뻾 ??李쎌쓣 ?좎??섍퀬, wsl 紐낅졊???덉쟾?섍쾶 ?꾨떖?⑸땲??
+                // Implementation note.
                 string wslDistroArgument = GetWslDistroArgument();
                 start.Arguments = wslDistroArgument + "bash -lc \"" + bashCmd + "\"";
 
-                // ?몃? 李쎌쓣 ?꾩슦湲??꾪븳 ?듭떖 ?ㅼ젙
+                // Capture process output in the app log.
                 start.UseShellExecute = false;
                 start.RedirectStandardOutput = true;
                 start.RedirectStandardError = true;
@@ -605,12 +605,12 @@ namespace DataManager
                 string projectPath = "~/mysim";
                 string modelFile = "models/mypilot.h5";
 
-                // 1. ?덈룄??寃쎈줈 ?ㅼ젙
+                // Prepare temporary files for test predictions.
                 string appDir = Application.StartupPath;
                 string winPathsFile = Path.Combine(appDir, "win_paths.txt");
                 string winResultsFile = Path.Combine(appDir, "results.csv");
 
-                // 2. 由щ늼?ㅼ슜 ?대?吏 寃쎈줈 紐⑸줉 ?묒꽦 (Windows ?뚯씪 ?앹꽦)
+                // Convert selected image paths for WSL.
                 var linuxPaths = _allData.Select(d =>
                 {
                     string drive = Path.GetPathRoot(d.ImagePath).Substring(0, 1).ToLower();
@@ -619,7 +619,7 @@ namespace DataManager
                 }).ToList();
                 File.WriteAllLines(winPathsFile, linuxPaths);
 
-                // 3. [?듭떖] WSL???댄빐?섎뒗 ?꾩옱 ?대뜑??吏꾩쭨 寃쎈줈瑜?'wslpath'濡?媛?몄삤湲?
+                // Resolve the app output directory inside WSL.
                 Process wslPathProc = new Process();
                 wslPathProc.StartInfo.FileName = "wsl.exe";
                 string wslDistroArgument = GetWslDistroArgument();
@@ -633,7 +633,7 @@ namespace DataManager
                 string wslPathsFile = $"{wslAppDir}/win_paths.txt";
                 string wslResultsFile = $"{wslAppDir}/results.csv";
 
-                // 4. ?뚯씠???덉륫 ?ㅽ겕由쏀듃 (吏곸젒 ?뚯씪 ?쎄퀬 ?곌린)
+                // Build the Python prediction script.
                 string pythonPredictScript =
                     "import tensorflow as tf; import numpy as np; from PIL import Image; import os; " +
                     $"model = tf.keras.models.load_model('{modelFile}'); " +
@@ -646,13 +646,13 @@ namespace DataManager
                     "    results.append(f'{pred[0][0][0]},{pred[1][0][0]}'); " +
                     $"with open('{wslResultsFile}', 'w') as f: f.write('\\n'.join(results))";
 
-                // 5. WSL 紐낅졊???ㅽ뻾
+                // Configure the WSL process.
                 ProcessStartInfo start = new ProcessStartInfo();
                 start.FileName = "wsl.exe";
                 string bashCmd = BuildWslCondaCommand(envName, $"cd {projectPath} && python -c \\\"{pythonPredictScript}\\\"");
                 start.Arguments = $"{wslDistroArgument}bash -lc \"{bashCmd}\"";
                 start.UseShellExecute = false;
-                start.RedirectStandardError = true; // ?먮윭 ?뺤씤??
+                start.RedirectStandardError = true; // Implementation note.
                 start.CreateNoWindow = true;
 
                 Process process = Process.Start(start);
@@ -664,7 +664,7 @@ namespace DataManager
                     txtTrainingLog?.AppendText($"[?뚯씠???먮윭] {error}\r\n");
                 }
 
-                // 6. 寃곌낵 ?뚯씪(results.csv) ?쎄린
+                // Prepare temporary files for test predictions.
                 if (File.Exists(winResultsFile))
                 {
                     string[] lines = File.ReadAllLines(winResultsFile);
@@ -704,9 +704,9 @@ namespace DataManager
 
         #endregion
 
-        #region [5. ?꾪꽣留? ??젣, 留덉빱 諛??ㅼ떆媛??щ씪?대뜑 濡쒖쭅]
+        #region [5. Filtering, deletion, and markers]
 
-        // ?썱截?異붽?: ?곗씠??愿由????щ씪?대뜑 ?ㅼ떆媛??낅뜲?댄듃 硫붿꽌??
+        // Wire runtime event handlers.
         private void tbImageNavigator_Scroll(object sender, EventArgs e)
         {
             if (!EnsureDataLoaded()) return;
@@ -1037,7 +1037,7 @@ namespace DataManager
         private void ClearMarkers() { foreach (var m in _imageRangeMarkers) gbDataContent?.Controls.Remove(m); _imageRangeMarkers.Clear(); _isRangeSettingMode = false; }
         private int GetImageNavigatorMarkerLeft(int value, Size markerSize) { int min = tbImageNavigator.Minimum, max = tbImageNavigator.Maximum; double ratio = (max == min) ? 0 : (double)(value - min) / (max - min); return tbImageNavigator.Left + 10 + (int)((tbImageNavigator.Width - 20) * ratio) - (markerSize.Width / 2); }
 
-        // 留덉빱 諛곗튂瑜??꾪븳 MouseUp 濡쒖쭅? ?좎?
+        // Handle marker placement after mouse release.
         private void tbImageNavigator_MouseUp(object sender, MouseEventArgs e)
         {
             _currentIndex = tbImageNavigator.Value;
@@ -1047,7 +1047,7 @@ namespace DataManager
 
         #endregion
 
-        #region [6. 李⑦듃 ?낅뜲?댄듃 諛?湲고?]
+        #region [6. Chart updates and helpers]
 
         private void UpdateCharts()
         {
