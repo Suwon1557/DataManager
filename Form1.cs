@@ -9,22 +9,24 @@ using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Text.Json;
 using System.Drawing.Drawing2D;
-using System.Runtime.InteropServices; // 🛠️ FIX: DllImport 사용을 위해 반드시 필요함!
+using System.Runtime.InteropServices; // ?썱截?FIX: DllImport ?ъ슜???꾪빐 諛섎뱶???꾩슂??
 
 namespace DataManager
 {
-    // ⭐ 중요: Form1 클래스가 파일 최상단에 위치해야 디자이너 에러가 방지됩니다.
+    // 狩?以묒슂: Form1 ?대옒?ㅺ? ?뚯씪 理쒖긽?⑥뿉 ?꾩튂?댁빞 ?붿옄?대꼫 ?먮윭媛 諛⑹??⑸땲??
     public partial class Form1 : Form
     {
-        // [필드 변수 선언 - 단 하나도 빠짐없이 100% 유지]
+        // [?꾨뱶 蹂???좎뼵 - ???섎굹??鍮좎쭚?놁씠 100% ?좎?]
         private List<DrivingData> _allData = new List<DrivingData>();
         private readonly Stack<DeleteAction> _deleteUndoStack = new Stack<DeleteAction>();
         private int _currentIndex = -1;
         private bool _isReversed = false;
         private bool _isRangeSettingMode = false;
+        private readonly Color _folderPathTextColor = Color.FromArgb(238, 243, 249);
+        private readonly Color _folderPathWarningColor = Color.FromArgb(248, 113, 113);
         private readonly List<Panel> _imageRangeMarkers = new List<Panel>();
         private System.Windows.Forms.Timer _playTimer = new System.Windows.Forms.Timer();
-        private const string UiFontFamily = "맑은 고딕";
+        private const string UiFontFamily = "留묒? 怨좊뵓";
 
         private class DeleteAction
         {
@@ -39,7 +41,7 @@ namespace DataManager
             public string TrashPath { get; set; } = "";
         }
 
-        // 🛠️ FIX: shlwapi.dll 임포트 위치 (클래스 바로 아래)
+        // ?썱截?FIX: shlwapi.dll ?꾪룷???꾩튂 (?대옒??諛붾줈 ?꾨옒)
         [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
         private static extern int StrCmpLogicalW(string psz1, string psz2);
 
@@ -49,12 +51,12 @@ namespace DataManager
 
             if (lvDataItems.Columns.Count == 0)
             {
-                lvDataItems.Columns.Add("번호", 70);
-                lvDataItems.Columns.Add("이미지 파일명", 320);
+                lvDataItems.Columns.Add("\uBC88\uD638", 70);
+                lvDataItems.Columns.Add("\uC774\uBBF8\uC9C0 \uD30C\uC77C\uBA85", 320);
             }
             AdjustDataListColumns();
 
-            // 1. 트랙바 범위 설정
+            // 1. ?몃옓諛?踰붿쐞 ?ㅼ젙
             tbPlaybackSpeed.Minimum = 25;
             tbPlaybackSpeed.Maximum = 200;
             tbPlaybackSpeed.Value = 100;
@@ -68,13 +70,13 @@ namespace DataManager
             this.Shown += Form1_Shown;
             this.Resize += Form1_Resize;
 
-            // 이벤트 연결
+            // ?대깽???곌껐
             lvDataItems.SelectedIndexChanged += lvDataItems_SelectedIndexChanged;
 
-            // 🛠️ 데이터 관리 탭 슬라이더: 드래그 즉시 실시간 업데이트를 위해 Scroll 이벤트 연결
+            // ?썱截??곗씠??愿由????щ씪?대뜑: ?쒕옒洹?利됱떆 ?ㅼ떆媛??낅뜲?댄듃瑜??꾪빐 Scroll ?대깽???곌껐
             tbImageNavigator.Scroll += tbImageNavigator_Scroll;
 
-            // 🛠️ 학습 탭 슬라이더 안전 연결
+            // ?썱截??숈뒿 ???щ씪?대뜑 ?덉쟾 ?곌껐
             if (tbTestImageNavigator != null)
             {
                 tbTestImageNavigator.Scroll -= tbTestImageNavigator_Scroll_1;
@@ -82,7 +84,7 @@ namespace DataManager
             }
         }
 
-        #region [1. 탭별 차트 레이아웃 - 중앙 배치 및 슬라이더 보호]
+        #region [1. ??퀎 李⑦듃 ?덉씠?꾩썐 - 以묒븰 諛곗튂 諛??щ씪?대뜑 蹂댄샇]
 
         private void Form1_Shown(object? sender, EventArgs e)
         {
@@ -92,14 +94,14 @@ namespace DataManager
 
             this.AutoScroll = true;
 
-            // 🔍 탭 컨트롤 검색
+            // ?뵇 ??而⑦듃濡?寃??
             var tabControl = this.Controls.OfType<TabControl>().FirstOrDefault();
             if (tabControl != null && tabControl.TabPages.Count >= 2)
             {
-                TabPage page1 = tabControl.TabPages[0]; // 데이터 관리
-                TabPage page2 = tabControl.TabPages[1]; // 학습/테스트
+                TabPage page1 = tabControl.TabPages[0]; // ?곗씠??愿由?
+                TabPage page2 = tabControl.TabPages[1]; // ?숈뒿/?뚯뒪??
 
-                // --- [탭 1: 데이터 관리 차트 (하단 정중앙)] ---
+                // --- [??1: ?곗씠??愿由?李⑦듃 (?섎떒 ?뺤쨷??] ---
                 int p1_chartY = 540;
                 int p1_chartWidth = 480;
                 int p1_chartHeight = 200;
@@ -117,7 +119,7 @@ namespace DataManager
                     page1.Controls.Add(chtSpeedValue);
                 }
 
-                // --- [탭 2: 학습/테스트 차트 (완전한 중앙 & 슬라이더 가림 방지)] ---
+                // --- [??2: ?숈뒿/?뚯뒪??李⑦듃 (?꾩쟾??以묒븰 & ?щ씪?대뜑 媛由?諛⑹?)] ---
                 int p2_chartX = 520;
                 int p2_chartWidth = 720;
                 int p2_chartHeight = 230;
@@ -134,10 +136,9 @@ namespace DataManager
                 }
             }
 
-            // 차트 제목 및 스타일 설정
+            // 李⑦듃 ?쒕ぉ 諛??ㅽ????ㅼ젙
             EnsureDataChartsLayout();
             EnsureTestChartsLayout();
-
             SetupSafeChart(chtSteeringValue, "Steering Data", Color.DodgerBlue, "실제 조향값");
             SetupSafeChart(chtSpeedValue, "Speed Data", Color.OrangeRed, "실제 속도값");
             SetupSafeChart(chtTestSteeringValue, "실제/예측 조향값 비교 Chart", Color.Blue, "예측값", "Actual", Color.Green);
@@ -255,7 +256,7 @@ namespace DataManager
             if (chart == null) return;
             ChartArea ca = chart.ChartAreas.Count > 0 ? chart.ChartAreas[0] : chart.ChartAreas.Add("Main");
             ca.AxisX.Title = "";
-            ca.AxisX.LabelStyle.Format = "0;0;0"; // -0 방지
+            ca.AxisX.LabelStyle.Format = "0;0;0"; // -0 諛⑹?
 
             chart.Titles.Clear();
             var title = chart.Titles.Add(titleName);
@@ -281,7 +282,7 @@ namespace DataManager
 
         #endregion
 
-        #region [2. 카탈로그 및 메니페스트 파싱 데이터 로드]
+        #region [2. 移댄깉濡쒓렇 諛?硫붾땲?섏뒪???뚯떛 ?곗씠??濡쒕뱶]
 
         private void btnSelectAdd_Click(object sender, EventArgs e)
         {
@@ -293,6 +294,7 @@ namespace DataManager
         {
             _allData.Clear();
             lvDataItems.Items.Clear();
+            txtFolderPath.ForeColor = _folderPathTextColor;
 
             var catalogFiles = Directory.GetFiles(path, "*.catalog");
 
@@ -310,6 +312,12 @@ namespace DataManager
 
             RefreshDataListView();
 
+            if (_allData.Count == 0)
+            {
+                ShowNoDataMessage();
+                return;
+            }
+
             _currentIndex = 0;
             tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1);
             if (tbTestImageNavigator != null) tbTestImageNavigator.Maximum = Math.Max(0, _allData.Count - 1);
@@ -317,7 +325,7 @@ namespace DataManager
             UpdateDisplay();
             UpdateCharts();
 
-            // 데이터 로드 즉시 학습 탭 미리보기 이미지 출력
+            // ?곗씠??濡쒕뱶 利됱떆 ?숈뒿 ??誘몃━蹂닿린 ?대?吏 異쒕젰
             if (pbTestPreview != null && _allData.Count > 0)
                 if (File.Exists(_allData[0].ImagePath)) pbTestPreview.Image = Image.FromFile(_allData[0].ImagePath);
         }
@@ -357,15 +365,15 @@ namespace DataManager
 
         private void btnCheckDataIntegrity_Click(object sender, EventArgs e)
         {
-            if (_allData.Count == 0) return;
+            if (!EnsureDataLoaded()) return;
             bool isDup = _allData.GroupBy(x => x.Index).Any(g => g.Count() > 1);
             bool isMissingFile = _allData.Any(x => !File.Exists(x.ImagePath));
-            MessageBox.Show($"중복: {(isDup ? "⚠️ 발견" : "정상")}\n파일 유실: {(isMissingFile ? "⚠️ 발견" : "정상")}", "데이터 무결성 검사");
+            MessageBox.Show($"중복 인덱스: {(isDup ? "문제 있음" : "정상")}\n이미지 파일 누락: {(isMissingFile ? "문제 있음" : "정상")}", "무결성 검사");
         }
 
         #endregion
 
-        #region [3. 탐색 및 재생 제어]
+        #region [3. ?먯깋 諛??ъ깮 ?쒖뼱]
 
         private void UpdateDisplay()
         {
@@ -383,7 +391,21 @@ namespace DataManager
             tbImageNavigator.Value = _currentIndex;
         }
 
-        private void StartPlayback() { if (_allData.Count == 0) return; _playTimer.Interval = (int)(150 / (tbPlaybackSpeed.Value / 100.0)); _playTimer.Start(); }
+        private bool EnsureDataLoaded()
+        {
+            if (_allData.Count > 0) return true;
+            ShowNoDataMessage();
+            return false;
+        }
+
+        private void ShowNoDataMessage()
+        {
+            _playTimer.Stop();
+            txtFolderPath.ForeColor = _folderPathWarningColor;
+            txtFolderPath.Text = "\uB370\uC774\uD130\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4. \uB370\uC774\uD130\uB97C \uAC00\uC838\uC624\uC138\uC694";
+        }
+
+        private void StartPlayback() { if (!EnsureDataLoaded()) return; _playTimer.Interval = (int)(150 / (tbPlaybackSpeed.Value / 100.0)); _playTimer.Start(); }
         private void PlayTimer_Tick(object? sender, EventArgs e)
         {
             if (_isReversed) { if (_currentIndex > 0) _currentIndex--; else _playTimer.Stop(); }
@@ -393,11 +415,11 @@ namespace DataManager
 
         private void btnPlay_Click_1(object sender, EventArgs e) { _isReversed = false; StartPlayback(); }
         private void btnReverse_Click(object sender, EventArgs e) { _isReversed = true; StartPlayback(); }
-        private void btnStop_Click(object sender, EventArgs e) { _playTimer.Stop(); }
+        private void btnStop_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; _playTimer.Stop(); }
 
         #endregion
 
-        #region [4. 탭 2: 학습 및 테스트]
+        #region [4. ??2: ?숈뒿 諛??뚯뒪??
 
         private string BuildWslCondaCommand(string envName, string command)
         {
@@ -446,61 +468,138 @@ namespace DataManager
             return "";
         }
 
-        private void btnTrain_Click(object sender, EventArgs e)
+        private void AppendTrainingLog(string message)
         {
+            if (txtTrainingLog == null) return;
+
+            message = CleanTrainingLogMessage(message);
+            if (string.IsNullOrWhiteSpace(message)) return;
+
+            if (txtTrainingLog.InvokeRequired)
+            {
+                txtTrainingLog.BeginInvoke(new Action<string>(AppendTrainingLog), message);
+                return;
+            }
+
+            txtTrainingLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}\r\n");
+        }
+
+        private string CleanTrainingLogMessage(string message)
+        {
+            if (string.IsNullOrEmpty(message)) return string.Empty;
+
+            var cleaned = new System.Text.StringBuilder(message.Length);
+            bool inEscapeSequence = false;
+
+            foreach (char ch in message)
+            {
+                if (inEscapeSequence)
+                {
+                    if (ch >= '@' && ch <= '~')
+                    {
+                        inEscapeSequence = false;
+                    }
+                    continue;
+                }
+
+                if (ch == '\u001b')
+                {
+                    inEscapeSequence = true;
+                    continue;
+                }
+
+                if (ch == '\b')
+                {
+                    if (cleaned.Length > 0) cleaned.Length--;
+                    continue;
+                }
+
+                if (ch == '\r') continue;
+                if (char.IsControl(ch) && ch != '\t') continue;
+
+                cleaned.Append(ch);
+            }
+
+            return cleaned.ToString().Trim();
+        }
+
+        private async void btnTrain_Click(object sender, EventArgs e)
+        {
+            if (!EnsureDataLoaded()) return;
+
             try
             {
-                // 1. 리눅스 환경 설정
+                btnTrain.Enabled = false;
+
+                // 1. 由щ늼???섍꼍 ?ㅼ젙
                 string envName = "e2e_env";
                 string projectPath = "~/mysim";
 
-                // 2. 실행할 전체 명령어 (라이브러리 점검 및 학습 시작)
+                // 2. ?ㅽ뻾???꾩껜 紐낅졊??(?쇱씠釉뚮윭由??먭? 諛??숈뒿 ?쒖옉)
                 string installCmd = "pip install numpy==1.24.3 pandas==2.0.3 tensorflow==2.13.0 albumentations imgaug";
                 string trainCmd = "python train.py --tub ./data --model ./models/mypilot.h5";
 
-                // bash -i 모드로 실행하여 .bashrc 설정을 자동으로 로드합니다.
+                // bash -i 紐⑤뱶濡??ㅽ뻾?섏뿬 .bashrc ?ㅼ젙???먮룞?쇰줈 濡쒕뱶?⑸땲??
                 string bashCmd = BuildWslCondaCommand(envName, $"cd {projectPath} && {installCmd} && {trainCmd}");
 
-                // 3. 프로세스 실행 설정 (외부 CMD 창 모드)
+                // 3. ?꾨줈?몄뒪 ?ㅽ뻾 ?ㅼ젙 (?몃? CMD 李?紐⑤뱶)
                 ProcessStartInfo start = new ProcessStartInfo();
-                start.FileName = "cmd.exe";
+                start.FileName = "wsl.exe";
 
-                // /k 옵션으로 명령 실행 후 창을 유지하고, wsl 명령을 안전하게 전달합니다.
+                // /k ?듭뀡?쇰줈 紐낅졊 ?ㅽ뻾 ??李쎌쓣 ?좎??섍퀬, wsl 紐낅졊???덉쟾?섍쾶 ?꾨떖?⑸땲??
                 string wslDistroArgument = GetWslDistroArgument();
-                start.Arguments = "/k wsl " + wslDistroArgument + "bash -lc \"" + bashCmd + "\"";
+                start.Arguments = wslDistroArgument + "bash -lc \"" + bashCmd + "\"";
 
-                // 외부 창을 띄우기 위한 핵심 설정
-                start.UseShellExecute = true;
-                start.CreateNoWindow = false;
+                // ?몃? 李쎌쓣 ?꾩슦湲??꾪븳 ?듭떖 ?ㅼ젙
+                start.UseShellExecute = false;
+                start.RedirectStandardOutput = true;
+                start.RedirectStandardError = true;
+                start.CreateNoWindow = true;
 
-                Process.Start(start);
-
-                txtTrainingLog?.AppendText($"[{DateTime.Now:HH:mm:ss}] 외부 터미널에서 WSL 학습 프로세스가 시작되었습니다.\r\n");
+                using Process process = new Process();
+                process.StartInfo = start;
+                process.OutputDataReceived += (_, args) =>
+                {
+                    if (!string.IsNullOrEmpty(args.Data)) AppendTrainingLog(args.Data);
+                };
+                process.ErrorDataReceived += (_, args) =>
+                {
+                    if (!string.IsNullOrEmpty(args.Data)) AppendTrainingLog(args.Data);
+                };
+                AppendTrainingLog("WSL \uD559\uC2B5 \uD504\uB85C\uC138\uC2A4\uB97C \uC2DC\uC791\uD588\uC2B5\uB2C8\uB2E4.");
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+                await process.WaitForExitAsync();
+                AppendTrainingLog($"\uD559\uC2B5 \uD504\uB85C\uC138\uC2A4\uAC00 \uC885\uB8CC\uB418\uC5C8\uC2B5\uB2C8\uB2E4. ExitCode={process.ExitCode}");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("프로세스 실행 중 오류: " + ex.Message);
+                MessageBox.Show("?꾨줈?몄뒪 ?ㅽ뻾 以??ㅻ쪟: " + ex.Message);
+            }
+            finally
+            {
+                btnTrain.Enabled = true;
             }
         }
 
         private void btnStartTest_Click(object sender, EventArgs e)
         {
-            if (_allData.Count == 0) return;
+            if (!EnsureDataLoaded()) return;
 
             try
             {
-                txtTrainingLog?.AppendText($"[{DateTime.Now:HH:mm:ss}] 테스트 세션 시작 (경로 동기화 중...)\r\n");
-
+                AppendTrainingLog("테스트 세션 시작 (경로 동기화 중...)");
                 string envName = "e2e_env";
                 string projectPath = "~/mysim";
                 string modelFile = "models/mypilot.h5";
 
-                // 1. 윈도우 경로 설정
+                // 1. ?덈룄??寃쎈줈 ?ㅼ젙
                 string appDir = Application.StartupPath;
                 string winPathsFile = Path.Combine(appDir, "win_paths.txt");
                 string winResultsFile = Path.Combine(appDir, "results.csv");
 
-                // 2. 리눅스용 이미지 경로 목록 작성 (Windows 파일 생성)
+                // 2. 由щ늼?ㅼ슜 ?대?吏 寃쎈줈 紐⑸줉 ?묒꽦 (Windows ?뚯씪 ?앹꽦)
                 var linuxPaths = _allData.Select(d =>
                 {
                     string drive = Path.GetPathRoot(d.ImagePath).Substring(0, 1).ToLower();
@@ -509,7 +608,7 @@ namespace DataManager
                 }).ToList();
                 File.WriteAllLines(winPathsFile, linuxPaths);
 
-                // 3. [핵심] WSL이 이해하는 현재 폴더의 진짜 경로를 'wslpath'로 가져오기
+                // 3. [?듭떖] WSL???댄빐?섎뒗 ?꾩옱 ?대뜑??吏꾩쭨 寃쎈줈瑜?'wslpath'濡?媛?몄삤湲?
                 Process wslPathProc = new Process();
                 wslPathProc.StartInfo.FileName = "wsl.exe";
                 string wslDistroArgument = GetWslDistroArgument();
@@ -523,7 +622,7 @@ namespace DataManager
                 string wslPathsFile = $"{wslAppDir}/win_paths.txt";
                 string wslResultsFile = $"{wslAppDir}/results.csv";
 
-                // 4. 파이썬 예측 스크립트 (직접 파일 읽고 쓰기)
+                // 4. ?뚯씠???덉륫 ?ㅽ겕由쏀듃 (吏곸젒 ?뚯씪 ?쎄퀬 ?곌린)
                 string pythonPredictScript =
                     "import tensorflow as tf; import numpy as np; from PIL import Image; import os; " +
                     $"model = tf.keras.models.load_model('{modelFile}'); " +
@@ -536,13 +635,13 @@ namespace DataManager
                     "    results.append(f'{pred[0][0][0]},{pred[1][0][0]}'); " +
                     $"with open('{wslResultsFile}', 'w') as f: f.write('\\n'.join(results))";
 
-                // 5. WSL 명령어 실행
+                // 5. WSL 紐낅졊???ㅽ뻾
                 ProcessStartInfo start = new ProcessStartInfo();
                 start.FileName = "wsl.exe";
                 string bashCmd = BuildWslCondaCommand(envName, $"cd {projectPath} && python -c \\\"{pythonPredictScript}\\\"");
                 start.Arguments = $"{wslDistroArgument}bash -lc \"{bashCmd}\"";
                 start.UseShellExecute = false;
-                start.RedirectStandardError = true; // 에러 확인용
+                start.RedirectStandardError = true; // ?먮윭 ?뺤씤??
                 start.CreateNoWindow = true;
 
                 Process process = Process.Start(start);
@@ -551,10 +650,10 @@ namespace DataManager
 
                 if (!string.IsNullOrEmpty(error))
                 {
-                    txtTrainingLog?.AppendText($"[파이썬 에러] {error}\r\n");
+                    txtTrainingLog?.AppendText($"[?뚯씠???먮윭] {error}\r\n");
                 }
 
-                // 6. 결과 파일(results.csv) 읽기
+                // 6. 寃곌낵 ?뚯씪(results.csv) ?쎄린
                 if (File.Exists(winResultsFile))
                 {
                     string[] lines = File.ReadAllLines(winResultsFile);
@@ -568,22 +667,22 @@ namespace DataManager
                         }
                     }
                     UpdateCharts();
-                    txtTrainingLog?.AppendText($"[{DateTime.Now:HH:mm:ss}] 예측 완료! 차트를 확인하세요.\r\n");
+                    AppendTrainingLog("예측 완료! 차트를 확인하세요.");
                 }
                 else
                 {
-                    txtTrainingLog?.AppendText($"[{DateTime.Now:HH:mm:ss}] 오류: results.csv가 생성되지 않았습니다.\r\n");
+                    AppendTrainingLog("\uC624\uB958: results.csv\uAC00 \uC0DD\uC131\uB418\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4.");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("테스트 실패: " + ex.Message);
+                MessageBox.Show("?뚯뒪???ㅽ뙣: " + ex.Message);
             }
         }
 
         private void tbTestImageNavigator_Scroll_1(object sender, EventArgs e)
         {
-            if (tbTestImageNavigator == null || pbTestPreview == null || _allData.Count == 0) return;
+            if (!EnsureDataLoaded() || tbTestImageNavigator == null || pbTestPreview == null) return;
             int idx = tbTestImageNavigator.Value;
             if (idx >= 0 && idx < _allData.Count && File.Exists(_allData[idx].ImagePath))
             {
@@ -594,17 +693,19 @@ namespace DataManager
 
         #endregion
 
-        #region [5. 필터링, 삭제, 마커 및 실시간 슬라이더 로직]
+        #region [5. ?꾪꽣留? ??젣, 留덉빱 諛??ㅼ떆媛??щ씪?대뜑 濡쒖쭅]
 
-        // 🛠️ 추가: 데이터 관리 탭 슬라이더 실시간 업데이트 메서드
+        // ?썱截?異붽?: ?곗씠??愿由????щ씪?대뜑 ?ㅼ떆媛??낅뜲?댄듃 硫붿꽌??
         private void tbImageNavigator_Scroll(object sender, EventArgs e)
         {
+            if (!EnsureDataLoaded()) return;
             _currentIndex = tbImageNavigator.Value;
             UpdateDisplay();
         }
 
         private void btnFilter_Click(object sender, EventArgs e)
         {
+            if (!EnsureDataLoaded()) return;
             var targets = _allData.Where(x => x.Steering == 0 || x.Speed == 0).ToList();
             if (targets.Count > 0)
             {
@@ -614,7 +715,7 @@ namespace DataManager
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            if (_allData.Count == 0 || _currentIndex < 0) return;
+            if (!EnsureDataLoaded() || _currentIndex < 0) return;
             if (_imageRangeMarkers.Count == 2)
             {
                 int s = (int)_imageRangeMarkers[0].Tag, f = (int)_imageRangeMarkers[1].Tag;
@@ -630,6 +731,7 @@ namespace DataManager
 
         private void btnCancelDelete_Click(object sender, EventArgs e)
         {
+            if (!EnsureDataLoaded()) return;
             if (_deleteUndoStack.Count == 0) return;
 
             DeleteAction action = _deleteUndoStack.Pop();
@@ -664,7 +766,7 @@ namespace DataManager
             }
             catch (Exception ex)
             {
-                MessageBox.Show("복구 중 오류: " + ex.Message);
+                MessageBox.Show("蹂듦뎄 以??ㅻ쪟: " + ex.Message);
             }
         }
 
@@ -706,7 +808,7 @@ namespace DataManager
             catch (Exception ex)
             {
                 RollbackMovedFiles(action);
-                MessageBox.Show("삭제 중 오류: " + ex.Message);
+                MessageBox.Show("??젣 以??ㅻ쪟: " + ex.Message);
             }
         }
 
@@ -800,7 +902,7 @@ namespace DataManager
         private void ClearMarkers() { foreach (var m in _imageRangeMarkers) gbDataContent?.Controls.Remove(m); _imageRangeMarkers.Clear(); _isRangeSettingMode = false; }
         private int GetImageNavigatorMarkerLeft(int value, Size markerSize) { int min = tbImageNavigator.Minimum, max = tbImageNavigator.Maximum; double ratio = (max == min) ? 0 : (double)(value - min) / (max - min); return tbImageNavigator.Left + 10 + (int)((tbImageNavigator.Width - 20) * ratio) - (markerSize.Width / 2); }
 
-        // 마커 배치를 위한 MouseUp 로직은 유지
+        // 留덉빱 諛곗튂瑜??꾪븳 MouseUp 濡쒖쭅? ?좎?
         private void tbImageNavigator_MouseUp(object sender, MouseEventArgs e)
         {
             _currentIndex = tbImageNavigator.Value;
@@ -810,7 +912,7 @@ namespace DataManager
 
         #endregion
 
-        #region [6. 차트 업데이트 및 기타]
+        #region [6. 李⑦듃 ?낅뜲?댄듃 諛?湲고?]
 
         private void UpdateCharts()
         {
@@ -1099,12 +1201,11 @@ namespace DataManager
                 fore,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
         }
-
         private void InitializeDataInfoGrid() { dgvDataInfo.Rows.Clear(); dgvDataInfo.Rows.Add("데이터 수", "0"); dgvDataInfo.Rows.Add("이미지", "0"); dgvDataInfo.Rows.Add("조향값", "0"); dgvDataInfo.Rows.Add("속도값", "0"); }
         private void UpdatePlaybackSpeedLabel() { if (lblPlaybackSpeed != null) lblPlaybackSpeed.Text = $"x{tbPlaybackSpeed.Value / 100.0:0.##}"; }
-        private void tbPlaybackSpeed_Scroll(object sender, EventArgs e) { UpdatePlaybackSpeedLabel(); if (_playTimer.Enabled) _playTimer.Interval = (int)(150 / (tbPlaybackSpeed.Value / 100.0)); }
-        private void btnSetRange_Click(object sender, EventArgs e) => _isRangeSettingMode = true;
-        private void btnCancelRange_Click(object sender, EventArgs e) => ClearMarkers();
+        private void tbPlaybackSpeed_Scroll(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; UpdatePlaybackSpeedLabel(); if (_playTimer.Enabled) _playTimer.Interval = (int)(150 / (tbPlaybackSpeed.Value / 100.0)); }
+        private void btnSetRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; _isRangeSettingMode = true; }
+        private void btnCancelRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; ClearMarkers(); }
         private void gbDataContent_Resize(object sender, EventArgs e) { foreach (var m in _imageRangeMarkers) if (m.Tag is int val) m.Left = GetImageNavigatorMarkerLeft(val, m.Size); if (_allData.Count > 0) UpdateCharts(); }
 
         #endregion
