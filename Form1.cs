@@ -840,13 +840,7 @@ namespace DataManager
                 string catalogPath = group.Key;
                 if (!File.Exists(catalogPath)) continue;
 
-                string backupPath = GetUniquePath(Path.Combine(trashDir, Path.GetFileName(catalogPath) + ".bak"));
-                File.Copy(catalogPath, backupPath);
-                action.CatalogBackups.Add(new CatalogBackupInfo
-                {
-                    OriginalPath = catalogPath,
-                    BackupPath = backupPath
-                });
+                BackupCatalogFile(action, catalogPath, trashDir);
 
                 var imageNamesToRemove = group
                     .Select(x => x.CatalogImageName)
@@ -862,6 +856,63 @@ namespace DataManager
                     .ToArray();
 
                 File.WriteAllLines(catalogPath, keptLines);
+                UpdateCatalogManifest(action, catalogPath, keptLines, trashDir);
+            }
+        }
+
+        private void BackupCatalogFile(DeleteAction action, string originalPath, string trashDir)
+        {
+            if (!File.Exists(originalPath)) return;
+            if (action.CatalogBackups.Any(x => x.OriginalPath.Equals(originalPath, StringComparison.OrdinalIgnoreCase))) return;
+
+            string backupPath = GetUniquePath(Path.Combine(trashDir, Path.GetFileName(originalPath) + ".bak"));
+            File.Copy(originalPath, backupPath);
+            action.CatalogBackups.Add(new CatalogBackupInfo
+            {
+                OriginalPath = originalPath,
+                BackupPath = backupPath
+            });
+        }
+
+        private void UpdateCatalogManifest(DeleteAction action, string catalogPath, string[] catalogLines, string trashDir)
+        {
+            string catalogManifestPath = catalogPath + "_manifest";
+            if (!File.Exists(catalogManifestPath)) return;
+
+            BackupCatalogFile(action, catalogManifestPath, trashDir);
+
+            try
+            {
+                using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(catalogManifestPath));
+                var root = doc.RootElement;
+                double createdAt = root.TryGetProperty("created_at", out var createdAtElement)
+                    ? createdAtElement.GetDouble()
+                    : 0;
+                string path = root.TryGetProperty("path", out var pathElement)
+                    ? pathElement.GetString() ?? Path.GetFileName(catalogManifestPath)
+                    : Path.GetFileName(catalogManifestPath);
+                int startIndex = root.TryGetProperty("start_index", out var startIndexElement)
+                    ? startIndexElement.GetInt32()
+                    : 0;
+
+                var manifest = new
+                {
+                    created_at = createdAt,
+                    line_lengths = catalogLines.Select(line => line.Length).ToArray(),
+                    path,
+                    start_index = startIndex
+                };
+
+                File.WriteAllText(catalogManifestPath, JsonSerializer.Serialize(manifest));
+            }
+            catch
+            {
+                File.WriteAllText(catalogManifestPath, JsonSerializer.Serialize(new
+                {
+                    line_lengths = catalogLines.Select(line => line.Length).ToArray(),
+                    path = Path.GetFileName(catalogManifestPath),
+                    start_index = 0
+                }));
             }
         }
 
