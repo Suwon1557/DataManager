@@ -561,11 +561,11 @@
             // 
             // btnStartTest
             // 
-            btnStartTest.BackColor = Color.FromArgb(245, 176, 65);
-            btnStartTest.FlatAppearance.BorderColor = Color.FromArgb(245, 176, 65);
+            btnStartTest.BackColor = Color.FromArgb(45, 212, 191);
+            btnStartTest.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
             btnStartTest.FlatStyle = FlatStyle.Flat;
             btnStartTest.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnStartTest.ForeColor = Color.FromArgb(48, 34, 8);
+            btnStartTest.ForeColor = Color.FromArgb(6, 42, 43);
             btnStartTest.Location = new Point(27, 734);
             btnStartTest.Margin = new Padding(7, 5, 7, 5);
             btnStartTest.Name = "btnStartTest";
@@ -623,17 +623,19 @@
             // 
             // btnTrain
             // 
-            btnTrain.BackColor = Color.FromArgb(245, 176, 65);
-            btnTrain.FlatAppearance.BorderColor = Color.FromArgb(245, 176, 65);
+            btnTrain.BackColor = Color.FromArgb(45, 212, 191);
+            btnTrain.BackgroundImage = (Image)resources.GetObject("btnTrain.BackgroundImage");
+            btnTrain.BackgroundImageLayout = ImageLayout.Zoom;
+            btnTrain.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
             btnTrain.FlatStyle = FlatStyle.Flat;
             btnTrain.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnTrain.ForeColor = Color.FromArgb(48, 34, 8);
+            btnTrain.ForeColor = Color.FromArgb(6, 42, 43);
             btnTrain.Location = new Point(27, 62);
             btnTrain.Margin = new Padding(7, 5, 7, 5);
             btnTrain.Name = "btnTrain";
             btnTrain.Size = new Size(320, 126);
             btnTrain.TabIndex = 0;
-            btnTrain.Text = "학습";
+            btnTrain.Text = "";
             btnTrain.UseVisualStyleBackColor = false;
             btnTrain.Click += btnTrain_Click;
             // 

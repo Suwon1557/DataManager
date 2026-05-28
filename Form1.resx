@@ -18978,4 +18978,7 @@
         y7Isy7Isy7Isy7Isy7Isy7Is25/7/wFgnm4WS9L6QAAAAABJRU5ErkJggg==
 </value>
   </data>
+  <data name="btnTrain.BackgroundImage" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\icon_train_cap_theme.png;System.Drawing.Bitmap, System.Drawing</value>
+  </data>
 </root>

@@ -884,8 +884,8 @@ namespace DataManager
             StyleGroupBox(gbModelTest, panel, gold);
 
             StyleButton(btnSelectFolder, teal, Color.FromArgb(6, 42, 43), teal);
-            StyleButton(btnTrain, gold, Color.FromArgb(48, 34, 8), gold);
-            StyleButton(btnStartTest, gold, Color.FromArgb(48, 34, 8), gold);
+            StyleButton(btnTrain, teal, Color.FromArgb(6, 42, 43), teal);
+            StyleButton(btnStartTest, teal, Color.FromArgb(6, 42, 43), teal);
             StyleButton(btnFilter, panelSoft, teal, Color.FromArgb(255, 114, 16));
 
             StyleButton(btnCheckDataIntegrity, panelSoft, text, teal);
@@ -926,7 +926,7 @@ namespace DataManager
             Text = "Data Manager";
             btnFilter.Text = string.Empty;
             btnCheckDataIntegrity.Text = "무결성 검사";
-            btnTrain.Text = "학습";
+            btnTrain.Text = string.Empty;
             btnStartTest.Text = "테스트 시작";
             btnSetRange.Text = "범위 설정";
             btnCancelRange.Text = "X";
