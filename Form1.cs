@@ -33,12 +33,19 @@ namespace DataManager
             public List<DrivingData> Items { get; set; } = new List<DrivingData>();
             public int RestoreIndex { get; set; }
             public List<FileMoveInfo> MovedFiles { get; set; } = new List<FileMoveInfo>();
+            public List<CatalogBackupInfo> CatalogBackups { get; set; } = new List<CatalogBackupInfo>();
         }
 
         private class FileMoveInfo
         {
             public string OriginalPath { get; set; } = "";
             public string TrashPath { get; set; } = "";
+        }
+
+        private class CatalogBackupInfo
+        {
+            public string OriginalPath { get; set; } = "";
+            public string BackupPath { get; set; } = "";
         }
 
         // ?썱截?FIX: shlwapi.dll ?꾪룷???꾩튂 (?대옒??諛붾줈 ?꾨옒)
@@ -337,8 +344,9 @@ namespace DataManager
             foreach (var catFile in catalogFiles)
             {
                 string[] lines = File.ReadAllLines(catFile);
-                foreach (var line in lines)
+                for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
                 {
+                    var line = lines[lineIndex];
                     if (string.IsNullOrWhiteSpace(line)) continue;
                     try
                     {
@@ -354,7 +362,10 @@ namespace DataManager
                                 Index = globalIdx++,
                                 ImagePath = Path.Combine(basePath, "images", imgName),
                                 Steering = angle,
-                                Speed = throttle * 100
+                                Speed = throttle * 100,
+                                CatalogFilePath = catFile,
+                                CatalogImageName = imgName,
+                                CatalogLineNumber = lineIndex
                             });
                         }
                     }
@@ -759,6 +770,8 @@ namespace DataManager
                     }
                 }
 
+                RestoreCatalogFiles(action);
+
                 int insertIndex = Math.Max(0, Math.Min(action.RestoreIndex, _allData.Count));
                 _allData.InsertRange(insertIndex, action.Items);
                 _currentIndex = insertIndex;
@@ -798,6 +811,8 @@ namespace DataManager
                     });
                 }
 
+                RemoveCatalogLines(action, items, trashDir);
+
                 foreach (var item in items)
                     _allData.Remove(item);
 
@@ -807,8 +822,77 @@ namespace DataManager
             }
             catch (Exception ex)
             {
+                RestoreCatalogFiles(action);
                 RollbackMovedFiles(action);
                 MessageBox.Show("??젣 以??ㅻ쪟: " + ex.Message);
+            }
+        }
+
+        private void RemoveCatalogLines(DeleteAction action, List<DrivingData> items, string trashDir)
+        {
+            var catalogItems = items
+                .Where(x => !string.IsNullOrWhiteSpace(x.CatalogFilePath) && x.CatalogLineNumber >= 0)
+                .GroupBy(x => x.CatalogFilePath)
+                .ToList();
+
+            foreach (var group in catalogItems)
+            {
+                string catalogPath = group.Key;
+                if (!File.Exists(catalogPath)) continue;
+
+                string backupPath = GetUniquePath(Path.Combine(trashDir, Path.GetFileName(catalogPath) + ".bak"));
+                File.Copy(catalogPath, backupPath);
+                action.CatalogBackups.Add(new CatalogBackupInfo
+                {
+                    OriginalPath = catalogPath,
+                    BackupPath = backupPath
+                });
+
+                var imageNamesToRemove = group
+                    .Select(x => x.CatalogImageName)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var lineNumbersToRemove = group
+                    .Select(x => x.CatalogLineNumber)
+                    .ToHashSet();
+
+                string[] lines = File.ReadAllLines(catalogPath);
+                var keptLines = lines
+                    .Where((line, index) => !ShouldRemoveCatalogLine(line, index, imageNamesToRemove, lineNumbersToRemove))
+                    .ToArray();
+
+                File.WriteAllLines(catalogPath, keptLines);
+            }
+        }
+
+        private bool ShouldRemoveCatalogLine(string line, int index, HashSet<string> imageNamesToRemove, HashSet<int> lineNumbersToRemove)
+        {
+            if (imageNamesToRemove.Count == 0) return lineNumbersToRemove.Contains(index);
+
+            try
+            {
+                using JsonDocument doc = JsonDocument.Parse(line);
+                string? imgName = doc.RootElement.GetProperty("cam/image_array").GetString();
+                return imgName != null && imageNamesToRemove.Contains(imgName);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void RestoreCatalogFiles(DeleteAction action)
+        {
+            foreach (var backup in action.CatalogBackups)
+            {
+                try
+                {
+                    if (!File.Exists(backup.BackupPath)) continue;
+                    string? dir = Path.GetDirectoryName(backup.OriginalPath);
+                    if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                    File.Copy(backup.BackupPath, backup.OriginalPath, true);
+                }
+                catch { }
             }
         }
 
@@ -1235,5 +1319,8 @@ namespace DataManager
         public double Speed { get; set; }
         public double PredictedSteering { get; set; }
         public double PredictedSpeed { get; set; }
+        public string CatalogFilePath { get; set; } = "";
+        public string CatalogImageName { get; set; } = "";
+        public int CatalogLineNumber { get; set; } = -1;
     }
 }
