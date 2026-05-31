@@ -22,24 +22,19 @@ namespace DataManager
         private int _currentIndex = -1;
         private bool _isReversed = false;
         private bool _isRangeSettingMode = false;
+        private int _listViewDragAnchorIndex = -1;
         private readonly Color _folderPathTextColor = Color.FromArgb(238, 243, 249);
         private readonly Color _folderPathWarningColor = Color.FromArgb(248, 113, 113);
         private readonly List<Panel> _imageRangeMarkers = new List<Panel>();
         private System.Windows.Forms.Timer _playTimer = new System.Windows.Forms.Timer();
+        private const int BasePlaybackIntervalMs = 50;
         private const string UiFontFamily = "Malgun Gothic";
 
         private class DeleteAction
         {
             public List<DrivingData> Items { get; set; } = new List<DrivingData>();
             public int RestoreIndex { get; set; }
-            public List<FileMoveInfo> MovedFiles { get; set; } = new List<FileMoveInfo>();
             public List<CatalogBackupInfo> CatalogBackups { get; set; } = new List<CatalogBackupInfo>();
-        }
-
-        private class FileMoveInfo
-        {
-            public string OriginalPath { get; set; } = "";
-            public string TrashPath { get; set; } = "";
         }
 
         private class CatalogBackupInfo
@@ -72,13 +67,15 @@ namespace DataManager
             tbImageNavigator.TickStyle = TickStyle.BottomRight;
             tbTestImageNavigator.TickStyle = TickStyle.BottomRight;
             tbPlaybackSpeed.Minimum = 25;
-            tbPlaybackSpeed.Maximum = 200;
+            tbPlaybackSpeed.Maximum = 400;
             tbPlaybackSpeed.Value = 100;
 
             InitializeDataInfoGrid();
             UpdatePlaybackSpeedLabel();
             ApplyPolishedTheme();
             ConfigureResponsiveLayout();
+            lvDataItems.MultiSelect = true;
+            lvDataItems.HideSelection = false;
 
             _playTimer.Tick += PlayTimer_Tick;
             this.Shown += Form1_Shown;
@@ -86,6 +83,9 @@ namespace DataManager
 
             // Wire runtime event handlers.
             lvDataItems.SelectedIndexChanged += lvDataItems_SelectedIndexChanged;
+            lvDataItems.MouseDown += lvDataItems_MouseDown;
+            lvDataItems.MouseMove += lvDataItems_MouseMove;
+            lvDataItems.MouseUp += lvDataItems_MouseUp;
 
             // Wire runtime event handlers.
             tbImageNavigator.Scroll += tbImageNavigator_Scroll;
@@ -155,10 +155,10 @@ namespace DataManager
             ApplyResponsiveLayout();
             EnsureDataChartsLayout();
             EnsureTestChartsLayout();
-            SetupSafeChart(chtSteeringValue, "Steering Data", Color.DodgerBlue, "실제 조향값");
-            SetupSafeChart(chtSpeedValue, "Speed Data", Color.OrangeRed, "실제 속도값");
-            SetupSafeChart(chtTestSteeringValue, "실제/예측 조향값 비교 Chart", Color.Blue, "예측값", "Actual", Color.Green);
-            SetupSafeChart(chtTestSpeedValue, "실제/예측 속도값 비교 Chart", Color.Red, "예측값", "Actual", Color.Green);
+            SetupSafeChart(chtSteeringValue, "조향 데이터", Color.FromArgb(45, 212, 191), "실제 조향값");
+            SetupSafeChart(chtSpeedValue, "속도 데이터", Color.FromArgb(245, 176, 65), "실제 속도값");
+            SetupSafeChart(chtTestSteeringValue, "조향 예측 비교", Color.FromArgb(248, 113, 113), "예측값", "실제값", Color.FromArgb(45, 212, 191));
+            SetupSafeChart(chtTestSpeedValue, "속도 예측 비교", Color.FromArgb(248, 113, 113), "예측값", "실제값", Color.FromArgb(245, 176, 65));
 
             UpdateCharts();
         }
@@ -328,8 +328,11 @@ namespace DataManager
             int chartLeft = pbTestPreview.Right + 20;
             int chartTop = pbTestPreview.Top;
             int chartBottom = tbTestImageNavigator.Top - 12;
-            layout.Bounds = new Rectangle(chartLeft, chartTop, Math.Max(100, gbModelTest.ClientSize.Width - chartLeft - 12), Math.Max(80, chartBottom - chartTop));
-            layout.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            int availableWidth = Math.Max(100, gbModelTest.ClientSize.Width - chartLeft - 12);
+            int chartWidth = Math.Max(100, availableWidth / 2);
+            int rightAlignedLeft = Math.Max(chartLeft, gbModelTest.ClientSize.Width - chartWidth - 12);
+            layout.Bounds = new Rectangle(rightAlignedLeft, chartTop, chartWidth, Math.Max(80, chartBottom - chartTop));
+            layout.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
 
             if (chtTestSteeringValue == null) chtTestSteeringValue = new Chart();
             if (chtTestSpeedValue == null) chtTestSpeedValue = new Chart();
@@ -389,25 +392,53 @@ namespace DataManager
             ChartArea ca = chart.ChartAreas.Count > 0 ? chart.ChartAreas[0] : chart.ChartAreas.Add("Main");
             ca.AxisX.Title = "";
             ca.AxisX.LabelStyle.Format = "0;0;0"; // Avoid displaying negative zero.
+            ca.BackColor = Color.FromArgb(22, 30, 46);
+            ca.BorderColor = Color.FromArgb(103, 119, 148);
+            ca.AxisX.LineColor = Color.FromArgb(103, 119, 148);
+            ca.AxisY.LineColor = Color.FromArgb(103, 119, 148);
+            ca.AxisX.MajorGrid.LineColor = Color.FromArgb(49, 62, 88);
+            ca.AxisY.MajorGrid.LineColor = Color.FromArgb(49, 62, 88);
+            ca.AxisX.LabelStyle.ForeColor = Color.FromArgb(238, 243, 249);
+            ca.AxisY.LabelStyle.ForeColor = Color.FromArgb(238, 243, 249);
+            ca.AxisX.MajorTickMark.LineColor = Color.FromArgb(103, 119, 148);
+            ca.AxisY.MajorTickMark.LineColor = Color.FromArgb(103, 119, 148);
+
+            chart.BackColor = Color.FromArgb(22, 30, 46);
+            chart.BorderlineColor = Color.FromArgb(103, 119, 148);
+            chart.BorderlineDashStyle = ChartDashStyle.Solid;
+            chart.BorderlineWidth = 1;
 
             chart.Titles.Clear();
             var title = chart.Titles.Add(titleName);
             title.Font = new Font("Malgun Gothic", 12, FontStyle.Bold);
-            title.ForeColor = Color.FromArgb(40, 40, 40);
+            title.ForeColor = Color.FromArgb(245, 176, 65);
 
             chart.Series.Clear();
             var s1 = chart.Series.Add(s1Name);
             s1.ChartType = SeriesChartType.Line;
             s1.Color = c1;
-            s1.BorderWidth = 2;
+            s1.BorderWidth = 3;
+            s1.ShadowColor = Color.Transparent;
 
             if (s2Name != null)
             {
                 var s2 = chart.Series.Add(s2Name);
                 s2.ChartType = SeriesChartType.Line;
-                s2.Color = c2 ?? Color.Green;
-                s2.BorderWidth = 2;
+                s2.Color = c2 ?? Color.FromArgb(45, 212, 191);
+                s2.BorderWidth = 3;
+                s2.ShadowColor = Color.Transparent;
             }
+
+            chart.Legends.Clear();
+            if (s2Name != null)
+            {
+                var legend = chart.Legends.Add("Legend");
+                legend.BackColor = Color.Transparent;
+                legend.ForeColor = Color.FromArgb(238, 243, 249);
+                legend.Font = new Font("Malgun Gothic", 8F, FontStyle.Regular);
+                legend.Docking = Docking.Bottom;
+            }
+
             chart.Visible = true;
             chart.BringToFront();
         }
@@ -426,6 +457,7 @@ namespace DataManager
         {
             _allData.Clear();
             lvDataItems.Items.Clear();
+            ReleasePreviewImages();
             txtFolderPath.ForeColor = _folderPathTextColor;
 
             var catalogFiles = Directory.GetFiles(path, "*.catalog");
@@ -434,15 +466,8 @@ namespace DataManager
             {
                 ParseCatalogData(path, catalogFiles);
             }
-            else
-            {
-                var files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories).ToList();
-                files.Sort((x, y) => StrCmpLogicalW(x, y));
-                for (int i = 0; i < files.Count; i++)
-                    _allData.Add(new DrivingData { Index = i, ImagePath = files[i], Steering = 0, Speed = 0 });
-            }
 
-            RefreshDataListView();
+            RefreshDataListView(false);
 
             if (_allData.Count == 0)
             {
@@ -459,7 +484,10 @@ namespace DataManager
 
             // Show the first loaded image in the test preview.
             if (pbTestPreview != null && _allData.Count > 0)
-                if (File.Exists(_allData[0].ImagePath)) pbTestPreview.Image = Image.FromFile(_allData[0].ImagePath);
+            {
+                ReleaseTestPreviewImage();
+                if (File.Exists(_allData[0].ImagePath)) pbTestPreview.Image = LoadImageWithoutLock(_allData[0].ImagePath);
+            }
         }
 
         private void ParseCatalogData(string basePath, string[] catalogFiles)
@@ -515,10 +543,10 @@ namespace DataManager
         {
             if (_currentIndex < 0 || _currentIndex >= _allData.Count) return;
             var data = _allData[_currentIndex];
+            ReleaseDataPreviewImage();
             if (File.Exists(data.ImagePath))
             {
-                using (var fs = new FileStream(data.ImagePath, FileMode.Open, FileAccess.Read))
-                    pbDataPreview.Image = Image.FromStream(fs);
+                pbDataPreview.Image = LoadImageWithoutLock(data.ImagePath);
             }
             dgvDataInfo.Rows[0].Cells[1].Value = _allData.Count;
             dgvDataInfo.Rows[1].Cells[1].Value = _currentIndex;
@@ -541,7 +569,7 @@ namespace DataManager
             txtFolderPath.Text = "\uB370\uC774\uD130\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4. \uB370\uC774\uD130\uB97C \uAC00\uC838\uC624\uC138\uC694";
         }
 
-        private void StartPlayback() { if (!EnsureDataLoaded()) return; _playTimer.Interval = (int)(150 / (tbPlaybackSpeed.Value / 100.0)); _playTimer.Start(); }
+        private void StartPlayback() { if (!EnsureDataLoaded()) return; _playTimer.Interval = GetPlaybackInterval(); _playTimer.Start(); }
         private void PlayTimer_Tick(object? sender, EventArgs e)
         {
             if (_isReversed) { if (_currentIndex > 0) _currentIndex--; else _playTimer.Stop(); }
@@ -711,7 +739,7 @@ namespace DataManager
             }
             catch (Exception ex)
             {
-                MessageBox.Show("?꾨줈?몄뒪 ?ㅽ뻾 以??ㅻ쪟: " + ex.Message);
+                MessageBox.Show("프로세스 실행 중 오류: " + ex.Message);
             }
             finally
             {
@@ -786,7 +814,7 @@ namespace DataManager
 
                 if (!string.IsNullOrEmpty(error))
                 {
-                    txtTrainingLog?.AppendText($"[?뚯씠???먮윭] {error}\r\n");
+                    txtTrainingLog?.AppendText($"[예측 오류] {error}\r\n");
                 }
 
                 // Prepare temporary files for test predictions.
@@ -812,7 +840,7 @@ namespace DataManager
             }
             catch (Exception ex)
             {
-                MessageBox.Show("?뚯뒪???ㅽ뙣: " + ex.Message);
+                MessageBox.Show("테스트 실패: " + ex.Message);
             }
         }
 
@@ -820,10 +848,10 @@ namespace DataManager
         {
             if (!EnsureDataLoaded() || tbTestImageNavigator == null || pbTestPreview == null) return;
             int idx = tbTestImageNavigator.Value;
+            ReleaseTestPreviewImage();
             if (idx >= 0 && idx < _allData.Count && File.Exists(_allData[idx].ImagePath))
             {
-                using (var fs = new FileStream(_allData[idx].ImagePath, FileMode.Open, FileAccess.Read))
-                    pbTestPreview.Image = Image.FromStream(fs);
+                pbTestPreview.Image = LoadImageWithoutLock(_allData[idx].ImagePath);
             }
         }
 
@@ -859,6 +887,10 @@ namespace DataManager
                 DeleteDataItems(_allData.GetRange(min, max - min + 1), min);
                 ClearMarkers();
             }
+            else if (TryGetSelectedListViewDataItems(out var selectedItems, out int restoreIndex))
+            {
+                DeleteDataItems(selectedItems, restoreIndex);
+            }
             else
             {
                 DeleteDataItems(new List<DrivingData> { _allData[_currentIndex] }, _currentIndex);
@@ -867,34 +899,11 @@ namespace DataManager
 
         private void btnCancelDelete_Click(object sender, EventArgs e)
         {
-            if (!EnsureDataLoaded()) return;
             if (_deleteUndoStack.Count == 0) return;
 
             DeleteAction action = _deleteUndoStack.Pop();
             try
             {
-                foreach (var file in action.MovedFiles)
-                {
-                    if (!File.Exists(file.TrashPath)) continue;
-
-                    string? dir = Path.GetDirectoryName(file.OriginalPath);
-                    if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-
-                    string originalPath = file.OriginalPath;
-                    if (File.Exists(file.OriginalPath))
-                    {
-                        string duplicatePath = GetUniquePath(file.OriginalPath);
-                        File.Move(file.TrashPath, duplicatePath);
-                        file.OriginalPath = duplicatePath;
-                        foreach (var item in action.Items.Where(x => x.ImagePath == originalPath))
-                            item.ImagePath = duplicatePath;
-                    }
-                    else
-                    {
-                        File.Move(file.TrashPath, file.OriginalPath);
-                    }
-                }
-
                 RestoreCatalogFiles(action);
 
                 int insertIndex = Math.Max(0, Math.Min(action.RestoreIndex, _allData.Count));
@@ -904,7 +913,7 @@ namespace DataManager
             }
             catch (Exception ex)
             {
-                MessageBox.Show("蹂듦뎄 以??ㅻ쪟: " + ex.Message);
+                MessageBox.Show("복구 중 오류: " + ex.Message);
             }
         }
 
@@ -922,21 +931,9 @@ namespace DataManager
 
             try
             {
-                string trashDir = CreateTrashDirectory();
-                foreach (var item in items)
-                {
-                    if (!File.Exists(item.ImagePath)) continue;
+                string backupDir = CreateCatalogBackupDirectory();
 
-                    string trashPath = GetUniquePath(Path.Combine(trashDir, Path.GetFileName(item.ImagePath)));
-                    File.Move(item.ImagePath, trashPath);
-                    action.MovedFiles.Add(new FileMoveInfo
-                    {
-                        OriginalPath = item.ImagePath,
-                        TrashPath = trashPath
-                    });
-                }
-
-                RemoveCatalogLines(action, items, trashDir);
+                RemoveCatalogLines(action, items, backupDir);
 
                 foreach (var item in items)
                     _allData.Remove(item);
@@ -948,12 +945,11 @@ namespace DataManager
             catch (Exception ex)
             {
                 RestoreCatalogFiles(action);
-                RollbackMovedFiles(action);
-                MessageBox.Show("??젣 以??ㅻ쪟: " + ex.Message);
+                MessageBox.Show("삭제 중 오류: " + ex.Message);
             }
         }
 
-        private void RemoveCatalogLines(DeleteAction action, List<DrivingData> items, string trashDir)
+        private void RemoveCatalogLines(DeleteAction action, List<DrivingData> items, string backupDir)
         {
             var catalogItems = items
                 .Where(x => !string.IsNullOrWhiteSpace(x.CatalogFilePath) && x.CatalogLineNumber >= 0)
@@ -965,7 +961,7 @@ namespace DataManager
                 string catalogPath = group.Key;
                 if (!File.Exists(catalogPath)) continue;
 
-                BackupCatalogFile(action, catalogPath, trashDir);
+                BackupCatalogFile(action, catalogPath, backupDir);
 
                 var imageNamesToRemove = group
                     .Select(x => x.CatalogImageName)
@@ -981,16 +977,16 @@ namespace DataManager
                     .ToArray();
 
                 File.WriteAllLines(catalogPath, keptLines);
-                UpdateCatalogManifest(action, catalogPath, keptLines, trashDir);
+                UpdateCatalogManifest(action, catalogPath, keptLines, backupDir);
             }
         }
 
-        private void BackupCatalogFile(DeleteAction action, string originalPath, string trashDir)
+        private void BackupCatalogFile(DeleteAction action, string originalPath, string backupDir)
         {
             if (!File.Exists(originalPath)) return;
             if (action.CatalogBackups.Any(x => x.OriginalPath.Equals(originalPath, StringComparison.OrdinalIgnoreCase))) return;
 
-            string backupPath = GetUniquePath(Path.Combine(trashDir, Path.GetFileName(originalPath) + ".bak"));
+            string backupPath = GetUniquePath(Path.Combine(backupDir, Path.GetFileName(originalPath) + ".bak"));
             File.Copy(originalPath, backupPath);
             action.CatalogBackups.Add(new CatalogBackupInfo
             {
@@ -999,12 +995,12 @@ namespace DataManager
             });
         }
 
-        private void UpdateCatalogManifest(DeleteAction action, string catalogPath, string[] catalogLines, string trashDir)
+        private void UpdateCatalogManifest(DeleteAction action, string catalogPath, string[] catalogLines, string backupDir)
         {
             string catalogManifestPath = catalogPath + "_manifest";
             if (!File.Exists(catalogManifestPath)) return;
 
-            BackupCatalogFile(action, catalogManifestPath, trashDir);
+            BackupCatalogFile(action, catalogManifestPath, backupDir);
 
             try
             {
@@ -1072,20 +1068,20 @@ namespace DataManager
             }
         }
 
-        private string CreateTrashDirectory()
+        private string CreateCatalogBackupDirectory()
         {
             string basePath = Directory.Exists(txtFolderPath.Text) ? txtFolderPath.Text : Application.StartupPath;
-            string trashRoot = Path.Combine(basePath, ".datamanager_trash");
-            string trashDir = Path.Combine(trashRoot, DateTime.Now.ToString("yyyyMMdd_HHmmss_fff"));
-            Directory.CreateDirectory(trashDir);
+            string backupRoot = Path.Combine(basePath, ".datamanager_catalog_backups");
+            string backupDir = Path.Combine(backupRoot, DateTime.Now.ToString("yyyyMMdd_HHmmss_fff"));
+            Directory.CreateDirectory(backupDir);
 
             try
             {
-                File.SetAttributes(trashRoot, File.GetAttributes(trashRoot) | FileAttributes.Hidden);
+                File.SetAttributes(backupRoot, File.GetAttributes(backupRoot) | FileAttributes.Hidden);
             }
             catch { }
 
-            return trashDir;
+            return backupDir;
         }
 
         private string GetUniquePath(string path)
@@ -1106,27 +1102,21 @@ namespace DataManager
             return candidate;
         }
 
-        private void RollbackMovedFiles(DeleteAction action)
+        private void ReleasePreviewImages()
         {
-            foreach (var file in action.MovedFiles)
-            {
-                try
-                {
-                    if (!File.Exists(file.TrashPath) || File.Exists(file.OriginalPath)) continue;
-                    string? dir = Path.GetDirectoryName(file.OriginalPath);
-                    if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-                    File.Move(file.TrashPath, file.OriginalPath);
-                }
-                catch { }
-            }
+            ReleaseDataPreviewImage();
+            ReleaseTestPreviewImage();
         }
 
-        private void ReleasePreviewImages()
+        private void ReleaseDataPreviewImage()
         {
             Image? dataImage = pbDataPreview.Image;
             pbDataPreview.Image = null;
             dataImage?.Dispose();
+        }
 
+        private void ReleaseTestPreviewImage()
+        {
             if (pbTestPreview != null)
             {
                 Image? testImage = pbTestPreview.Image;
@@ -1135,8 +1125,39 @@ namespace DataManager
             }
         }
 
-        private void RefreshDataListView()
+        private Image LoadImageWithoutLock(string imagePath)
         {
+            using var stream = new MemoryStream(File.ReadAllBytes(imagePath));
+            using var image = Image.FromStream(stream);
+            return new Bitmap(image);
+        }
+
+        private bool TryGetSelectedListViewDataItems(out List<DrivingData> selectedItems, out int restoreIndex)
+        {
+            var selectedIndexes = lvDataItems.SelectedItems
+                .Cast<ListViewItem>()
+                .Select(item => int.TryParse(item.Text, out int idx) ? idx : (int?)null)
+                .Where(idx => idx.HasValue)
+                .Select(idx => idx!.Value)
+                .ToHashSet();
+
+            selectedItems = _allData
+                .Where(data => selectedIndexes.Contains(data.Index))
+                .ToList();
+
+            restoreIndex = selectedItems.Count == 0
+                ? -1
+                : selectedItems.Min(item => _allData.IndexOf(item));
+
+            return selectedItems.Count > 0;
+        }
+
+        private void RefreshDataListView(bool preserveScroll = true)
+        {
+            int topItemIndex = preserveScroll && lvDataItems.TopItem != null
+                ? lvDataItems.TopItem.Index
+                : -1;
+
             lvDataItems.BeginUpdate();
             lvDataItems.Items.Clear();
             foreach (var d in _allData.OrderBy(x => x.Index))
@@ -1146,9 +1167,22 @@ namespace DataManager
                 lvDataItems.Items.Add(item);
             }
             lvDataItems.EndUpdate();
+
+            if (topItemIndex >= 0 && lvDataItems.Items.Count > 0)
+            {
+                int restoredTopIndex = Math.Min(topItemIndex, lvDataItems.Items.Count - 1);
+                try
+                {
+                    lvDataItems.TopItem = lvDataItems.Items[restoredTopIndex];
+                }
+                catch
+                {
+                    lvDataItems.Items[restoredTopIndex].EnsureVisible();
+                }
+            }
         }
 
-        private void RefreshUI() { _currentIndex = Math.Max(0, Math.Min(_currentIndex, _allData.Count - 1)); tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); RefreshDataListView(); UpdateDisplay(); UpdateCharts(); }
+        private void RefreshUI() { _currentIndex = Math.Max(0, Math.Min(_currentIndex, _allData.Count - 1)); tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); if (tbTestImageNavigator != null) tbTestImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); RefreshDataListView(); UpdateDisplay(); UpdateCharts(); }
 
         private void AddMarker()
         {
@@ -1194,12 +1228,12 @@ namespace DataManager
 
                 if (chtTestSteeringValue != null)
                 {
-                    chtTestSteeringValue.Series["Actual"].Points.AddXY(d.Index, d.Steering);
+                    chtTestSteeringValue.Series["실제값"].Points.AddXY(d.Index, d.Steering);
                     chtTestSteeringValue.Series[0].Points.AddXY(d.Index, d.PredictedSteering);
                 }
                 if (chtTestSpeedValue != null)
                 {
-                    chtTestSpeedValue.Series["Actual"].Points.AddXY(d.Index, d.Speed);
+                    chtTestSpeedValue.Series["실제값"].Points.AddXY(d.Index, d.Speed);
                     chtTestSpeedValue.Series[0].Points.AddXY(d.Index, d.PredictedSpeed);
                 }
             }
@@ -1285,7 +1319,7 @@ namespace DataManager
 
         private void ApplyTextPolish()
         {
-            Text = "Data Manager";
+            Text = "데이터 관리자";
             btnFilter.Text = string.Empty;
             btnCheckDataIntegrity.Text = "무결성 검사";
             btnTrain.Text = string.Empty;
@@ -1466,7 +1500,8 @@ namespace DataManager
         }
         private void InitializeDataInfoGrid() { dgvDataInfo.Rows.Clear(); dgvDataInfo.Rows.Add("데이터 수", "0"); dgvDataInfo.Rows.Add("이미지", "0"); dgvDataInfo.Rows.Add("조향값", "0"); dgvDataInfo.Rows.Add("속도값", "0"); }
         private void UpdatePlaybackSpeedLabel() { if (lblPlaybackSpeed != null) lblPlaybackSpeed.Text = $"x{tbPlaybackSpeed.Value / 100.0:0.##}"; }
-        private void tbPlaybackSpeed_Scroll(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; UpdatePlaybackSpeedLabel(); if (_playTimer.Enabled) _playTimer.Interval = (int)(150 / (tbPlaybackSpeed.Value / 100.0)); }
+        private int GetPlaybackInterval() { return Math.Max(1, (int)(BasePlaybackIntervalMs / (tbPlaybackSpeed.Value / 100.0))); }
+        private void tbPlaybackSpeed_Scroll(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; UpdatePlaybackSpeedLabel(); if (_playTimer.Enabled) _playTimer.Interval = GetPlaybackInterval(); }
         private void btnSetRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; _isRangeSettingMode = true; }
         private void btnCancelRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; ClearMarkers(); }
         private void gbDataContent_Resize(object sender, EventArgs e) { LayoutDataContentControls(); foreach (var m in _imageRangeMarkers) if (m.Tag is int val) m.Left = GetImageNavigatorMarkerLeft(val, m.Size); if (_allData.Count > 0) UpdateCharts(); }
@@ -1475,6 +1510,40 @@ namespace DataManager
 
         private void dgvDataInfo_CellContentClick(object sender, DataGridViewCellEventArgs e) { }
         private void lvDataItems_SelectedIndexChanged(object sender, EventArgs e) { if (lvDataItems.SelectedItems.Count > 0 && int.TryParse(lvDataItems.SelectedItems[0].Text, out int idx)) { _currentIndex = _allData.FindIndex(x => x.Index == idx); UpdateDisplay(); } }
+        private void lvDataItems_MouseDown(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left) return;
+
+            ListViewItem? item = lvDataItems.GetItemAt(e.X, e.Y);
+            _listViewDragAnchorIndex = item?.Index ?? -1;
+        }
+
+        private void lvDataItems_MouseMove(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left || _listViewDragAnchorIndex < 0) return;
+
+            ListViewItem? item = lvDataItems.GetItemAt(e.X, e.Y);
+            if (item == null || item.Index == _listViewDragAnchorIndex) return;
+
+            SelectListViewRange(_listViewDragAnchorIndex, item.Index);
+        }
+
+        private void lvDataItems_MouseUp(object? sender, MouseEventArgs e)
+        {
+            _listViewDragAnchorIndex = -1;
+        }
+
+        private void SelectListViewRange(int startIndex, int endIndex)
+        {
+            int min = Math.Max(0, Math.Min(startIndex, endIndex));
+            int max = Math.Min(lvDataItems.Items.Count - 1, Math.Max(startIndex, endIndex));
+
+            lvDataItems.BeginUpdate();
+            for (int i = 0; i < lvDataItems.Items.Count; i++)
+                lvDataItems.Items[i].Selected = i >= min && i <= max;
+            lvDataItems.EndUpdate();
+        }
+
         private void btnFilter_Click_1(object sender, EventArgs e) => btnFilter_Click(sender, e);
         private void tpDataManager_Click(object sender, EventArgs e) { }
         private void gbDataContent_Enter(object sender, EventArgs e) { }
