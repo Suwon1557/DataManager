@@ -155,10 +155,10 @@ namespace DataManager
             ApplyResponsiveLayout();
             EnsureDataChartsLayout();
             EnsureTestChartsLayout();
-            SetupSafeChart(chtSteeringValue, "Steering Data", Color.DodgerBlue, "실제 조향값");
-            SetupSafeChart(chtSpeedValue, "Speed Data", Color.OrangeRed, "실제 속도값");
-            SetupSafeChart(chtTestSteeringValue, "실제/예측 조향값 비교 Chart", Color.Blue, "예측값", "Actual", Color.Green);
-            SetupSafeChart(chtTestSpeedValue, "실제/예측 속도값 비교 Chart", Color.Red, "예측값", "Actual", Color.Green);
+            SetupSafeChart(chtSteeringValue, "조향 데이터", Color.FromArgb(45, 212, 191), "실제 조향값");
+            SetupSafeChart(chtSpeedValue, "속도 데이터", Color.FromArgb(245, 176, 65), "실제 속도값");
+            SetupSafeChart(chtTestSteeringValue, "조향 예측 비교", Color.FromArgb(248, 113, 113), "예측값", "실제값", Color.FromArgb(45, 212, 191));
+            SetupSafeChart(chtTestSpeedValue, "속도 예측 비교", Color.FromArgb(248, 113, 113), "예측값", "실제값", Color.FromArgb(245, 176, 65));
 
             UpdateCharts();
         }
@@ -328,8 +328,11 @@ namespace DataManager
             int chartLeft = pbTestPreview.Right + 20;
             int chartTop = pbTestPreview.Top;
             int chartBottom = tbTestImageNavigator.Top - 12;
-            layout.Bounds = new Rectangle(chartLeft, chartTop, Math.Max(100, gbModelTest.ClientSize.Width - chartLeft - 12), Math.Max(80, chartBottom - chartTop));
-            layout.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            int availableWidth = Math.Max(100, gbModelTest.ClientSize.Width - chartLeft - 12);
+            int chartWidth = Math.Max(100, availableWidth / 2);
+            int rightAlignedLeft = Math.Max(chartLeft, gbModelTest.ClientSize.Width - chartWidth - 12);
+            layout.Bounds = new Rectangle(rightAlignedLeft, chartTop, chartWidth, Math.Max(80, chartBottom - chartTop));
+            layout.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
 
             if (chtTestSteeringValue == null) chtTestSteeringValue = new Chart();
             if (chtTestSpeedValue == null) chtTestSpeedValue = new Chart();
@@ -389,25 +392,53 @@ namespace DataManager
             ChartArea ca = chart.ChartAreas.Count > 0 ? chart.ChartAreas[0] : chart.ChartAreas.Add("Main");
             ca.AxisX.Title = "";
             ca.AxisX.LabelStyle.Format = "0;0;0"; // Avoid displaying negative zero.
+            ca.BackColor = Color.FromArgb(22, 30, 46);
+            ca.BorderColor = Color.FromArgb(103, 119, 148);
+            ca.AxisX.LineColor = Color.FromArgb(103, 119, 148);
+            ca.AxisY.LineColor = Color.FromArgb(103, 119, 148);
+            ca.AxisX.MajorGrid.LineColor = Color.FromArgb(49, 62, 88);
+            ca.AxisY.MajorGrid.LineColor = Color.FromArgb(49, 62, 88);
+            ca.AxisX.LabelStyle.ForeColor = Color.FromArgb(238, 243, 249);
+            ca.AxisY.LabelStyle.ForeColor = Color.FromArgb(238, 243, 249);
+            ca.AxisX.MajorTickMark.LineColor = Color.FromArgb(103, 119, 148);
+            ca.AxisY.MajorTickMark.LineColor = Color.FromArgb(103, 119, 148);
+
+            chart.BackColor = Color.FromArgb(22, 30, 46);
+            chart.BorderlineColor = Color.FromArgb(103, 119, 148);
+            chart.BorderlineDashStyle = ChartDashStyle.Solid;
+            chart.BorderlineWidth = 1;
 
             chart.Titles.Clear();
             var title = chart.Titles.Add(titleName);
             title.Font = new Font("Malgun Gothic", 12, FontStyle.Bold);
-            title.ForeColor = Color.FromArgb(40, 40, 40);
+            title.ForeColor = Color.FromArgb(245, 176, 65);
 
             chart.Series.Clear();
             var s1 = chart.Series.Add(s1Name);
             s1.ChartType = SeriesChartType.Line;
             s1.Color = c1;
-            s1.BorderWidth = 2;
+            s1.BorderWidth = 3;
+            s1.ShadowColor = Color.Transparent;
 
             if (s2Name != null)
             {
                 var s2 = chart.Series.Add(s2Name);
                 s2.ChartType = SeriesChartType.Line;
-                s2.Color = c2 ?? Color.Green;
-                s2.BorderWidth = 2;
+                s2.Color = c2 ?? Color.FromArgb(45, 212, 191);
+                s2.BorderWidth = 3;
+                s2.ShadowColor = Color.Transparent;
             }
+
+            chart.Legends.Clear();
+            if (s2Name != null)
+            {
+                var legend = chart.Legends.Add("Legend");
+                legend.BackColor = Color.Transparent;
+                legend.ForeColor = Color.FromArgb(238, 243, 249);
+                legend.Font = new Font("Malgun Gothic", 8F, FontStyle.Regular);
+                legend.Docking = Docking.Bottom;
+            }
+
             chart.Visible = true;
             chart.BringToFront();
         }
@@ -708,7 +739,7 @@ namespace DataManager
             }
             catch (Exception ex)
             {
-                MessageBox.Show("?꾨줈?몄뒪 ?ㅽ뻾 以??ㅻ쪟: " + ex.Message);
+                MessageBox.Show("프로세스 실행 중 오류: " + ex.Message);
             }
             finally
             {
@@ -783,7 +814,7 @@ namespace DataManager
 
                 if (!string.IsNullOrEmpty(error))
                 {
-                    txtTrainingLog?.AppendText($"[?뚯씠???먮윭] {error}\r\n");
+                    txtTrainingLog?.AppendText($"[예측 오류] {error}\r\n");
                 }
 
                 // Prepare temporary files for test predictions.
@@ -809,7 +840,7 @@ namespace DataManager
             }
             catch (Exception ex)
             {
-                MessageBox.Show("?뚯뒪???ㅽ뙣: " + ex.Message);
+                MessageBox.Show("테스트 실패: " + ex.Message);
             }
         }
 
@@ -882,7 +913,7 @@ namespace DataManager
             }
             catch (Exception ex)
             {
-                MessageBox.Show("蹂듦뎄 以??ㅻ쪟: " + ex.Message);
+                MessageBox.Show("복구 중 오류: " + ex.Message);
             }
         }
 
@@ -914,7 +945,7 @@ namespace DataManager
             catch (Exception ex)
             {
                 RestoreCatalogFiles(action);
-                MessageBox.Show("??젣 以??ㅻ쪟: " + ex.Message);
+                MessageBox.Show("삭제 중 오류: " + ex.Message);
             }
         }
 
@@ -1197,12 +1228,12 @@ namespace DataManager
 
                 if (chtTestSteeringValue != null)
                 {
-                    chtTestSteeringValue.Series["Actual"].Points.AddXY(d.Index, d.Steering);
+                    chtTestSteeringValue.Series["실제값"].Points.AddXY(d.Index, d.Steering);
                     chtTestSteeringValue.Series[0].Points.AddXY(d.Index, d.PredictedSteering);
                 }
                 if (chtTestSpeedValue != null)
                 {
-                    chtTestSpeedValue.Series["Actual"].Points.AddXY(d.Index, d.Speed);
+                    chtTestSpeedValue.Series["실제값"].Points.AddXY(d.Index, d.Speed);
                     chtTestSpeedValue.Series[0].Points.AddXY(d.Index, d.PredictedSpeed);
                 }
             }
@@ -1288,7 +1319,7 @@ namespace DataManager
 
         private void ApplyTextPolish()
         {
-            Text = "Data Manager";
+            Text = "데이터 관리자";
             btnFilter.Text = string.Empty;
             btnCheckDataIntegrity.Text = "무결성 검사";
             btnTrain.Text = string.Empty;

@@ -137,11 +137,11 @@ namespace DataManager
             tpDataManager.BackColor = Color.FromArgb(28, 36, 54);
             tpDataManager.Controls.Add(gbDataContent);
             tpDataManager.Controls.Add(gbDataLoad);
-            tpDataManager.Location = new Point(5, 25);
+            tpDataManager.Location = new Point(4, 24);
             tpDataManager.Margin = new Padding(7, 5, 7, 5);
             tpDataManager.Name = "tpDataManager";
             tpDataManager.Padding = new Padding(7, 5, 7, 5);
-            tpDataManager.Size = new Size(1893, 869);
+            tpDataManager.Size = new Size(1896, 872);
             tpDataManager.TabIndex = 0;
             tpDataManager.Text = "데이터 관리";
             tpDataManager.Click += tpDataManager_Click;
@@ -171,7 +171,7 @@ namespace DataManager
             gbDataContent.Margin = new Padding(7, 5, 7, 5);
             gbDataContent.Name = "gbDataContent";
             gbDataContent.Padding = new Padding(7, 5, 7, 5);
-            gbDataContent.Size = new Size(1781, 719);
+            gbDataContent.Size = new Size(1784, 722);
             gbDataContent.TabIndex = 1;
             gbDataContent.TabStop = false;
             gbDataContent.Text = "데이터 탐색";
@@ -186,7 +186,7 @@ namespace DataManager
             btnSetRange.FlatStyle = FlatStyle.Flat;
             btnSetRange.Font = new Font("한컴 고딕", 12.02F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnSetRange.ForeColor = Color.FromArgb(238, 243, 249);
-            btnSetRange.Location = new Point(1329, 361);
+            btnSetRange.Location = new Point(1332, 361);
             btnSetRange.Margin = new Padding(7, 5, 7, 5);
             btnSetRange.Name = "btnSetRange";
             btnSetRange.Size = new Size(226, 63);
@@ -202,7 +202,7 @@ namespace DataManager
             btnCancelRange.FlatAppearance.BorderColor = Color.FromArgb(245, 176, 65);
             btnCancelRange.FlatStyle = FlatStyle.Flat;
             btnCancelRange.ForeColor = Color.FromArgb(245, 176, 65);
-            btnCancelRange.Location = new Point(1564, 361);
+            btnCancelRange.Location = new Point(1567, 361);
             btnCancelRange.Margin = new Padding(7, 5, 7, 5);
             btnCancelRange.Name = "btnCancelRange";
             btnCancelRange.Size = new Size(198, 63);
@@ -229,7 +229,7 @@ namespace DataManager
             tbImageNavigator.Margin = new Padding(7, 5, 7, 5);
             tbImageNavigator.Maximum = 100;
             tbImageNavigator.Name = "tbImageNavigator";
-            tbImageNavigator.Size = new Size(1744, 60);
+            tbImageNavigator.Size = new Size(1747, 45);
             tbImageNavigator.TabIndex = 11;
             tbImageNavigator.MouseUp += tbImageNavigator_MouseUp;
             // 
@@ -290,7 +290,7 @@ namespace DataManager
             lblPlaybackSpeed.Location = new Point(487, 369);
             lblPlaybackSpeed.Margin = new Padding(7, 0, 7, 0);
             lblPlaybackSpeed.Name = "lblPlaybackSpeed";
-            lblPlaybackSpeed.Size = new Size(60, 48);
+            lblPlaybackSpeed.Size = new Size(32, 25);
             lblPlaybackSpeed.TabIndex = 7;
             lblPlaybackSpeed.Text = "x1";
             // 
@@ -302,7 +302,7 @@ namespace DataManager
             tbPlaybackSpeed.Margin = new Padding(7, 5, 7, 5);
             tbPlaybackSpeed.Maximum = 4;
             tbPlaybackSpeed.Name = "tbPlaybackSpeed";
-            tbPlaybackSpeed.Size = new Size(458, 60);
+            tbPlaybackSpeed.Size = new Size(458, 45);
             tbPlaybackSpeed.TabIndex = 6;
             tbPlaybackSpeed.Value = 2;
             tbPlaybackSpeed.Scroll += tbPlaybackSpeed_Scroll;
@@ -430,7 +430,7 @@ namespace DataManager
             lvDataItems.Location = new Point(1336, 43);
             lvDataItems.Margin = new Padding(7, 5, 7, 5);
             lvDataItems.Name = "lvDataItems";
-            lvDataItems.Size = new Size(425, 272);
+            lvDataItems.Size = new Size(428, 272);
             lvDataItems.TabIndex = 1;
             lvDataItems.UseCompatibleStateImageBehavior = false;
             lvDataItems.View = View.Details;
@@ -461,7 +461,7 @@ namespace DataManager
             gbDataLoad.Margin = new Padding(7, 5, 7, 5);
             gbDataLoad.Name = "gbDataLoad";
             gbDataLoad.Padding = new Padding(7, 5, 7, 5);
-            gbDataLoad.Size = new Size(1781, 120);
+            gbDataLoad.Size = new Size(1784, 120);
             gbDataLoad.TabIndex = 0;
             gbDataLoad.TabStop = false;
             gbDataLoad.Text = "데이터 불러오기";
@@ -474,7 +474,7 @@ namespace DataManager
             btnCheckDataIntegrity.FlatStyle = FlatStyle.Flat;
             btnCheckDataIntegrity.Font = new Font("한컴 고딕", 10.77F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnCheckDataIntegrity.ForeColor = Color.FromArgb(238, 243, 249);
-            btnCheckDataIntegrity.Location = new Point(1469, 41);
+            btnCheckDataIntegrity.Location = new Point(1472, 41);
             btnCheckDataIntegrity.Margin = new Padding(7, 5, 7, 5);
             btnCheckDataIntegrity.Name = "btnCheckDataIntegrity";
             btnCheckDataIntegrity.Size = new Size(293, 45);
@@ -488,13 +488,13 @@ namespace DataManager
             txtFolderPath.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtFolderPath.BackColor = Color.FromArgb(22, 30, 46);
             txtFolderPath.BorderStyle = BorderStyle.FixedSingle;
-            txtFolderPath.Font = new Font("Constantia", 13.28F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            txtFolderPath.Font = new Font("Constantia", 20.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
             txtFolderPath.ForeColor = Color.FromArgb(238, 243, 249);
             txtFolderPath.Location = new Point(246, 45);
             txtFolderPath.Margin = new Padding(7, 5, 7, 5);
             txtFolderPath.Name = "txtFolderPath";
             txtFolderPath.ReadOnly = true;
-            txtFolderPath.Size = new Size(1208, 48);
+            txtFolderPath.Size = new Size(1211, 40);
             txtFolderPath.TabIndex = 1;
             txtFolderPath.Text = "(폴더경로)";
             txtFolderPath.TextChanged += txtFolderPath_TextChanged;
@@ -521,11 +521,11 @@ namespace DataManager
             tpTrainingTest.BackColor = Color.FromArgb(28, 36, 54);
             tpTrainingTest.Controls.Add(gbModelTest);
             tpTrainingTest.Controls.Add(gbTrainingSetup);
-            tpTrainingTest.Location = new Point(5, 25);
+            tpTrainingTest.Location = new Point(4, 24);
             tpTrainingTest.Margin = new Padding(7, 5, 7, 5);
             tpTrainingTest.Name = "tpTrainingTest";
             tpTrainingTest.Padding = new Padding(7, 5, 7, 5);
-            tpTrainingTest.Size = new Size(1893, 869);
+            tpTrainingTest.Size = new Size(1896, 872);
             tpTrainingTest.TabIndex = 1;
             tpTrainingTest.Text = "학습/테스트";
             // 
@@ -542,7 +542,7 @@ namespace DataManager
             gbModelTest.Margin = new Padding(7, 5, 7, 5);
             gbModelTest.Name = "gbModelTest";
             gbModelTest.Padding = new Padding(7, 5, 7, 5);
-            gbModelTest.Size = new Size(1867, 683);
+            gbModelTest.Size = new Size(1870, 686);
             gbModelTest.TabIndex = 1;
             gbModelTest.TabStop = false;
             gbModelTest.Text = "모델 테스트";
@@ -551,11 +551,11 @@ namespace DataManager
             // 
             tbTestImageNavigator.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             tbTestImageNavigator.BackColor = Color.FromArgb(39, 50, 72);
-            tbTestImageNavigator.Location = new Point(18, 615);
+            tbTestImageNavigator.Location = new Point(18, 618);
             tbTestImageNavigator.Margin = new Padding(7, 5, 7, 5);
             tbTestImageNavigator.Maximum = 100;
             tbTestImageNavigator.Name = "tbTestImageNavigator";
-            tbTestImageNavigator.Size = new Size(1830, 60);
+            tbTestImageNavigator.Size = new Size(1833, 45);
             tbTestImageNavigator.TabIndex = 2;
             tbTestImageNavigator.Scroll += tbTestImageNavigator_Scroll_1;
             // 
@@ -599,7 +599,7 @@ namespace DataManager
             gbTrainingSetup.Margin = new Padding(7, 5, 7, 5);
             gbTrainingSetup.Name = "gbTrainingSetup";
             gbTrainingSetup.Padding = new Padding(7, 5, 7, 5);
-            gbTrainingSetup.Size = new Size(1867, 156);
+            gbTrainingSetup.Size = new Size(1870, 156);
             gbTrainingSetup.TabIndex = 0;
             gbTrainingSetup.TabStop = false;
             gbTrainingSetup.Text = "데이터 학습";
@@ -618,7 +618,7 @@ namespace DataManager
             txtTrainingLog.Name = "txtTrainingLog";
             txtTrainingLog.ReadOnly = true;
             txtTrainingLog.ScrollBars = ScrollBars.Vertical;
-            txtTrainingLog.Size = new Size(1592, 86);
+            txtTrainingLog.Size = new Size(1595, 86);
             txtTrainingLog.TabIndex = 1;
             // 
             // btnTrain
@@ -635,7 +635,6 @@ namespace DataManager
             btnTrain.Name = "btnTrain";
             btnTrain.Size = new Size(214, 84);
             btnTrain.TabIndex = 0;
-            btnTrain.Text = "";
             btnTrain.UseVisualStyleBackColor = false;
             btnTrain.Click += btnTrain_Click;
             // 
@@ -648,13 +647,12 @@ namespace DataManager
             lblTitle.Location = new Point(6, 8);
             lblTitle.Margin = new Padding(7, 0, 7, 0);
             lblTitle.Name = "lblTitle";
-            lblTitle.Size = new Size(234, 39);
+            lblTitle.Size = new Size(122, 20);
             lblTitle.TabIndex = 0;
             lblTitle.Text = "Data Manager";
             // 
             // Form1
             // 
-            AutoScaleDimensions = new SizeF(16F, 27F);
             AutoScaleMode = AutoScaleMode.None;
             BackColor = Color.FromArgb(18, 24, 38);
             ClientSize = new Size(1904, 900);
