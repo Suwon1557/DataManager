@@ -32,14 +32,7 @@ namespace DataManager
         {
             public List<DrivingData> Items { get; set; } = new List<DrivingData>();
             public int RestoreIndex { get; set; }
-            public List<FileMoveInfo> MovedFiles { get; set; } = new List<FileMoveInfo>();
             public List<CatalogBackupInfo> CatalogBackups { get; set; } = new List<CatalogBackupInfo>();
-        }
-
-        private class FileMoveInfo
-        {
-            public string OriginalPath { get; set; } = "";
-            public string TrashPath { get; set; } = "";
         }
 
         private class CatalogBackupInfo
@@ -426,6 +419,7 @@ namespace DataManager
         {
             _allData.Clear();
             lvDataItems.Items.Clear();
+            ReleasePreviewImages();
             txtFolderPath.ForeColor = _folderPathTextColor;
 
             var catalogFiles = Directory.GetFiles(path, "*.catalog");
@@ -433,13 +427,6 @@ namespace DataManager
             if (catalogFiles.Length > 0)
             {
                 ParseCatalogData(path, catalogFiles);
-            }
-            else
-            {
-                var files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories).ToList();
-                files.Sort((x, y) => StrCmpLogicalW(x, y));
-                for (int i = 0; i < files.Count; i++)
-                    _allData.Add(new DrivingData { Index = i, ImagePath = files[i], Steering = 0, Speed = 0 });
             }
 
             RefreshDataListView();
@@ -459,7 +446,10 @@ namespace DataManager
 
             // Show the first loaded image in the test preview.
             if (pbTestPreview != null && _allData.Count > 0)
-                if (File.Exists(_allData[0].ImagePath)) pbTestPreview.Image = Image.FromFile(_allData[0].ImagePath);
+            {
+                ReleaseTestPreviewImage();
+                if (File.Exists(_allData[0].ImagePath)) pbTestPreview.Image = LoadImageWithoutLock(_allData[0].ImagePath);
+            }
         }
 
         private void ParseCatalogData(string basePath, string[] catalogFiles)
@@ -515,10 +505,10 @@ namespace DataManager
         {
             if (_currentIndex < 0 || _currentIndex >= _allData.Count) return;
             var data = _allData[_currentIndex];
+            ReleaseDataPreviewImage();
             if (File.Exists(data.ImagePath))
             {
-                using (var fs = new FileStream(data.ImagePath, FileMode.Open, FileAccess.Read))
-                    pbDataPreview.Image = Image.FromStream(fs);
+                pbDataPreview.Image = LoadImageWithoutLock(data.ImagePath);
             }
             dgvDataInfo.Rows[0].Cells[1].Value = _allData.Count;
             dgvDataInfo.Rows[1].Cells[1].Value = _currentIndex;
@@ -820,10 +810,10 @@ namespace DataManager
         {
             if (!EnsureDataLoaded() || tbTestImageNavigator == null || pbTestPreview == null) return;
             int idx = tbTestImageNavigator.Value;
+            ReleaseTestPreviewImage();
             if (idx >= 0 && idx < _allData.Count && File.Exists(_allData[idx].ImagePath))
             {
-                using (var fs = new FileStream(_allData[idx].ImagePath, FileMode.Open, FileAccess.Read))
-                    pbTestPreview.Image = Image.FromStream(fs);
+                pbTestPreview.Image = LoadImageWithoutLock(_allData[idx].ImagePath);
             }
         }
 
@@ -867,34 +857,11 @@ namespace DataManager
 
         private void btnCancelDelete_Click(object sender, EventArgs e)
         {
-            if (!EnsureDataLoaded()) return;
             if (_deleteUndoStack.Count == 0) return;
 
             DeleteAction action = _deleteUndoStack.Pop();
             try
             {
-                foreach (var file in action.MovedFiles)
-                {
-                    if (!File.Exists(file.TrashPath)) continue;
-
-                    string? dir = Path.GetDirectoryName(file.OriginalPath);
-                    if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-
-                    string originalPath = file.OriginalPath;
-                    if (File.Exists(file.OriginalPath))
-                    {
-                        string duplicatePath = GetUniquePath(file.OriginalPath);
-                        File.Move(file.TrashPath, duplicatePath);
-                        file.OriginalPath = duplicatePath;
-                        foreach (var item in action.Items.Where(x => x.ImagePath == originalPath))
-                            item.ImagePath = duplicatePath;
-                    }
-                    else
-                    {
-                        File.Move(file.TrashPath, file.OriginalPath);
-                    }
-                }
-
                 RestoreCatalogFiles(action);
 
                 int insertIndex = Math.Max(0, Math.Min(action.RestoreIndex, _allData.Count));
@@ -922,21 +889,9 @@ namespace DataManager
 
             try
             {
-                string trashDir = CreateTrashDirectory();
-                foreach (var item in items)
-                {
-                    if (!File.Exists(item.ImagePath)) continue;
+                string backupDir = CreateCatalogBackupDirectory();
 
-                    string trashPath = GetUniquePath(Path.Combine(trashDir, Path.GetFileName(item.ImagePath)));
-                    File.Move(item.ImagePath, trashPath);
-                    action.MovedFiles.Add(new FileMoveInfo
-                    {
-                        OriginalPath = item.ImagePath,
-                        TrashPath = trashPath
-                    });
-                }
-
-                RemoveCatalogLines(action, items, trashDir);
+                RemoveCatalogLines(action, items, backupDir);
 
                 foreach (var item in items)
                     _allData.Remove(item);
@@ -948,12 +903,11 @@ namespace DataManager
             catch (Exception ex)
             {
                 RestoreCatalogFiles(action);
-                RollbackMovedFiles(action);
                 MessageBox.Show("??젣 以??ㅻ쪟: " + ex.Message);
             }
         }
 
-        private void RemoveCatalogLines(DeleteAction action, List<DrivingData> items, string trashDir)
+        private void RemoveCatalogLines(DeleteAction action, List<DrivingData> items, string backupDir)
         {
             var catalogItems = items
                 .Where(x => !string.IsNullOrWhiteSpace(x.CatalogFilePath) && x.CatalogLineNumber >= 0)
@@ -965,7 +919,7 @@ namespace DataManager
                 string catalogPath = group.Key;
                 if (!File.Exists(catalogPath)) continue;
 
-                BackupCatalogFile(action, catalogPath, trashDir);
+                BackupCatalogFile(action, catalogPath, backupDir);
 
                 var imageNamesToRemove = group
                     .Select(x => x.CatalogImageName)
@@ -981,16 +935,16 @@ namespace DataManager
                     .ToArray();
 
                 File.WriteAllLines(catalogPath, keptLines);
-                UpdateCatalogManifest(action, catalogPath, keptLines, trashDir);
+                UpdateCatalogManifest(action, catalogPath, keptLines, backupDir);
             }
         }
 
-        private void BackupCatalogFile(DeleteAction action, string originalPath, string trashDir)
+        private void BackupCatalogFile(DeleteAction action, string originalPath, string backupDir)
         {
             if (!File.Exists(originalPath)) return;
             if (action.CatalogBackups.Any(x => x.OriginalPath.Equals(originalPath, StringComparison.OrdinalIgnoreCase))) return;
 
-            string backupPath = GetUniquePath(Path.Combine(trashDir, Path.GetFileName(originalPath) + ".bak"));
+            string backupPath = GetUniquePath(Path.Combine(backupDir, Path.GetFileName(originalPath) + ".bak"));
             File.Copy(originalPath, backupPath);
             action.CatalogBackups.Add(new CatalogBackupInfo
             {
@@ -999,12 +953,12 @@ namespace DataManager
             });
         }
 
-        private void UpdateCatalogManifest(DeleteAction action, string catalogPath, string[] catalogLines, string trashDir)
+        private void UpdateCatalogManifest(DeleteAction action, string catalogPath, string[] catalogLines, string backupDir)
         {
             string catalogManifestPath = catalogPath + "_manifest";
             if (!File.Exists(catalogManifestPath)) return;
 
-            BackupCatalogFile(action, catalogManifestPath, trashDir);
+            BackupCatalogFile(action, catalogManifestPath, backupDir);
 
             try
             {
@@ -1072,20 +1026,20 @@ namespace DataManager
             }
         }
 
-        private string CreateTrashDirectory()
+        private string CreateCatalogBackupDirectory()
         {
             string basePath = Directory.Exists(txtFolderPath.Text) ? txtFolderPath.Text : Application.StartupPath;
-            string trashRoot = Path.Combine(basePath, ".datamanager_trash");
-            string trashDir = Path.Combine(trashRoot, DateTime.Now.ToString("yyyyMMdd_HHmmss_fff"));
-            Directory.CreateDirectory(trashDir);
+            string backupRoot = Path.Combine(basePath, ".datamanager_catalog_backups");
+            string backupDir = Path.Combine(backupRoot, DateTime.Now.ToString("yyyyMMdd_HHmmss_fff"));
+            Directory.CreateDirectory(backupDir);
 
             try
             {
-                File.SetAttributes(trashRoot, File.GetAttributes(trashRoot) | FileAttributes.Hidden);
+                File.SetAttributes(backupRoot, File.GetAttributes(backupRoot) | FileAttributes.Hidden);
             }
             catch { }
 
-            return trashDir;
+            return backupDir;
         }
 
         private string GetUniquePath(string path)
@@ -1106,33 +1060,34 @@ namespace DataManager
             return candidate;
         }
 
-        private void RollbackMovedFiles(DeleteAction action)
+        private void ReleasePreviewImages()
         {
-            foreach (var file in action.MovedFiles)
-            {
-                try
-                {
-                    if (!File.Exists(file.TrashPath) || File.Exists(file.OriginalPath)) continue;
-                    string? dir = Path.GetDirectoryName(file.OriginalPath);
-                    if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-                    File.Move(file.TrashPath, file.OriginalPath);
-                }
-                catch { }
-            }
+            ReleaseDataPreviewImage();
+            ReleaseTestPreviewImage();
         }
 
-        private void ReleasePreviewImages()
+        private void ReleaseDataPreviewImage()
         {
             Image? dataImage = pbDataPreview.Image;
             pbDataPreview.Image = null;
             dataImage?.Dispose();
+        }
 
+        private void ReleaseTestPreviewImage()
+        {
             if (pbTestPreview != null)
             {
                 Image? testImage = pbTestPreview.Image;
                 pbTestPreview.Image = null;
                 testImage?.Dispose();
             }
+        }
+
+        private Image LoadImageWithoutLock(string imagePath)
+        {
+            using var stream = new MemoryStream(File.ReadAllBytes(imagePath));
+            using var image = Image.FromStream(stream);
+            return new Bitmap(image);
         }
 
         private void RefreshDataListView()
@@ -1148,7 +1103,7 @@ namespace DataManager
             lvDataItems.EndUpdate();
         }
 
-        private void RefreshUI() { _currentIndex = Math.Max(0, Math.Min(_currentIndex, _allData.Count - 1)); tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); RefreshDataListView(); UpdateDisplay(); UpdateCharts(); }
+        private void RefreshUI() { _currentIndex = Math.Max(0, Math.Min(_currentIndex, _allData.Count - 1)); tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); if (tbTestImageNavigator != null) tbTestImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); RefreshDataListView(); UpdateDisplay(); UpdateCharts(); }
 
         private void AddMarker()
         {
