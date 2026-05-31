@@ -22,6 +22,7 @@ namespace DataManager
         private int _currentIndex = -1;
         private bool _isReversed = false;
         private bool _isRangeSettingMode = false;
+        private int _listViewDragAnchorIndex = -1;
         private readonly Color _folderPathTextColor = Color.FromArgb(238, 243, 249);
         private readonly Color _folderPathWarningColor = Color.FromArgb(248, 113, 113);
         private readonly List<Panel> _imageRangeMarkers = new List<Panel>();
@@ -72,6 +73,8 @@ namespace DataManager
             UpdatePlaybackSpeedLabel();
             ApplyPolishedTheme();
             ConfigureResponsiveLayout();
+            lvDataItems.MultiSelect = true;
+            lvDataItems.HideSelection = false;
 
             _playTimer.Tick += PlayTimer_Tick;
             this.Shown += Form1_Shown;
@@ -79,6 +82,9 @@ namespace DataManager
 
             // Wire runtime event handlers.
             lvDataItems.SelectedIndexChanged += lvDataItems_SelectedIndexChanged;
+            lvDataItems.MouseDown += lvDataItems_MouseDown;
+            lvDataItems.MouseMove += lvDataItems_MouseMove;
+            lvDataItems.MouseUp += lvDataItems_MouseUp;
 
             // Wire runtime event handlers.
             tbImageNavigator.Scroll += tbImageNavigator_Scroll;
@@ -429,7 +435,7 @@ namespace DataManager
                 ParseCatalogData(path, catalogFiles);
             }
 
-            RefreshDataListView();
+            RefreshDataListView(false);
 
             if (_allData.Count == 0)
             {
@@ -849,6 +855,10 @@ namespace DataManager
                 DeleteDataItems(_allData.GetRange(min, max - min + 1), min);
                 ClearMarkers();
             }
+            else if (TryGetSelectedListViewDataItems(out var selectedItems, out int restoreIndex))
+            {
+                DeleteDataItems(selectedItems, restoreIndex);
+            }
             else
             {
                 DeleteDataItems(new List<DrivingData> { _allData[_currentIndex] }, _currentIndex);
@@ -1090,8 +1100,32 @@ namespace DataManager
             return new Bitmap(image);
         }
 
-        private void RefreshDataListView()
+        private bool TryGetSelectedListViewDataItems(out List<DrivingData> selectedItems, out int restoreIndex)
         {
+            var selectedIndexes = lvDataItems.SelectedItems
+                .Cast<ListViewItem>()
+                .Select(item => int.TryParse(item.Text, out int idx) ? idx : (int?)null)
+                .Where(idx => idx.HasValue)
+                .Select(idx => idx!.Value)
+                .ToHashSet();
+
+            selectedItems = _allData
+                .Where(data => selectedIndexes.Contains(data.Index))
+                .ToList();
+
+            restoreIndex = selectedItems.Count == 0
+                ? -1
+                : selectedItems.Min(item => _allData.IndexOf(item));
+
+            return selectedItems.Count > 0;
+        }
+
+        private void RefreshDataListView(bool preserveScroll = true)
+        {
+            int topItemIndex = preserveScroll && lvDataItems.TopItem != null
+                ? lvDataItems.TopItem.Index
+                : -1;
+
             lvDataItems.BeginUpdate();
             lvDataItems.Items.Clear();
             foreach (var d in _allData.OrderBy(x => x.Index))
@@ -1101,6 +1135,19 @@ namespace DataManager
                 lvDataItems.Items.Add(item);
             }
             lvDataItems.EndUpdate();
+
+            if (topItemIndex >= 0 && lvDataItems.Items.Count > 0)
+            {
+                int restoredTopIndex = Math.Min(topItemIndex, lvDataItems.Items.Count - 1);
+                try
+                {
+                    lvDataItems.TopItem = lvDataItems.Items[restoredTopIndex];
+                }
+                catch
+                {
+                    lvDataItems.Items[restoredTopIndex].EnsureVisible();
+                }
+            }
         }
 
         private void RefreshUI() { _currentIndex = Math.Max(0, Math.Min(_currentIndex, _allData.Count - 1)); tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); if (tbTestImageNavigator != null) tbTestImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); RefreshDataListView(); UpdateDisplay(); UpdateCharts(); }
@@ -1430,6 +1477,40 @@ namespace DataManager
 
         private void dgvDataInfo_CellContentClick(object sender, DataGridViewCellEventArgs e) { }
         private void lvDataItems_SelectedIndexChanged(object sender, EventArgs e) { if (lvDataItems.SelectedItems.Count > 0 && int.TryParse(lvDataItems.SelectedItems[0].Text, out int idx)) { _currentIndex = _allData.FindIndex(x => x.Index == idx); UpdateDisplay(); } }
+        private void lvDataItems_MouseDown(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left) return;
+
+            ListViewItem? item = lvDataItems.GetItemAt(e.X, e.Y);
+            _listViewDragAnchorIndex = item?.Index ?? -1;
+        }
+
+        private void lvDataItems_MouseMove(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left || _listViewDragAnchorIndex < 0) return;
+
+            ListViewItem? item = lvDataItems.GetItemAt(e.X, e.Y);
+            if (item == null || item.Index == _listViewDragAnchorIndex) return;
+
+            SelectListViewRange(_listViewDragAnchorIndex, item.Index);
+        }
+
+        private void lvDataItems_MouseUp(object? sender, MouseEventArgs e)
+        {
+            _listViewDragAnchorIndex = -1;
+        }
+
+        private void SelectListViewRange(int startIndex, int endIndex)
+        {
+            int min = Math.Max(0, Math.Min(startIndex, endIndex));
+            int max = Math.Min(lvDataItems.Items.Count - 1, Math.Max(startIndex, endIndex));
+
+            lvDataItems.BeginUpdate();
+            for (int i = 0; i < lvDataItems.Items.Count; i++)
+                lvDataItems.Items[i].Selected = i >= min && i <= max;
+            lvDataItems.EndUpdate();
+        }
+
         private void btnFilter_Click_1(object sender, EventArgs e) => btnFilter_Click(sender, e);
         private void tpDataManager_Click(object sender, EventArgs e) { }
         private void gbDataContent_Enter(object sender, EventArgs e) { }
