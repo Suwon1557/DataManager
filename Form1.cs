@@ -10,6 +10,7 @@ using System.Windows.Forms.DataVisualization.Charting;
 using System.Text.Json;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices; // Required for native logical string comparison.
+using System.IO.Compression;
 
 namespace DataManager
 {
@@ -23,6 +24,11 @@ namespace DataManager
         private bool _isReversed = false;
         private bool _isRangeSettingMode = false;
         private int _listViewDragAnchorIndex = -1;
+        private string _selectedDataFolderPath = "";
+        private Process? _trainingProcess;
+        private bool _isTrainingRunning = false;
+        private bool _trainingStopRequested = false;
+        private Image? _trainButtonIdleImage;
         private readonly Color _folderPathTextColor = Color.FromArgb(238, 243, 249);
         private readonly Color _folderPathWarningColor = Color.FromArgb(248, 113, 113);
         private readonly List<Panel> _imageRangeMarkers = new List<Panel>();
@@ -50,6 +56,7 @@ namespace DataManager
         public Form1()
         {
             InitializeComponent();
+            _trainButtonIdleImage = btnTrain.BackgroundImage;
             AutoScaleMode = AutoScaleMode.None;
 
             if (lvDataItems.Columns.Count == 0)
@@ -72,7 +79,6 @@ namespace DataManager
 
             InitializeDataInfoGrid();
             UpdatePlaybackSpeedLabel();
-            ApplyPolishedTheme();
             ConfigureResponsiveLayout();
             lvDataItems.MultiSelect = true;
             lvDataItems.HideSelection = false;
@@ -455,6 +461,7 @@ namespace DataManager
 
         private void LoadData(string path)
         {
+            _selectedDataFolderPath = path;
             _allData.Clear();
             lvDataItems.Items.Clear();
             ReleasePreviewImages();
@@ -687,13 +694,103 @@ namespace DataManager
             return cleaned.ToString().Trim();
         }
 
+        private string CreateTrainingDataZip()
+        {
+            if (string.IsNullOrWhiteSpace(_selectedDataFolderPath) || !Directory.Exists(_selectedDataFolderPath))
+                throw new InvalidOperationException("선택한 데이터 폴더를 찾을 수 없습니다.");
+
+            if (!Directory.GetFiles(_selectedDataFolderPath, "*.catalog").Any())
+                throw new InvalidOperationException("선택한 폴더에 catalog 파일이 없습니다.");
+
+            string imagesPath = Path.Combine(_selectedDataFolderPath, "images");
+            if (!Directory.Exists(imagesPath))
+                throw new InvalidOperationException("선택한 폴더에 images 폴더가 없습니다.");
+
+            string zipPath = Path.Combine(Path.GetTempPath(), $"datamanager_training_data_{DateTime.Now:yyyyMMddHHmmss}.zip");
+            if (File.Exists(zipPath)) File.Delete(zipPath);
+
+            ZipFile.CreateFromDirectory(_selectedDataFolderPath, zipPath, CompressionLevel.Fastest, false);
+            return zipPath;
+        }
+
+        private string ConvertWindowsPathToWslPath(string windowsPath)
+        {
+            string fullPath = Path.GetFullPath(windowsPath);
+            string root = Path.GetPathRoot(fullPath) ?? "";
+            if (root.Length < 2 || root[1] != ':')
+                throw new InvalidOperationException("드라이브 문자 기반 Windows 경로만 WSL 경로로 변환할 수 있습니다.");
+
+            string drive = char.ToLowerInvariant(root[0]).ToString();
+            string subPath = fullPath.Substring(root.Length).Replace("\\", "/");
+            return $"/mnt/{drive}/{subPath}";
+        }
+
+        private string BashQuote(string value)
+        {
+            return "'" + value.Replace("'", "'\"'\"'") + "'";
+        }
+
+        private void SetTrainingButtonRunningState(bool isRunning)
+        {
+            if (btnTrain == null) return;
+
+            if (isRunning)
+            {
+                btnTrain.Enabled = true;
+                btnTrain.BackgroundImage = null;
+                btnTrain.Text = "정지";
+                StyleButton(btnTrain, Color.FromArgb(248, 113, 113), Color.White, Color.FromArgb(248, 113, 113));
+                return;
+            }
+
+            btnTrain.Enabled = true;
+            btnTrain.Text = string.Empty;
+            btnTrain.BackgroundImage = _trainButtonIdleImage;
+            StyleButton(btnTrain, Color.FromArgb(45, 212, 191), Color.FromArgb(6, 42, 43), Color.FromArgb(45, 212, 191));
+        }
+
+        private void StopTrainingProcess()
+        {
+            _trainingStopRequested = true;
+            AppendTrainingLog("학습 중지를 요청했습니다.");
+
+            try
+            {
+                if (_trainingProcess != null && !_trainingProcess.HasExited)
+                {
+                    _trainingProcess.Kill(true);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendTrainingLog("학습 중지 중 오류: " + ex.Message);
+            }
+        }
+
         private async void btnTrain_Click(object sender, EventArgs e)
         {
+            if (_isTrainingRunning)
+            {
+                StopTrainingProcess();
+                return;
+            }
+
             if (!EnsureDataLoaded()) return;
 
             try
             {
-                btnTrain.Enabled = false;
+                _isTrainingRunning = true;
+                _trainingStopRequested = false;
+                SetTrainingButtonRunningState(true);
+                AppendTrainingLog("선택한 데이터 폴더를 학습용 zip으로 압축합니다.");
+                string trainingZipPath = CreateTrainingDataZip();
+                string wslTrainingZipPath = ConvertWindowsPathToWslPath(trainingZipPath);
+
+                if (_trainingStopRequested)
+                {
+                    AppendTrainingLog("학습 시작 전에 중지되었습니다.");
+                    return;
+                }
 
                 // Configure the WSL training environment.
                 string envName = "e2e_env";
@@ -701,10 +798,11 @@ namespace DataManager
 
                 // Build the training commands.
                 string installCmd = "pip install numpy==1.24.3 pandas==2.0.3 tensorflow==2.13.0 albumentations imgaug";
-                string trainCmd = "python train.py --tub ./data --model ./models/mypilot.h5";
+                string importCmd = $"rm -rf ./data && mkdir -p ./data && cp {BashQuote(wslTrainingZipPath)} ./training_data.zip && python -m zipfile -e ./training_data.zip ./data && test -d ./data/images && ls ./data/*.catalog >/dev/null";
+                string trainCmd = "python train.py --tubs ./data --model ./models/mypilot.h5";
 
                 // Configure the WSL training environment.
-                string bashCmd = BuildWslCondaCommand(envName, $"cd {projectPath} && {installCmd} && {trainCmd}");
+                string bashCmd = BuildWslCondaCommand(envName, $"cd {projectPath} && {importCmd} && {installCmd} && {trainCmd}");
 
                 // Configure the WSL process.
                 ProcessStartInfo start = new ProcessStartInfo();
@@ -730,20 +828,35 @@ namespace DataManager
                 {
                     if (!string.IsNullOrEmpty(args.Data)) AppendTrainingLog(args.Data);
                 };
-                AppendTrainingLog("WSL \uD559\uC2B5 \uD504\uB85C\uC138\uC2A4\uB97C \uC2DC\uC791\uD588\uC2B5\uB2C8\uB2E4.");
+                AppendTrainingLog("WSL data 폴더 교체 후 학습 프로세스를 시작합니다.");
                 process.Start();
+                _trainingProcess = process;
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
                 await process.WaitForExitAsync();
-                AppendTrainingLog($"\uD559\uC2B5 \uD504\uB85C\uC138\uC2A4\uAC00 \uC885\uB8CC\uB418\uC5C8\uC2B5\uB2C8\uB2E4. ExitCode={process.ExitCode}");
+                if (_trainingStopRequested)
+                {
+                    AppendTrainingLog($"학습이 중지되었습니다. ExitCode={process.ExitCode}");
+                }
+                else
+                {
+                    AppendTrainingLog($"\uD559\uC2B5 \uD504\uB85C\uC138\uC2A4\uAC00 \uC885\uB8CC\uB418\uC5C8\uC2B5\uB2C8\uB2E4. ExitCode={process.ExitCode}");
+                }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!_trainingStopRequested)
             {
                 MessageBox.Show("프로세스 실행 중 오류: " + ex.Message);
             }
+            catch
+            {
+                AppendTrainingLog("학습이 중지되었습니다.");
+            }
             finally
             {
-                btnTrain.Enabled = true;
+                _trainingProcess = null;
+                _isTrainingRunning = false;
+                _trainingStopRequested = false;
+                SetTrainingButtonRunningState(false);
             }
         }
 
@@ -1247,127 +1360,6 @@ namespace DataManager
             }
         }
 
-        private void ApplyPolishedTheme()
-        {
-            Color ink = Color.FromArgb(18, 24, 38);
-            Color surface = Color.FromArgb(28, 36, 54);
-            Color panel = Color.FromArgb(39, 50, 72);
-            Color panelSoft = Color.FromArgb(49, 62, 88);
-            Color field = Color.FromArgb(246, 248, 252);
-            Color text = Color.FromArgb(238, 243, 249);
-            Color darkText = Color.FromArgb(31, 41, 55);
-            Color gold = Color.FromArgb(245, 176, 65);
-            Color teal = Color.FromArgb(45, 212, 191);
-            Color coral = Color.FromArgb(248, 113, 113);
-            Color line = Color.FromArgb(103, 119, 148);
-
-            BackColor = ink;
-            lblTitle.ForeColor = gold;
-
-            tcMain.BackColor = ink;
-            tcMain.DrawMode = TabDrawMode.OwnerDrawFixed;
-            tcMain.DrawItem -= tcMain_DrawItem;
-            tcMain.DrawItem += tcMain_DrawItem;
-
-            tpDataManager.BackColor = surface;
-            tpDataManager.UseVisualStyleBackColor = false;
-            tpTrainingTest.BackColor = surface;
-            tpTrainingTest.UseVisualStyleBackColor = false;
-
-            StyleGroupBox(gbDataLoad, panel, gold);
-            StyleGroupBox(gbDataContent, panel, gold);
-            StyleGroupBox(gbTrainingSetup, panel, gold);
-            StyleGroupBox(gbModelTest, panel, gold);
-
-            StyleButton(btnSelectFolder, teal, Color.FromArgb(6, 42, 43), teal);
-            StyleButton(btnTrain, teal, Color.FromArgb(6, 42, 43), teal);
-            StyleButton(btnStartTest, teal, Color.FromArgb(6, 42, 43), teal);
-            StyleButton(btnFilter, panelSoft, teal, Color.FromArgb(255, 114, 16));
-
-            StyleButton(btnCheckDataIntegrity, panelSoft, text, teal);
-            StyleButton(btnPlay, panelSoft, text, teal);
-            StyleButton(btnStop, panelSoft, text, teal);
-            StyleButton(btnReverse, panelSoft, text, teal);
-            StyleButton(btnSetRange, panelSoft, text, teal);
-            StyleButton(btnCancelRange, panelSoft, gold, gold);
-            StyleButton(btnDelete, panelSoft, coral, coral);
-            StyleButton(btnCancelDelete, Color.FromArgb(22, 30, 46), teal, teal);
-            txtFolderPath.BackColor = field;
-            txtFolderPath.ForeColor = darkText;
-            txtFolderPath.BorderStyle = BorderStyle.FixedSingle;
-            txtFolderPath.ReadOnly = false;
-            txtFolderPath.BackColor = Color.FromArgb(22, 30, 46);
-            txtFolderPath.ForeColor = text;
-            txtFolderPath.ReadOnly = true;
-            txtTrainingLog.BackColor = Color.FromArgb(12, 18, 30);
-            txtTrainingLog.ForeColor = text;
-            txtTrainingLog.BorderStyle = BorderStyle.FixedSingle;
-
-            StylePreview(pbDataPreview, line);
-            StylePreview(pbTestPreview, line);
-            StyleDataGrid(dgvDataInfo, Color.FromArgb(22, 30, 46), panelSoft, gold, line, text);
-            StyleListView(lvDataItems, Color.FromArgb(22, 30, 46), panelSoft, gold, text, line);
-
-            lblPlaybackSpeed.ForeColor = teal;
-            tbPlaybackSpeed.BackColor = panel;
-            tbImageNavigator.BackColor = panel;
-            tbTestImageNavigator.BackColor = panel;
-            pnlImageRangeMarker.BackColor = gold;
-
-            ApplyTextPolish();
-        }
-
-        private void ApplyTextPolish()
-        {
-            Text = "데이터 관리자";
-            btnFilter.Text = string.Empty;
-            btnCheckDataIntegrity.Text = "무결성 검사";
-            btnTrain.Text = string.Empty;
-            btnStartTest.Text = "테스트 시작";
-            btnSetRange.Text = "범위 설정";
-            btnCancelRange.Text = "X";
-            btnPlay.Text = ">>";
-            btnStop.Text = "||";
-            btnReverse.Text = "<<";
-
-            dgvDataInfo.ColumnHeadersDefaultCellStyle.Font = new Font(
-                UiFontFamily,
-                12F,
-                FontStyle.Bold);
-            dgvDataInfo.DefaultCellStyle.Font = new Font(UiFontFamily, 12F, FontStyle.Regular);
-            dgvDataInfo.Font = dgvDataInfo.DefaultCellStyle.Font;
-            dgvDataInfo.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
-            dgvDataInfo.DefaultCellStyle.WrapMode = DataGridViewTriState.False;
-            dgvDataInfo.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            dgvDataInfo.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
-            dgvDataInfo.ColumnHeadersHeight = 42;
-            dgvDataInfo.RowTemplate.Height = 38;
-            foreach (DataGridViewRow row in dgvDataInfo.Rows)
-            {
-                row.Height = 38;
-            }
-            colDataName.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-            colDataName.Width = Math.Max(colDataName.Width, 180);
-            colDataValue.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            colDataValue.MinimumWidth = Math.Max(colDataValue.MinimumWidth, 80);
-        }
-
-        private IEnumerable<Control> GetAllControls(Control root)
-        {
-            foreach (Control child in root.Controls)
-            {
-                yield return child;
-                foreach (Control grandChild in GetAllControls(child))
-                    yield return grandChild;
-            }
-        }
-
-        private void StyleGroupBox(GroupBox box, Color backColor, Color titleColor)
-        {
-            box.BackColor = backColor;
-            box.ForeColor = titleColor;
-        }
-
         private void StyleButton(Button button, Color backColor, Color foreColor, Color borderColor)
         {
             button.BackColor = backColor;
@@ -1378,50 +1370,6 @@ namespace DataManager
             button.FlatAppearance.MouseOverBackColor = ControlPaint.Light(backColor, 0.18f);
             button.FlatAppearance.MouseDownBackColor = ControlPaint.Dark(backColor, 0.08f);
             button.UseVisualStyleBackColor = false;
-        }
-
-        private void StylePreview(PictureBox preview, Color borderColor)
-        {
-            preview.BackColor = Color.FromArgb(12, 18, 30);
-            preview.BorderStyle = BorderStyle.FixedSingle;
-        }
-
-        private void StyleDataGrid(DataGridView grid, Color field, Color header, Color accent, Color line, Color cellText)
-        {
-            grid.BackgroundColor = field;
-            grid.BorderStyle = BorderStyle.FixedSingle;
-            grid.EnableHeadersVisualStyles = false;
-            grid.GridColor = line;
-            grid.DefaultCellStyle.BackColor = field;
-            grid.DefaultCellStyle.ForeColor = cellText;
-            grid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(49, 62, 88);
-            grid.DefaultCellStyle.SelectionForeColor = accent;
-            grid.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(28, 36, 54);
-            grid.ColumnHeadersDefaultCellStyle.BackColor = header;
-            grid.ColumnHeadersDefaultCellStyle.ForeColor = accent;
-            grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = header;
-            grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            grid.AdvancedCellBorderStyle.Left = DataGridViewAdvancedCellBorderStyle.None;
-            grid.AdvancedCellBorderStyle.Right = DataGridViewAdvancedCellBorderStyle.None;
-        }
-
-        private void StyleListView(ListView listView, Color field, Color header, Color accent, Color cellText, Color line)
-        {
-            listView.BackColor = field;
-            listView.ForeColor = cellText;
-            listView.Font = new Font(UiFontFamily, 11F, FontStyle.Regular);
-            listView.BorderStyle = BorderStyle.FixedSingle;
-            listView.GridLines = true;
-            listView.OwnerDraw = true;
-            listView.DrawColumnHeader -= lvDataItems_DrawColumnHeader;
-            listView.DrawItem -= lvDataItems_DrawItem;
-            listView.DrawSubItem -= lvDataItems_DrawSubItem;
-            listView.DrawColumnHeader += lvDataItems_DrawColumnHeader;
-            listView.DrawItem += lvDataItems_DrawItem;
-            listView.DrawSubItem += lvDataItems_DrawSubItem;
-            listView.Resize -= lvDataItems_Resize;
-            listView.Resize += lvDataItems_Resize;
-            AdjustDataListColumns();
         }
 
         private void AdjustDataListColumns()
@@ -1480,24 +1428,6 @@ namespace DataManager
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
         }
 
-        private void tcMain_DrawItem(object? sender, DrawItemEventArgs e)
-        {
-            TabPage page = tcMain.TabPages[e.Index];
-            bool selected = e.Index == tcMain.SelectedIndex;
-            Color back = selected ? Color.FromArgb(245, 176, 65) : Color.FromArgb(39, 50, 72);
-            Color fore = selected ? Color.FromArgb(31, 41, 55) : Color.FromArgb(238, 243, 249);
-
-            using (SolidBrush bg = new SolidBrush(back))
-                e.Graphics.FillRectangle(bg, e.Bounds);
-
-            TextRenderer.DrawText(
-                e.Graphics,
-                page.Text,
-                tcMain.Font,
-                e.Bounds,
-                fore,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-        }
         private void InitializeDataInfoGrid() { dgvDataInfo.Rows.Clear(); dgvDataInfo.Rows.Add("데이터 수", "0"); dgvDataInfo.Rows.Add("이미지", "0"); dgvDataInfo.Rows.Add("조향값", "0"); dgvDataInfo.Rows.Add("속도값", "0"); }
         private void UpdatePlaybackSpeedLabel() { if (lblPlaybackSpeed != null) lblPlaybackSpeed.Text = $"x{tbPlaybackSpeed.Value / 100.0:0.##}"; }
         private int GetPlaybackInterval() { return Math.Max(1, (int)(BasePlaybackIntervalMs / (tbPlaybackSpeed.Value / 100.0))); }
