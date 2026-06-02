@@ -1433,7 +1433,7 @@ namespace DataManager
 
         private void ApplyTextPolish()
         {
-            Text = "데이터 관리자";
+            Text = "Data Manager";
             btnFilter.Text = string.Empty;
             btnCheckDataIntegrity.Text = "무결성 검사";
             btnTrain.Text = string.Empty;

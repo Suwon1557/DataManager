@@ -662,7 +662,7 @@ namespace DataManager
             Margin = new Padding(7, 5, 7, 5);
             MinimumSize = new Size(1280, 720);
             Name = "Form1";
-            Text = "Form1";
+            Text = "Data Manager";
             Load += Form1_Load;
             tcMain.ResumeLayout(false);
             tpDataManager.ResumeLayout(false);
