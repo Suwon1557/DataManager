@@ -15,6 +15,7 @@ namespace DataManager
         private PictureBox pbTestPreview;
         private Label lblTestCurrentIndex;
         private Button btnStartTest;
+        private Button btnShowCurrentPrediction;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtTestSteeringValue;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtTestSpeedValue;
         private Button btnTrain;
@@ -99,6 +100,7 @@ namespace DataManager
             tbTestImageNavigator = new TrackBar();
             lblTestCurrentIndex = new Label();
             btnStartTest = new Button();
+            btnShowCurrentPrediction = new Button();
             pbTestPreview = new PictureBox();
             gbTrainingSetup = new GroupBox();
             txtTrainingLog = new TextBox();
@@ -543,6 +545,7 @@ namespace DataManager
             gbModelTest.BackColor = Color.FromArgb(39, 50, 72);
             gbModelTest.Controls.Add(tbTestImageNavigator);
             gbModelTest.Controls.Add(lblTestCurrentIndex);
+            gbModelTest.Controls.Add(btnShowCurrentPrediction);
             gbModelTest.Controls.Add(btnStartTest);
             gbModelTest.Controls.Add(pbTestPreview);
             gbModelTest.Font = new Font("맑은 고딕", 9.35F, FontStyle.Bold, GraphicsUnit.Point, 129);
@@ -597,6 +600,22 @@ namespace DataManager
             btnStartTest.Text = "테스트 시작";
             btnStartTest.UseVisualStyleBackColor = false;
             btnStartTest.Click += btnStartTest_Click;
+            // 
+            // btnShowCurrentPrediction
+            // 
+            btnShowCurrentPrediction.BackColor = Color.FromArgb(59, 130, 246);
+            btnShowCurrentPrediction.FlatAppearance.BorderColor = Color.FromArgb(59, 130, 246);
+            btnShowCurrentPrediction.FlatStyle = FlatStyle.Flat;
+            btnShowCurrentPrediction.Font = new Font("Microsoft Sans Serif", 10.52F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnShowCurrentPrediction.ForeColor = Color.White;
+            btnShowCurrentPrediction.Location = new Point(18, 552);
+            btnShowCurrentPrediction.Margin = new Padding(7, 5, 7, 5);
+            btnShowCurrentPrediction.Name = "btnShowCurrentPrediction";
+            btnShowCurrentPrediction.Size = new Size(606, 46);
+            btnShowCurrentPrediction.TabIndex = 4;
+            btnShowCurrentPrediction.Text = "Show Current Prediction";
+            btnShowCurrentPrediction.UseVisualStyleBackColor = false;
+            btnShowCurrentPrediction.Click += btnShowCurrentPrediction_Click;
             // 
             // pbTestPreview
             // 
