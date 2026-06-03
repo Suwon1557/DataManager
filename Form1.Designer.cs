@@ -13,6 +13,7 @@ namespace DataManager
         private GroupBox gbModelTest;
         private TrackBar tbTestImageNavigator;
         private PictureBox pbTestPreview;
+        private Label lblTestCurrentIndex;
         private Button btnStartTest;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtTestSteeringValue;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtTestSpeedValue;
@@ -96,6 +97,7 @@ namespace DataManager
             tpTrainingTest = new TabPage();
             gbModelTest = new GroupBox();
             tbTestImageNavigator = new TrackBar();
+            lblTestCurrentIndex = new Label();
             btnStartTest = new Button();
             pbTestPreview = new PictureBox();
             gbTrainingSetup = new GroupBox();
@@ -379,7 +381,7 @@ namespace DataManager
             dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle3.BackColor = Color.FromArgb(22, 30, 46);
             dataGridViewCellStyle3.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle3.ForeColor = Color.FromArgb(238, 243, 249);
+            dataGridViewCellStyle3.ForeColor = Color.FromArgb(245, 176, 65);
             dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(49, 62, 88);
             dataGridViewCellStyle3.SelectionForeColor = Color.FromArgb(245, 176, 65);
             dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
@@ -439,8 +441,8 @@ namespace DataManager
             lvDataItems.DrawColumnHeader += lvDataItems_DrawColumnHeader;
             lvDataItems.DrawItem += lvDataItems_DrawItem;
             lvDataItems.DrawSubItem += lvDataItems_DrawSubItem;
-            lvDataItems.Resize += lvDataItems_Resize;
             lvDataItems.SelectedIndexChanged += lvDataItems_SelectedIndexChanged;
+            lvDataItems.Resize += lvDataItems_Resize;
             // 
             // pbDataPreview
             // 
@@ -540,6 +542,7 @@ namespace DataManager
             gbModelTest.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             gbModelTest.BackColor = Color.FromArgb(39, 50, 72);
             gbModelTest.Controls.Add(tbTestImageNavigator);
+            gbModelTest.Controls.Add(lblTestCurrentIndex);
             gbModelTest.Controls.Add(btnStartTest);
             gbModelTest.Controls.Add(pbTestPreview);
             gbModelTest.Font = new Font("맑은 고딕", 9.35F, FontStyle.Bold, GraphicsUnit.Point, 129);
@@ -564,6 +567,20 @@ namespace DataManager
             tbTestImageNavigator.Size = new Size(1833, 45);
             tbTestImageNavigator.TabIndex = 2;
             tbTestImageNavigator.Scroll += tbTestImageNavigator_Scroll_1;
+            // 
+            // lblTestCurrentIndex
+            // 
+            lblTestCurrentIndex.BackColor = Color.FromArgb(22, 30, 46);
+            lblTestCurrentIndex.BorderStyle = BorderStyle.FixedSingle;
+            lblTestCurrentIndex.Font = new Font("맑은 고딕", 11F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTestCurrentIndex.ForeColor = Color.FromArgb(245, 176, 65);
+            lblTestCurrentIndex.Location = new Point(647, 41);
+            lblTestCurrentIndex.Margin = new Padding(7, 5, 7, 5);
+            lblTestCurrentIndex.Name = "lblTestCurrentIndex";
+            lblTestCurrentIndex.Size = new Size(220, 74);
+            lblTestCurrentIndex.TabIndex = 3;
+            lblTestCurrentIndex.Text = "현재 인덱스\r\n- / -";
+            lblTestCurrentIndex.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // btnStartTest
             // 

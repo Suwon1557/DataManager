@@ -359,6 +359,20 @@ namespace DataManager
                 30);
         }
 
+        private void UpdateTestIndexLabel(int? displayIndex = null)
+        {
+            if (lblTestCurrentIndex == null) return;
+
+            if (_allData.Count == 0)
+            {
+                lblTestCurrentIndex.Text = "\uD604\uC7AC \uC778\uB371\uC2A4\r\n- / -";
+                return;
+            }
+
+            int index = displayIndex ?? Math.Max(0, Math.Min(tbTestImageNavigator?.Value ?? _currentIndex, _allData.Count - 1));
+            lblTestCurrentIndex.Text = $"\uD604\uC7AC \uC778\uB371\uC2A4\r\n{index} / {_allData.Count - 1}";
+        }
+
         private TableLayoutPanel GetOrCreateChartLayout(Control parent, string name, int columnCount, int rowCount)
         {
             TableLayoutPanel? layout = parent.Controls.Find(name, false).OfType<TableLayoutPanel>().FirstOrDefault();
@@ -560,6 +574,7 @@ namespace DataManager
             dgvDataInfo.Rows[2].Cells[1].Value = data.Steering.ToString("F2");
             dgvDataInfo.Rows[3].Cells[1].Value = data.Speed.ToString("F0");
             tbImageNavigator.Value = _currentIndex;
+            UpdateTestIndexLabel();
         }
 
         private bool EnsureDataLoaded()
@@ -961,6 +976,7 @@ namespace DataManager
         {
             if (!EnsureDataLoaded() || tbTestImageNavigator == null || pbTestPreview == null) return;
             int idx = tbTestImageNavigator.Value;
+            UpdateTestIndexLabel(idx);
             ReleaseTestPreviewImage();
             if (idx >= 0 && idx < _allData.Count && File.Exists(_allData[idx].ImagePath))
             {
