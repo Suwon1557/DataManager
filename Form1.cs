@@ -28,6 +28,8 @@ namespace DataManager
         private string _selectedDataFolderPath = "";
         private bool _showTestOverlay = false;
         private bool _isTestRunning = false;
+        private Process? _testProcess;
+        private bool _testStopRequested = false;
         private Process? _trainingProcess;
         private bool _isTrainingRunning = false;
         private bool _trainingStopRequested = false;
@@ -254,7 +256,6 @@ namespace DataManager
             txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             tbTestImageNavigator.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             ApplyResponsiveLayout();
-            LayoutTestImageNavigatorAtBottom();
         }
 
         private void ApplyResponsiveLayout()
@@ -273,15 +274,7 @@ namespace DataManager
             gbDataLoad.SetBounds(margin, 3, pageWidth, dataLoadHeight);
             gbDataContent.SetBounds(margin, gbDataLoad.Bottom + 8, pageWidth, Math.Max(220, pageHeight - gbDataLoad.Bottom - 16));
 
-            int trainingWidth = Math.Max(400, tpTrainingTest.ClientSize.Width - (margin * 2));
-            int trainingHeight = Math.Max(260, tpTrainingTest.ClientSize.Height);
-            int trainingBoxHeight = Math.Min(132, Math.Max(88, trainingHeight / 6));
-            gbTrainingSetup.SetBounds(margin, 3, trainingWidth, trainingBoxHeight);
-            gbModelTest.SetBounds(margin, gbTrainingSetup.Bottom + 8, trainingWidth, Math.Max(220, trainingHeight - gbTrainingSetup.Bottom - 16));
-
             LayoutDataContentControls();
-            LayoutTrainingControls();
-            LayoutModelTestControls();
         }
 
         private void LayoutDataContentControls()
@@ -389,8 +382,6 @@ namespace DataManager
 
         private void EnsureTestChartsLayout()
         {
-            LayoutTestImageNavigatorAtBottom();
-
             TableLayoutPanel layout = GetOrCreateChartLayout(gbModelTest, "tlpTestCharts", 1, 2);
             int chartLeft = pbTestPreview.Right + 20;
             int chartTop = pbTestPreview.Top;
@@ -611,9 +602,59 @@ namespace DataManager
         private void btnCheckDataIntegrity_Click(object sender, EventArgs e)
         {
             if (!EnsureDataLoaded()) return;
-            bool isDup = _allData.GroupBy(x => x.Index).Any(g => g.Count() > 1);
-            bool isMissingFile = _allData.Any(x => !File.Exists(x.ImagePath));
-            MessageBox.Show($"Duplicate index: {(isDup ? "Problem found" : "OK")}\nMissing image file: {(isMissingFile ? "Problem found" : "OK")}", "Data integrity check");
+
+            var missingImages = _allData
+                .Where(x => !File.Exists(x.ImagePath))
+                .OrderBy(x => x.CatalogFilePath)
+                .ThenBy(x => x.CatalogLineNumber)
+                .ToList();
+
+            if (missingImages.Count == 0)
+            {
+                MessageBox.Show(
+                    "검사 완료\n누락된 이미지가 없습니다.",
+                    "데이터 무결성 검사",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
+            }
+
+            const int maxDisplayCount = 40;
+            var lines = missingImages
+                .Take(maxDisplayCount)
+                .Select(x =>
+                    $"{Path.GetFileName(x.CatalogFilePath)} / 카탈로그 인덱스 {x.CatalogLineNumber}: {x.CatalogImageName}")
+                .ToList();
+
+            if (missingImages.Count > maxDisplayCount)
+            {
+                lines.Add($"...외 {missingImages.Count - maxDisplayCount}개");
+            }
+
+            DialogResult result = MessageBox.Show(
+                $"누락된 이미지가 {missingImages.Count}개 있습니다.\n\n" +
+                "확인을 누르면 아래 카탈로그 항목이 삭제됩니다.\n" +
+                "취소를 누르면 아무것도 변경하지 않습니다.\n\n" +
+                string.Join("\n", lines),
+                "데이터 무결성 검사",
+                MessageBoxButtons.OKCancel,
+                MessageBoxIcon.Warning);
+
+            if (result == DialogResult.OK)
+            {
+                int restoreIndex = missingImages
+                    .Select(item => _allData.IndexOf(item))
+                    .Where(index => index >= 0)
+                    .DefaultIfEmpty(0)
+                    .Min();
+
+                DeleteDataItems(missingImages, restoreIndex);
+                MessageBox.Show(
+                    "문제가 있는 카탈로그 항목을 삭제했습니다.",
+                    "데이터 무결성 검사",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
         }
 
         #endregion
@@ -932,6 +973,40 @@ namespace DataManager
             }
         }
 
+        private void SetTestButtonRunningState(bool isRunning)
+        {
+            if (btnStartTest == null) return;
+
+            btnStartTest.Enabled = true;
+            if (isRunning)
+            {
+                btnStartTest.Text = "Stop";
+                StyleButton(btnStartTest, Color.FromArgb(248, 113, 113), Color.White, Color.FromArgb(248, 113, 113));
+                return;
+            }
+
+            btnStartTest.Text = "테스트 시작";
+            StyleButton(btnStartTest, Color.FromArgb(45, 212, 191), Color.FromArgb(6, 42, 43), Color.FromArgb(45, 212, 191));
+        }
+
+        private void StopTestProcess()
+        {
+            _testStopRequested = true;
+            AppendTrainingLog("Test stop requested.");
+
+            try
+            {
+                if (_testProcess != null && !_testProcess.HasExited)
+                {
+                    _testProcess.Kill(true);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendTrainingLog("Error while stopping test: " + ex.Message);
+            }
+        }
+
         private async void btnTrain_Click(object sender, EventArgs e)
         {
             if (_isTrainingRunning)
@@ -1022,14 +1097,19 @@ namespace DataManager
 
         private async void btnStartTest_Click(object sender, EventArgs e)
         {
+            if (_isTestRunning)
+            {
+                StopTestProcess();
+                return;
+            }
+
             if (!EnsureDataLoaded()) return;
-            if (_isTestRunning) return;
 
             try
             {
                 _isTestRunning = true;
-                btnStartTest.Enabled = false;
-                btnStartTest.Text = "테스트 중...";
+                _testStopRequested = false;
+                SetTestButtonRunningState(true);
                 AppendTrainingLog("Test session started. Syncing paths.");
                 string envName = "e2e_env";
                 string projectPath = "~/mysim";
@@ -1049,6 +1129,12 @@ namespace DataManager
                 File.WriteAllLines(winPathsFile, linuxPaths);
                 AppendTrainingLog($"Prepared {linuxPaths.Count} test images.");
 
+                if (_testStopRequested)
+                {
+                    AppendTrainingLog("Test was stopped before prediction started.");
+                    return;
+                }
+
                 Process wslPathProc = new Process();
                 wslPathProc.StartInfo.FileName = "wsl.exe";
                 string wslDistroArgument = GetWslDistroArgument();
@@ -1066,6 +1152,12 @@ namespace DataManager
                 if (wslPathProc.ExitCode != 0)
                     throw new InvalidOperationException($"wslpath failed: {wslPathError}");
                 AppendTrainingLog("WSL path conversion complete. Creating prediction script.");
+
+                if (_testStopRequested)
+                {
+                    AppendTrainingLog("Test was stopped before prediction started.");
+                    return;
+                }
 
                 string wslPathsFile = $"{wslAppDir}/win_paths.txt";
                 string wslResultsFile = $"{wslAppDir}/results.csv";
@@ -1133,6 +1225,7 @@ namespace DataManager
                 start.CreateNoWindow = true;
 
                 using Process process = Process.Start(start) ?? throw new InvalidOperationException("Prediction process could not be started.");
+                _testProcess = process;
                 process.OutputDataReceived += (_, args) =>
                 {
                     if (!string.IsNullOrWhiteSpace(args.Data)) AppendTrainingLog(args.Data);
@@ -1144,21 +1237,32 @@ namespace DataManager
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
                 await process.WaitForExitAsync();
+                if (_testStopRequested)
+                {
+                    AppendTrainingLog($"Test stopped. ExitCode={process.ExitCode}");
+                    return;
+                }
+
                 if (process.ExitCode != 0)
                     throw new InvalidOperationException($"prediction process failed. ExitCode={process.ExitCode}");
 
                 if (LoadPredictionResultsFromCsv(winResultsFile))
                     AppendTrainingLog("Prediction finished. Check the charts and overlay.");
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!_testStopRequested)
             {
                 MessageBox.Show("Test failed: " + ex.Message);
             }
+            catch
+            {
+                AppendTrainingLog("Test stopped.");
+            }
             finally
             {
+                _testProcess = null;
                 _isTestRunning = false;
-                btnStartTest.Enabled = true;
-                btnStartTest.Text = "테스트 시작";
+                _testStopRequested = false;
+                SetTestButtonRunningState(false);
             }
         }
 
