@@ -839,14 +839,14 @@ namespace DataManager
         private string CreateTrainingDataZip()
         {
             if (string.IsNullOrWhiteSpace(_selectedDataFolderPath) || !Directory.Exists(_selectedDataFolderPath))
-                throw new InvalidOperationException("?좏깮???곗씠???대뜑瑜?李얠쓣 ???놁뒿?덈떎.");
+                throw new InvalidOperationException("The selected data folder could not be found.");
 
             if (!Directory.GetFiles(_selectedDataFolderPath, "*.catalog").Any())
-                throw new InvalidOperationException("?좏깮???대뜑??catalog ?뚯씪???놁뒿?덈떎.");
+                throw new InvalidOperationException("The selected data folder does not contain any catalog files.");
 
             string imagesPath = Path.Combine(_selectedDataFolderPath, "images");
             if (!Directory.Exists(imagesPath))
-                throw new InvalidOperationException("?좏깮???대뜑??images ?대뜑媛 ?놁뒿?덈떎.");
+                throw new InvalidOperationException("The selected data folder does not contain an images folder.");
 
             string zipPath = Path.Combine(Path.GetTempPath(), $"datamanager_training_data_{DateTime.Now:yyyyMMddHHmmss}.zip");
             if (File.Exists(zipPath)) File.Delete(zipPath);
@@ -860,7 +860,7 @@ namespace DataManager
             string fullPath = Path.GetFullPath(windowsPath);
             string root = Path.GetPathRoot(fullPath) ?? "";
             if (root.Length < 2 || root[1] != ':')
-                throw new InvalidOperationException("?쒕씪?대툕 臾몄옄 湲곕컲 Windows 寃쎈줈留?WSL 寃쎈줈濡?蹂?섑븷 ???덉뒿?덈떎.");
+                throw new InvalidOperationException("Only drive-letter Windows paths can be converted to WSL paths.");
 
             string drive = char.ToLowerInvariant(root[0]).ToString();
             string subPath = fullPath.Substring(root.Length).Replace("\\", "/");
