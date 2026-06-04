@@ -170,10 +170,10 @@ namespace DataManager
             ApplyResponsiveLayout();
             EnsureDataChartsLayout();
             EnsureTestChartsLayout();
-            SetupSafeChart(chtSteeringValue, "Steering Data", Color.FromArgb(45, 212, 191), "Actual Steering");
-            SetupSafeChart(chtSpeedValue, "Speed Data", Color.FromArgb(245, 176, 65), "Actual Speed");
-            SetupSafeChart(chtTestSteeringValue, "Steering Prediction", Color.FromArgb(248, 113, 113), "Predict", "Actual", Color.FromArgb(45, 212, 191));
-            SetupSafeChart(chtTestSpeedValue, "Speed Prediction", Color.FromArgb(248, 113, 113), "Predict", "Actual", Color.FromArgb(245, 176, 65));
+            SetupSafeChart(chtSteeringValue, "조향값", Color.FromArgb(45, 212, 191), "실제 조향값");
+            SetupSafeChart(chtSpeedValue, "속도", Color.FromArgb(245, 176, 65), "실제 속도");
+            SetupSafeChart(chtTestSteeringValue, "조향값 예측", Color.FromArgb(248, 113, 113), "Predict", "Actual", Color.FromArgb(45, 212, 191));
+            SetupSafeChart(chtTestSpeedValue, "속도 예측", Color.FromArgb(248, 113, 113), "Predict", "Actual", Color.FromArgb(245, 176, 65));
 
             UpdateCharts();
         }
@@ -1755,7 +1755,7 @@ namespace DataManager
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
         }
 
-        private void InitializeDataInfoGrid() { dgvDataInfo.Rows.Clear(); dgvDataInfo.Rows.Add("Data Count", "0"); dgvDataInfo.Rows.Add("Image Index", "0"); dgvDataInfo.Rows.Add("Steering", "0"); dgvDataInfo.Rows.Add("Speed", "0"); }
+        private void InitializeDataInfoGrid() { dgvDataInfo.Rows.Clear(); dgvDataInfo.Rows.Add("데이터 수", "0"); dgvDataInfo.Rows.Add("이미지 인덱스", "0"); dgvDataInfo.Rows.Add("조향값", "0"); dgvDataInfo.Rows.Add("속도", "0"); }
         private void UpdatePlaybackSpeedLabel() { if (lblPlaybackSpeed != null) lblPlaybackSpeed.Text = $"x{tbPlaybackSpeed.Value / 100.0:0.##}"; }
         private int GetPlaybackInterval() { return Math.Max(1, (int)(BasePlaybackIntervalMs / (tbPlaybackSpeed.Value / 100.0))); }
         private void tbPlaybackSpeed_Scroll(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; UpdatePlaybackSpeedLabel(); if (_playTimer.Enabled) _playTimer.Interval = GetPlaybackInterval(); }
