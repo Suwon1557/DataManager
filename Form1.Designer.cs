@@ -20,6 +20,14 @@ namespace DataManager
         private System.Windows.Forms.DataVisualization.Charting.Chart chtTestSpeedValue;
         private Button btnTrain;
         private TextBox txtTrainingLog;
+        private Label lblTrainingEpochCaption;
+        private Label lblTrainingEpochValue;
+        private Label lblTrainingLossCaption;
+        private Label lblTrainingLossValue;
+        private Label lblTrainingValLossCaption;
+        private Label lblTrainingValLossValue;
+        private Label lblTrainingStatusCaption;
+        private Label lblTrainingStatusValue;
         private GroupBox gbDataLoad;
         private GroupBox gbDataContent;
         private PictureBox pbDataPreview;
@@ -36,6 +44,7 @@ namespace DataManager
         private Button btnPlay;
         private TrackBar tbPlaybackSpeed;
         private Label lblPlaybackSpeed;
+        private Label lblPlaybackSpeed_tab2;
         private TrackBar tbImageNavigator;
         private Button btnSetRange;
         private Button btnCancelRange;
@@ -97,15 +106,28 @@ namespace DataManager
             btnSelectFolder = new Button();
             tpTrainingTest = new TabPage();
             gbModelTest = new GroupBox();
+            trackBar_tab2 = new TrackBar();
+            lblPlaybackSpeed_tab2 = new Label();
             tbTestImageNavigator = new TrackBar();
             lblTestCurrentIndex = new Label();
-            btnStartTest = new Button();
             btnShowCurrentPrediction = new Button();
+            btnStartTest = new Button();
             pbTestPreview = new PictureBox();
             gbTrainingSetup = new GroupBox();
             txtTrainingLog = new TextBox();
+            lblTrainingStatusValue = new Label();
+            lblTrainingStatusCaption = new Label();
+            lblTrainingValLossValue = new Label();
+            lblTrainingValLossCaption = new Label();
+            lblTrainingLossValue = new Label();
+            lblTrainingLossCaption = new Label();
+            lblTrainingEpochValue = new Label();
+            lblTrainingEpochCaption = new Label();
             btnTrain = new Button();
             lblTitle = new Label();
+            btnReverse_tab2 = new Button();
+            btnStop_tab2 = new Button();
+            btnPlay_tab2 = new Button();
             tcMain.SuspendLayout();
             tpDataManager.SuspendLayout();
             gbDataContent.SuspendLayout();
@@ -116,6 +138,7 @@ namespace DataManager
             gbDataLoad.SuspendLayout();
             tpTrainingTest.SuspendLayout();
             gbModelTest.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)trackBar_tab2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)tbTestImageNavigator).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbTestPreview).BeginInit();
             gbTrainingSetup.SuspendLayout();
@@ -141,11 +164,11 @@ namespace DataManager
             tpDataManager.BackColor = Color.FromArgb(28, 36, 54);
             tpDataManager.Controls.Add(gbDataContent);
             tpDataManager.Controls.Add(gbDataLoad);
-            tpDataManager.Location = new Point(4, 24);
+            tpDataManager.Location = new Point(8, 28);
             tpDataManager.Margin = new Padding(7, 5, 7, 5);
             tpDataManager.Name = "tpDataManager";
             tpDataManager.Padding = new Padding(7, 5, 7, 5);
-            tpDataManager.Size = new Size(1896, 872);
+            tpDataManager.Size = new Size(1888, 864);
             tpDataManager.TabIndex = 0;
             tpDataManager.Text = "데이터 관리";
             tpDataManager.Click += tpDataManager_Click;
@@ -175,7 +198,7 @@ namespace DataManager
             gbDataContent.Margin = new Padding(7, 5, 7, 5);
             gbDataContent.Name = "gbDataContent";
             gbDataContent.Padding = new Padding(7, 5, 7, 5);
-            gbDataContent.Size = new Size(1784, 722);
+            gbDataContent.Size = new Size(1776, 714);
             gbDataContent.TabIndex = 1;
             gbDataContent.TabStop = false;
             gbDataContent.Text = "데이터 탐색";
@@ -188,9 +211,9 @@ namespace DataManager
             btnSetRange.BackColor = Color.FromArgb(49, 62, 88);
             btnSetRange.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
             btnSetRange.FlatStyle = FlatStyle.Flat;
-            btnSetRange.Font = new Font("한컴 고딕", 12.02F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnSetRange.Font = new Font("Microsoft Sans Serif", 12.02F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnSetRange.ForeColor = Color.FromArgb(238, 243, 249);
-            btnSetRange.Location = new Point(1332, 361);
+            btnSetRange.Location = new Point(1324, 361);
             btnSetRange.Margin = new Padding(7, 5, 7, 5);
             btnSetRange.Name = "btnSetRange";
             btnSetRange.Size = new Size(226, 63);
@@ -206,7 +229,7 @@ namespace DataManager
             btnCancelRange.FlatAppearance.BorderColor = Color.FromArgb(245, 176, 65);
             btnCancelRange.FlatStyle = FlatStyle.Flat;
             btnCancelRange.ForeColor = Color.FromArgb(245, 176, 65);
-            btnCancelRange.Location = new Point(1567, 361);
+            btnCancelRange.Location = new Point(1559, 361);
             btnCancelRange.Margin = new Padding(7, 5, 7, 5);
             btnCancelRange.Name = "btnCancelRange";
             btnCancelRange.Size = new Size(198, 63);
@@ -233,7 +256,7 @@ namespace DataManager
             tbImageNavigator.Margin = new Padding(7, 5, 7, 5);
             tbImageNavigator.Maximum = 100;
             tbImageNavigator.Name = "tbImageNavigator";
-            tbImageNavigator.Size = new Size(1747, 45);
+            tbImageNavigator.Size = new Size(1739, 90);
             tbImageNavigator.TabIndex = 11;
             tbImageNavigator.MouseUp += tbImageNavigator_MouseUp;
             // 
@@ -276,7 +299,7 @@ namespace DataManager
             btnFilter.BackgroundImageLayout = ImageLayout.Zoom;
             btnFilter.FlatAppearance.BorderColor = Color.FromArgb(255, 114, 16);
             btnFilter.FlatStyle = FlatStyle.Flat;
-            btnFilter.Font = new Font("한컴 울주 천전리 각석체", 12.02F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnFilter.Font = new Font("Microsoft Sans Serif", 12.02F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnFilter.ForeColor = Color.FromArgb(45, 212, 191);
             btnFilter.Location = new Point(544, 225);
             btnFilter.Margin = new Padding(7, 5, 7, 5);
@@ -294,7 +317,7 @@ namespace DataManager
             lblPlaybackSpeed.Location = new Point(487, 369);
             lblPlaybackSpeed.Margin = new Padding(7, 0, 7, 0);
             lblPlaybackSpeed.Name = "lblPlaybackSpeed";
-            lblPlaybackSpeed.Size = new Size(32, 25);
+            lblPlaybackSpeed.Size = new Size(60, 48);
             lblPlaybackSpeed.TabIndex = 7;
             lblPlaybackSpeed.Text = "x1";
             // 
@@ -306,7 +329,7 @@ namespace DataManager
             tbPlaybackSpeed.Margin = new Padding(7, 5, 7, 5);
             tbPlaybackSpeed.Maximum = 4;
             tbPlaybackSpeed.Name = "tbPlaybackSpeed";
-            tbPlaybackSpeed.Size = new Size(458, 45);
+            tbPlaybackSpeed.Size = new Size(458, 90);
             tbPlaybackSpeed.TabIndex = 6;
             tbPlaybackSpeed.Value = 2;
             tbPlaybackSpeed.Scroll += tbPlaybackSpeed_Scroll;
@@ -436,7 +459,7 @@ namespace DataManager
             lvDataItems.Margin = new Padding(7, 5, 7, 5);
             lvDataItems.Name = "lvDataItems";
             lvDataItems.OwnerDraw = true;
-            lvDataItems.Size = new Size(428, 272);
+            lvDataItems.Size = new Size(420, 272);
             lvDataItems.TabIndex = 1;
             lvDataItems.UseCompatibleStateImageBehavior = false;
             lvDataItems.View = View.Details;
@@ -471,7 +494,7 @@ namespace DataManager
             gbDataLoad.Margin = new Padding(7, 5, 7, 5);
             gbDataLoad.Name = "gbDataLoad";
             gbDataLoad.Padding = new Padding(7, 5, 7, 5);
-            gbDataLoad.Size = new Size(1784, 120);
+            gbDataLoad.Size = new Size(1776, 120);
             gbDataLoad.TabIndex = 0;
             gbDataLoad.TabStop = false;
             gbDataLoad.Text = "데이터 불러오기";
@@ -482,9 +505,9 @@ namespace DataManager
             btnCheckDataIntegrity.BackColor = Color.FromArgb(49, 62, 88);
             btnCheckDataIntegrity.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
             btnCheckDataIntegrity.FlatStyle = FlatStyle.Flat;
-            btnCheckDataIntegrity.Font = new Font("한컴 고딕", 10.77F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnCheckDataIntegrity.Font = new Font("Microsoft Sans Serif", 10.77F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnCheckDataIntegrity.ForeColor = Color.FromArgb(238, 243, 249);
-            btnCheckDataIntegrity.Location = new Point(1472, 41);
+            btnCheckDataIntegrity.Location = new Point(1464, 41);
             btnCheckDataIntegrity.Margin = new Padding(7, 5, 7, 5);
             btnCheckDataIntegrity.Name = "btnCheckDataIntegrity";
             btnCheckDataIntegrity.Size = new Size(293, 45);
@@ -504,7 +527,7 @@ namespace DataManager
             txtFolderPath.Margin = new Padding(7, 5, 7, 5);
             txtFolderPath.Name = "txtFolderPath";
             txtFolderPath.ReadOnly = true;
-            txtFolderPath.Size = new Size(1211, 40);
+            txtFolderPath.Size = new Size(1203, 73);
             txtFolderPath.TabIndex = 1;
             txtFolderPath.Text = "(폴더경로)";
             txtFolderPath.TextChanged += txtFolderPath_TextChanged;
@@ -531,11 +554,11 @@ namespace DataManager
             tpTrainingTest.BackColor = Color.FromArgb(28, 36, 54);
             tpTrainingTest.Controls.Add(gbModelTest);
             tpTrainingTest.Controls.Add(gbTrainingSetup);
-            tpTrainingTest.Location = new Point(4, 24);
+            tpTrainingTest.Location = new Point(8, 28);
             tpTrainingTest.Margin = new Padding(7, 5, 7, 5);
             tpTrainingTest.Name = "tpTrainingTest";
             tpTrainingTest.Padding = new Padding(7, 5, 7, 5);
-            tpTrainingTest.Size = new Size(1896, 872);
+            tpTrainingTest.Size = new Size(1888, 864);
             tpTrainingTest.TabIndex = 1;
             tpTrainingTest.Text = "학습/테스트";
             // 
@@ -543,6 +566,11 @@ namespace DataManager
             // 
             gbModelTest.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             gbModelTest.BackColor = Color.FromArgb(39, 50, 72);
+            gbModelTest.Controls.Add(btnReverse_tab2);
+            gbModelTest.Controls.Add(trackBar_tab2);
+            gbModelTest.Controls.Add(lblPlaybackSpeed_tab2);
+            gbModelTest.Controls.Add(btnStop_tab2);
+            gbModelTest.Controls.Add(btnPlay_tab2);
             gbModelTest.Controls.Add(tbTestImageNavigator);
             gbModelTest.Controls.Add(lblTestCurrentIndex);
             gbModelTest.Controls.Add(btnShowCurrentPrediction);
@@ -554,20 +582,44 @@ namespace DataManager
             gbModelTest.Margin = new Padding(7, 5, 7, 5);
             gbModelTest.Name = "gbModelTest";
             gbModelTest.Padding = new Padding(7, 5, 7, 5);
-            gbModelTest.Size = new Size(1870, 686);
+            gbModelTest.Size = new Size(1862, 678);
             gbModelTest.TabIndex = 1;
             gbModelTest.TabStop = false;
             gbModelTest.Text = "모델 테스트";
+            // 
+            // trackBar_tab2
+            // 
+            trackBar_tab2.BackColor = Color.FromArgb(39, 50, 72);
+            trackBar_tab2.LargeChange = 1;
+            trackBar_tab2.Location = new Point(647, 385);
+            trackBar_tab2.Margin = new Padding(7, 5, 7, 5);
+            trackBar_tab2.Maximum = 4;
+            trackBar_tab2.Name = "trackBar_tab2";
+            trackBar_tab2.Size = new Size(458, 90);
+            trackBar_tab2.TabIndex = 7;
+            trackBar_tab2.Value = 2;
+            // 
+            // lblPlaybackSpeed_tab2
+            // 
+            lblPlaybackSpeed_tab2.AutoSize = true;
+            lblPlaybackSpeed_tab2.Font = new Font("맑은 고딕", 13.36F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblPlaybackSpeed_tab2.ForeColor = Color.FromArgb(45, 212, 191);
+            lblPlaybackSpeed_tab2.Location = new Point(1113, 385);
+            lblPlaybackSpeed_tab2.Margin = new Padding(7, 0, 7, 0);
+            lblPlaybackSpeed_tab2.Name = "lblPlaybackSpeed_tab2";
+            lblPlaybackSpeed_tab2.Size = new Size(60, 48);
+            lblPlaybackSpeed_tab2.TabIndex = 9;
+            lblPlaybackSpeed_tab2.Text = "x1";
             // 
             // tbTestImageNavigator
             // 
             tbTestImageNavigator.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             tbTestImageNavigator.BackColor = Color.FromArgb(39, 50, 72);
-            tbTestImageNavigator.Location = new Point(18, 618);
+            tbTestImageNavigator.Location = new Point(18, 610);
             tbTestImageNavigator.Margin = new Padding(7, 5, 7, 5);
             tbTestImageNavigator.Maximum = 100;
             tbTestImageNavigator.Name = "tbTestImageNavigator";
-            tbTestImageNavigator.Size = new Size(1833, 45);
+            tbTestImageNavigator.Size = new Size(1825, 90);
             tbTestImageNavigator.TabIndex = 2;
             tbTestImageNavigator.Scroll += tbTestImageNavigator_Scroll_1;
             // 
@@ -585,6 +637,22 @@ namespace DataManager
             lblTestCurrentIndex.Text = "현재 인덱스\r\n- / -";
             lblTestCurrentIndex.TextAlign = ContentAlignment.MiddleCenter;
             // 
+            // btnShowCurrentPrediction
+            // 
+            btnShowCurrentPrediction.BackColor = Color.FromArgb(59, 130, 246);
+            btnShowCurrentPrediction.FlatAppearance.BorderColor = Color.FromArgb(59, 130, 246);
+            btnShowCurrentPrediction.FlatStyle = FlatStyle.Flat;
+            btnShowCurrentPrediction.Font = new Font("Microsoft Sans Serif", 10.52F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnShowCurrentPrediction.ForeColor = Color.White;
+            btnShowCurrentPrediction.Location = new Point(18, 552);
+            btnShowCurrentPrediction.Margin = new Padding(7, 5, 7, 5);
+            btnShowCurrentPrediction.Name = "btnShowCurrentPrediction";
+            btnShowCurrentPrediction.Size = new Size(606, 46);
+            btnShowCurrentPrediction.TabIndex = 4;
+            btnShowCurrentPrediction.Text = "현재 예측 보기";
+            btnShowCurrentPrediction.UseVisualStyleBackColor = false;
+            btnShowCurrentPrediction.Click += btnShowCurrentPrediction_Click;
+            // 
             // btnStartTest
             // 
             btnStartTest.BackColor = Color.FromArgb(45, 212, 191);
@@ -600,22 +668,6 @@ namespace DataManager
             btnStartTest.Text = "테스트 시작";
             btnStartTest.UseVisualStyleBackColor = false;
             btnStartTest.Click += btnStartTest_Click;
-            // 
-            // btnShowCurrentPrediction
-            // 
-            btnShowCurrentPrediction.BackColor = Color.FromArgb(59, 130, 246);
-            btnShowCurrentPrediction.FlatAppearance.BorderColor = Color.FromArgb(59, 130, 246);
-            btnShowCurrentPrediction.FlatStyle = FlatStyle.Flat;
-            btnShowCurrentPrediction.Font = new Font("Microsoft Sans Serif", 10.52F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnShowCurrentPrediction.ForeColor = Color.White;
-            btnShowCurrentPrediction.Location = new Point(18, 552);
-            btnShowCurrentPrediction.Margin = new Padding(7, 5, 7, 5);
-            btnShowCurrentPrediction.Name = "btnShowCurrentPrediction";
-            btnShowCurrentPrediction.Size = new Size(606, 46);
-            btnShowCurrentPrediction.TabIndex = 4;
-            btnShowCurrentPrediction.Text = "Show Current Prediction";
-            btnShowCurrentPrediction.UseVisualStyleBackColor = false;
-            btnShowCurrentPrediction.Click += btnShowCurrentPrediction_Click;
             // 
             // pbTestPreview
             // 
@@ -634,6 +686,14 @@ namespace DataManager
             gbTrainingSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             gbTrainingSetup.BackColor = Color.FromArgb(39, 50, 72);
             gbTrainingSetup.Controls.Add(txtTrainingLog);
+            gbTrainingSetup.Controls.Add(lblTrainingStatusValue);
+            gbTrainingSetup.Controls.Add(lblTrainingStatusCaption);
+            gbTrainingSetup.Controls.Add(lblTrainingValLossValue);
+            gbTrainingSetup.Controls.Add(lblTrainingValLossCaption);
+            gbTrainingSetup.Controls.Add(lblTrainingLossValue);
+            gbTrainingSetup.Controls.Add(lblTrainingLossCaption);
+            gbTrainingSetup.Controls.Add(lblTrainingEpochValue);
+            gbTrainingSetup.Controls.Add(lblTrainingEpochCaption);
             gbTrainingSetup.Controls.Add(btnTrain);
             gbTrainingSetup.Font = new Font("맑은 고딕", 9.35F, FontStyle.Bold, GraphicsUnit.Point, 129);
             gbTrainingSetup.ForeColor = Color.FromArgb(245, 176, 65);
@@ -641,7 +701,7 @@ namespace DataManager
             gbTrainingSetup.Margin = new Padding(7, 5, 7, 5);
             gbTrainingSetup.Name = "gbTrainingSetup";
             gbTrainingSetup.Padding = new Padding(7, 5, 7, 5);
-            gbTrainingSetup.Size = new Size(1870, 156);
+            gbTrainingSetup.Size = new Size(1862, 156);
             gbTrainingSetup.TabIndex = 0;
             gbTrainingSetup.TabStop = false;
             gbTrainingSetup.Text = "데이터 학습";
@@ -649,19 +709,107 @@ namespace DataManager
             // 
             // txtTrainingLog
             // 
-            txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             txtTrainingLog.BackColor = Color.FromArgb(12, 18, 30);
             txtTrainingLog.BorderStyle = BorderStyle.FixedSingle;
             txtTrainingLog.Font = new Font("맑은 고딕", 6.68F, FontStyle.Bold, GraphicsUnit.Point, 129);
             txtTrainingLog.ForeColor = Color.FromArgb(238, 243, 249);
-            txtTrainingLog.Location = new Point(246, 41);
+            txtTrainingLog.Location = new Point(1046, 41);
             txtTrainingLog.Margin = new Padding(7, 5, 7, 5);
             txtTrainingLog.Multiline = true;
             txtTrainingLog.Name = "txtTrainingLog";
             txtTrainingLog.ReadOnly = true;
             txtTrainingLog.ScrollBars = ScrollBars.Vertical;
-            txtTrainingLog.Size = new Size(1595, 86);
+            txtTrainingLog.Size = new Size(798, 86);
             txtTrainingLog.TabIndex = 1;
+            // 
+            // lblTrainingStatusValue
+            // 
+            lblTrainingStatusValue.AutoSize = true;
+            lblTrainingStatusValue.Font = new Font("맑은 고딕", 10F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingStatusValue.ForeColor = Color.FromArgb(45, 212, 191);
+            lblTrainingStatusValue.Location = new Point(350, 106);
+            lblTrainingStatusValue.Name = "lblTrainingStatusValue";
+            lblTrainingStatusValue.Size = new Size(28, 37);
+            lblTrainingStatusValue.TabIndex = 11;
+            lblTrainingStatusValue.Text = "-";
+            // 
+            // lblTrainingStatusCaption
+            // 
+            lblTrainingStatusCaption.AutoSize = true;
+            lblTrainingStatusCaption.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingStatusCaption.ForeColor = Color.FromArgb(245, 176, 65);
+            lblTrainingStatusCaption.Location = new Point(275, 109);
+            lblTrainingStatusCaption.Name = "lblTrainingStatusCaption";
+            lblTrainingStatusCaption.Size = new Size(62, 32);
+            lblTrainingStatusCaption.TabIndex = 10;
+            lblTrainingStatusCaption.Text = "상태";
+            // 
+            // lblTrainingValLossValue
+            // 
+            lblTrainingValLossValue.AutoSize = true;
+            lblTrainingValLossValue.Font = new Font("맑은 고딕", 11F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingValLossValue.ForeColor = Color.FromArgb(238, 243, 249);
+            lblTrainingValLossValue.Location = new Point(600, 72);
+            lblTrainingValLossValue.Name = "lblTrainingValLossValue";
+            lblTrainingValLossValue.Size = new Size(30, 41);
+            lblTrainingValLossValue.TabIndex = 9;
+            lblTrainingValLossValue.Text = "-";
+            // 
+            // lblTrainingValLossCaption
+            // 
+            lblTrainingValLossCaption.AutoSize = true;
+            lblTrainingValLossCaption.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingValLossCaption.ForeColor = Color.FromArgb(245, 176, 65);
+            lblTrainingValLossCaption.Location = new Point(515, 76);
+            lblTrainingValLossCaption.Name = "lblTrainingValLossCaption";
+            lblTrainingValLossCaption.Size = new Size(118, 32);
+            lblTrainingValLossCaption.TabIndex = 8;
+            lblTrainingValLossCaption.Text = "검증 손실";
+            // 
+            // lblTrainingLossValue
+            // 
+            lblTrainingLossValue.AutoSize = true;
+            lblTrainingLossValue.Font = new Font("맑은 고딕", 11F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingLossValue.ForeColor = Color.FromArgb(238, 243, 249);
+            lblTrainingLossValue.Location = new Point(350, 72);
+            lblTrainingLossValue.Name = "lblTrainingLossValue";
+            lblTrainingLossValue.Size = new Size(30, 41);
+            lblTrainingLossValue.TabIndex = 7;
+            lblTrainingLossValue.Text = "-";
+            // 
+            // lblTrainingLossCaption
+            // 
+            lblTrainingLossCaption.AutoSize = true;
+            lblTrainingLossCaption.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingLossCaption.ForeColor = Color.FromArgb(245, 176, 65);
+            lblTrainingLossCaption.Location = new Point(275, 76);
+            lblTrainingLossCaption.Name = "lblTrainingLossCaption";
+            lblTrainingLossCaption.Size = new Size(62, 32);
+            lblTrainingLossCaption.TabIndex = 6;
+            lblTrainingLossCaption.Text = "손실";
+            // 
+            // lblTrainingEpochValue
+            // 
+            lblTrainingEpochValue.AutoSize = true;
+            lblTrainingEpochValue.Font = new Font("맑은 고딕", 11F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingEpochValue.ForeColor = Color.FromArgb(238, 243, 249);
+            lblTrainingEpochValue.Location = new Point(350, 39);
+            lblTrainingEpochValue.Name = "lblTrainingEpochValue";
+            lblTrainingEpochValue.Size = new Size(77, 41);
+            lblTrainingEpochValue.TabIndex = 3;
+            lblTrainingEpochValue.Text = "- / -";
+            // 
+            // lblTrainingEpochCaption
+            // 
+            lblTrainingEpochCaption.AutoSize = true;
+            lblTrainingEpochCaption.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingEpochCaption.ForeColor = Color.FromArgb(245, 176, 65);
+            lblTrainingEpochCaption.Location = new Point(275, 43);
+            lblTrainingEpochCaption.Name = "lblTrainingEpochCaption";
+            lblTrainingEpochCaption.Size = new Size(62, 32);
+            lblTrainingEpochCaption.TabIndex = 2;
+            lblTrainingEpochCaption.Text = "회차";
             // 
             // btnTrain
             // 
@@ -684,14 +832,59 @@ namespace DataManager
             // 
             lblTitle.AutoSize = true;
             lblTitle.BackColor = Color.Transparent;
-            lblTitle.Font = new Font("Britannic Bold", 13.28F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            lblTitle.Font = new Font("Microsoft Sans Serif", 13.28F, FontStyle.Regular, GraphicsUnit.Point, 0);
             lblTitle.ForeColor = Color.FromArgb(245, 176, 65);
             lblTitle.Location = new Point(6, 8);
             lblTitle.Margin = new Padding(7, 0, 7, 0);
             lblTitle.Name = "lblTitle";
-            lblTitle.Size = new Size(122, 20);
+            lblTitle.Size = new Size(245, 40);
             lblTitle.TabIndex = 0;
             lblTitle.Text = "Data Manager";
+            // 
+            // btnReverse_tab2
+            // 
+            btnReverse_tab2.BackColor = Color.FromArgb(49, 62, 88);
+            btnReverse_tab2.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
+            btnReverse_tab2.FlatStyle = FlatStyle.Flat;
+            btnReverse_tab2.Font = new Font("굴림", 14.78F, FontStyle.Bold);
+            btnReverse_tab2.ForeColor = Color.FromArgb(238, 243, 249);
+            btnReverse_tab2.Location = new Point(963, 316);
+            btnReverse_tab2.Margin = new Padding(7, 5, 7, 5);
+            btnReverse_tab2.Name = "btnReverse_tab2";
+            btnReverse_tab2.Size = new Size(146, 48);
+            btnReverse_tab2.TabIndex = 8;
+            btnReverse_tab2.Text = "<<";
+            btnReverse_tab2.UseVisualStyleBackColor = false;
+            // 
+            // btnStop_tab2
+            // 
+            btnStop_tab2.BackColor = Color.FromArgb(49, 62, 88);
+            btnStop_tab2.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
+            btnStop_tab2.FlatStyle = FlatStyle.Flat;
+            btnStop_tab2.Font = new Font("굴림", 14.78F, FontStyle.Bold);
+            btnStop_tab2.ForeColor = Color.FromArgb(238, 243, 249);
+            btnStop_tab2.Location = new Point(806, 317);
+            btnStop_tab2.Margin = new Padding(7, 5, 7, 5);
+            btnStop_tab2.Name = "btnStop_tab2";
+            btnStop_tab2.Size = new Size(148, 48);
+            btnStop_tab2.TabIndex = 7;
+            btnStop_tab2.Text = "||";
+            btnStop_tab2.UseVisualStyleBackColor = false;
+            // 
+            // btnPlay_tab2
+            // 
+            btnPlay_tab2.BackColor = Color.FromArgb(49, 62, 88);
+            btnPlay_tab2.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
+            btnPlay_tab2.FlatStyle = FlatStyle.Flat;
+            btnPlay_tab2.Font = new Font("굴림", 14.78F, FontStyle.Bold);
+            btnPlay_tab2.ForeColor = Color.FromArgb(238, 243, 249);
+            btnPlay_tab2.Location = new Point(652, 317);
+            btnPlay_tab2.Margin = new Padding(7, 5, 7, 5);
+            btnPlay_tab2.Name = "btnPlay_tab2";
+            btnPlay_tab2.Size = new Size(145, 48);
+            btnPlay_tab2.TabIndex = 6;
+            btnPlay_tab2.Text = ">>";
+            btnPlay_tab2.UseVisualStyleBackColor = false;
             // 
             // Form1
             // 
@@ -700,7 +893,7 @@ namespace DataManager
             ClientSize = new Size(1904, 900);
             Controls.Add(lblTitle);
             Controls.Add(tcMain);
-            Font = new Font("한컴 울주 천전리 각석체", 6.01F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            Font = new Font("Microsoft Sans Serif", 6.01F, FontStyle.Bold, GraphicsUnit.Point, 129);
             Margin = new Padding(7, 5, 7, 5);
             MinimumSize = new Size(1280, 720);
             Name = "Form1";
@@ -719,6 +912,7 @@ namespace DataManager
             tpTrainingTest.ResumeLayout(false);
             gbModelTest.ResumeLayout(false);
             gbModelTest.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)trackBar_tab2).EndInit();
             ((System.ComponentModel.ISupportInitialize)tbTestImageNavigator).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbTestPreview).EndInit();
             gbTrainingSetup.ResumeLayout(false);
@@ -729,5 +923,9 @@ namespace DataManager
 
         #endregion
 
+        private TrackBar trackBar_tab2;
+        private Button btnReverse_tab2;
+        private Button btnStop_tab2;
+        private Button btnPlay_tab2;
     }
 }
