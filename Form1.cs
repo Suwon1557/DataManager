@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -13,6 +13,7 @@ using System.Runtime.InteropServices; // Required for native logical string comp
 using System.IO.Compression;
 using System.Globalization;
 using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace DataManager
 {
@@ -84,6 +85,7 @@ namespace DataManager
             tbPlaybackSpeed.Value = 100;
 
             InitializeDataInfoGrid();
+            ResetTrainingSummary();
             UpdatePlaybackSpeedLabel();
             ConfigureResponsiveLayout();
             lvDataItems.MultiSelect = true;
@@ -244,7 +246,7 @@ namespace DataManager
 
             gbTrainingSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             gbModelTest.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             tbTestImageNavigator.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             ApplyResponsiveLayout();
             LayoutTestImageNavigatorAtBottom();
@@ -324,8 +326,28 @@ namespace DataManager
             const int margin = 18;
             int height = gbTrainingSetup.ClientSize.Height;
             int buttonHeight = Math.Max(50, height - 72);
+            int logWidth = Math.Max(260, (gbTrainingSetup.ClientSize.Width - (margin * 2)) / 2);
+            int logLeft = Math.Max(btnTrain.Right + 14, gbTrainingSetup.ClientSize.Width - margin - logWidth);
+            int summaryLeft = btnTrain.Right + 38;
+            int summaryWidth = Math.Max(220, logLeft - summaryLeft - 24);
+            int summaryMid = summaryLeft + Math.Max(120, summaryWidth / 2);
             btnTrain.SetBounds(margin, 41, 214, buttonHeight);
-            txtTrainingLog.SetBounds(btnTrain.Right + 14, 41, Math.Max(160, gbTrainingSetup.ClientSize.Width - btnTrain.Right - 43), buttonHeight + 2);
+            LayoutTrainingSummaryLabels(summaryLeft, summaryMid);
+            txtTrainingLog.SetBounds(logLeft, 41, logWidth, buttonHeight + 2);
+        }
+
+        private void LayoutTrainingSummaryLabels(int left, int middle)
+        {
+            if (lblTrainingEpochCaption == null) return;
+
+            lblTrainingEpochCaption.Location = new Point(left, 43);
+            lblTrainingEpochValue.Location = new Point(left + 75, 39);
+            lblTrainingLossCaption.Location = new Point(middle, 43);
+            lblTrainingLossValue.Location = new Point(middle + 75, 39);
+            lblTrainingValLossCaption.Location = new Point(left, 76);
+            lblTrainingValLossValue.Location = new Point(left + 75, 72);
+            lblTrainingStatusCaption.Location = new Point(left, 109);
+            lblTrainingStatusValue.Location = new Point(left + 75, 106);
         }
 
         private void LayoutModelTestControls()
@@ -701,7 +723,78 @@ namespace DataManager
 
             if (IsDisposed || !IsHandleCreated) return;
             if (txtTrainingLog == null || txtTrainingLog.IsDisposed) return;
+            UpdateTrainingSummaryFromLog(message);
             txtTrainingLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}\r\n");
+        }
+
+        private void ResetTrainingSummary()
+        {
+            SetTrainingSummaryText("- / -", "-", "-", "-");
+        }
+
+        private void SetTrainingSummaryText(string epoch, string loss, string valLoss, string status)
+        {
+            if (lblTrainingEpochValue == null) return;
+
+            lblTrainingEpochValue.Text = epoch;
+            lblTrainingLossValue.Text = loss;
+            lblTrainingValLossValue.Text = valLoss;
+            lblTrainingStatusValue.Text = status;
+            lblTrainingStatusValue.ForeColor = Color.FromArgb(45, 212, 191);
+        }
+
+        private void UpdateTrainingSummaryFromLog(string message)
+        {
+            Match epochMatch = Regex.Match(message, @"Epoch\s+(\d+)\s*/\s*(\d+)", RegexOptions.IgnoreCase);
+            if (epochMatch.Success)
+            {
+                lblTrainingEpochValue.Text = $"{epochMatch.Groups[1].Value} / {epochMatch.Groups[2].Value}";
+                if (lblTrainingStatusValue.Text == "-")
+                {
+                    lblTrainingStatusValue.Text = "학습 중";
+                }
+            }
+
+            Match lossMatch = Regex.Match(message, @"(?:^|\s)-\s+loss:\s*([0-9.eE+-]+)");
+            if (lossMatch.Success)
+            {
+                lblTrainingLossValue.Text = lossMatch.Groups[1].Value;
+            }
+
+            Match valLossMatch = Regex.Match(message, @"(?:^|\s)-\s+val_loss:\s*([0-9.eE+-]+)");
+            if (valLossMatch.Success)
+            {
+                lblTrainingValLossValue.Text = valLossMatch.Groups[1].Value;
+            }
+
+            Match improvedMatch = Regex.Match(message, @"Epoch\s+\d+\s*:\s*val_loss\s+improved\s+from\s+([0-9.eE+-]+|inf)\s+to\s+([0-9.eE+-]+)", RegexOptions.IgnoreCase);
+            if (!improvedMatch.Success)
+            {
+                improvedMatch = Regex.Match(message, @"val_loss\s+improved\s+from\s+([0-9.eE+-]+|inf)\s+to\s+([0-9.eE+-]+)", RegexOptions.IgnoreCase);
+            }
+            if (improvedMatch.Success)
+            {
+                lblTrainingValLossValue.Text = improvedMatch.Groups[2].Value;
+                if (improvedMatch.Groups[1].Value.Equals("inf", StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+
+                lblTrainingStatusValue.Text = $"개선됨 {improvedMatch.Groups[1].Value} -> {improvedMatch.Groups[2].Value}";
+                lblTrainingStatusValue.ForeColor = Color.FromArgb(45, 212, 191);
+                return;
+            }
+
+            Match notImprovedMatch = Regex.Match(message, @"Epoch\s+\d+\s*:\s*val_loss\s+did\s+not\s+improve\s+from\s+([0-9.eE+-]+|inf)", RegexOptions.IgnoreCase);
+            if (!notImprovedMatch.Success)
+            {
+                notImprovedMatch = Regex.Match(message, @"val_loss\s+did\s+not\s+improve\s+from\s+([0-9.eE+-]+|inf)", RegexOptions.IgnoreCase);
+            }
+            if (notImprovedMatch.Success)
+            {
+                lblTrainingStatusValue.Text = $"개선 없음 best {notImprovedMatch.Groups[1].Value}";
+                lblTrainingStatusValue.ForeColor = Color.FromArgb(245, 176, 65);
+            }
         }
 
         private string CleanTrainingLogMessage(string message)
@@ -830,6 +923,7 @@ namespace DataManager
             {
                 _isTrainingRunning = true;
                 _trainingStopRequested = false;
+                ResetTrainingSummary();
                 SetTrainingButtonRunningState(true);
                 AppendTrainingLog("Compressing selected data folder for training.");
                 string trainingZipPath = CreateTrainingDataZip();
@@ -918,7 +1012,7 @@ namespace DataManager
             {
                 _isTestRunning = true;
                 btnStartTest.Enabled = false;
-                btnStartTest.Text = "Testing...";
+                btnStartTest.Text = "테스트 중...";
                 AppendTrainingLog("Test session started. Syncing paths.");
                 string envName = "e2e_env";
                 string projectPath = "~/mysim";
@@ -1054,7 +1148,7 @@ namespace DataManager
             {
                 _isTestRunning = false;
                 btnStartTest.Enabled = true;
-                btnStartTest.Text = "Test Start";
+                btnStartTest.Text = "테스트 시작";
             }
         }
 
