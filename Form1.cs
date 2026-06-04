@@ -9,7 +9,7 @@ using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Text.Json;
 using System.Drawing.Drawing2D;
-using System.Runtime.InteropServices; // Required for native logical string comparison.
+using System.Runtime.InteropServices;
 using System.IO.Compression;
 using System.Globalization;
 using System.Threading;
@@ -17,10 +17,8 @@ using System.Text.RegularExpressions;
 
 namespace DataManager
 {
-    // Implementation note.
     public partial class Form1 : Form
     {
-        // Implementation note.
         private List<DrivingData> _allData = new List<DrivingData>();
         private readonly Stack<DeleteAction> _deleteUndoStack = new Stack<DeleteAction>();
         private int _currentIndex = -1;
@@ -55,7 +53,6 @@ namespace DataManager
             public string BackupPath { get; set; } = "";
         }
 
-        // Required for native logical string comparison.
         [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
         private static extern int StrCmpLogicalW(string psz1, string psz2);
 
@@ -73,16 +70,25 @@ namespace DataManager
             }
             AdjustDataListColumns();
 
-            // Configure the playback speed range.
             tbPlaybackSpeed.AutoSize = false;
             tbImageNavigator.AutoSize = false;
             tbTestImageNavigator.AutoSize = false;
+            if (trackBar_tab2 != null) trackBar_tab2.AutoSize = false;
+
             tbPlaybackSpeed.TickStyle = TickStyle.None;
             tbImageNavigator.TickStyle = TickStyle.BottomRight;
             tbTestImageNavigator.TickStyle = TickStyle.BottomRight;
+            if (trackBar_tab2 != null) trackBar_tab2.TickStyle = TickStyle.None;
+
             tbPlaybackSpeed.Minimum = 25;
             tbPlaybackSpeed.Maximum = 400;
             tbPlaybackSpeed.Value = 100;
+            if (trackBar_tab2 != null)
+            {
+                trackBar_tab2.Minimum = 25;
+                trackBar_tab2.Maximum = 400;
+                trackBar_tab2.Value = 100;
+            }
 
             InitializeDataInfoGrid();
             ResetTrainingSummary();
@@ -96,16 +102,21 @@ namespace DataManager
             this.Resize += Form1_Resize;
             this.FormClosed += Form1_FormClosed;
 
-            // Wire runtime event handlers.
             lvDataItems.SelectedIndexChanged += lvDataItems_SelectedIndexChanged;
             lvDataItems.MouseDown += lvDataItems_MouseDown;
             lvDataItems.MouseMove += lvDataItems_MouseMove;
             lvDataItems.MouseUp += lvDataItems_MouseUp;
 
-            // Wire runtime event handlers.
             tbImageNavigator.Scroll += tbImageNavigator_Scroll;
+            if (trackBar_tab2 != null) trackBar_tab2.Scroll += trackBar_tab2_Scroll;
 
-            // Implementation note.
+            btnPlay_tab2.Click -= btnPlay_tab2_Click;
+            btnPlay_tab2.Click += btnPlay_tab2_Click;
+            btnStop_tab2.Click -= btnStop_tab2_Click;
+            btnStop_tab2.Click += btnStop_tab2_Click;
+            btnReverse_tab2.Click -= btnReverse_tab2_Click;
+            btnReverse_tab2.Click += btnReverse_tab2_Click;
+
             if (tbTestImageNavigator != null)
             {
                 tbTestImageNavigator.Scroll -= tbTestImageNavigator_Scroll_1;
@@ -124,14 +135,12 @@ namespace DataManager
 
             this.AutoScroll = false;
 
-            // Find the main tab control.
             var tabControl = this.Controls.OfType<TabControl>().FirstOrDefault();
             if (tabControl != null && tabControl.TabPages.Count >= 2)
             {
-                TabPage page1 = tabControl.TabPages[0]; // Find the main tab control.
-                TabPage page2 = tabControl.TabPages[1]; // Create fallback charts for the data tab.
+                TabPage page1 = tabControl.TabPages[0];
+                TabPage page2 = tabControl.TabPages[1];
 
-                // Create fallback charts for the data tab.
                 int p1_chartY = 540;
                 int p1_chartWidth = 480;
                 int p1_chartHeight = 200;
@@ -149,7 +158,6 @@ namespace DataManager
                     page1.Controls.Add(chtSpeedValue);
                 }
 
-                // Create fallback charts for the training tab.
                 int p2_chartX = 520;
                 int p2_chartWidth = 720;
                 int p2_chartHeight = 230;
@@ -166,7 +174,6 @@ namespace DataManager
                 }
             }
 
-            // Apply chart layout and styling.
             ApplyResponsiveLayout();
             EnsureDataChartsLayout();
             EnsureTestChartsLayout();
@@ -213,7 +220,6 @@ namespace DataManager
         {
             try
             {
-                // Shut down WSL so TensorFlow memory is released when this app closes.
                 ProcessStartInfo start = new ProcessStartInfo
                 {
                     FileName = "wsl.exe",
@@ -225,7 +231,6 @@ namespace DataManager
             }
             catch
             {
-                // App shutdown should not be blocked by WSL cleanup failures.
             }
         }
 
@@ -363,6 +368,7 @@ namespace DataManager
             pbTestPreview.SetBounds(margin, 41, previewWidth, previewHeight);
             btnStartTest.SetBounds(margin, pbTestPreview.Bottom + 12, previewWidth, 46);
             btnShowCurrentPrediction.SetBounds(margin, btnStartTest.Bottom + 8, previewWidth, 40);
+            lblPlaybackSpeed_tab2.SetBounds(trackBar_tab2.Right + 8, trackBar_tab2.Top + 2, 70, 32);
             tbTestImageNavigator.SetBounds(margin, btnShowCurrentPrediction.Bottom + 10, Math.Max(120, width - (margin * 2)), 30);
         }
 
@@ -466,7 +472,7 @@ namespace DataManager
             if (chart == null) return;
             ChartArea ca = chart.ChartAreas.Count > 0 ? chart.ChartAreas[0] : chart.ChartAreas.Add("Main");
             ca.AxisX.Title = "";
-            ca.AxisX.LabelStyle.Format = "0;0;0"; // Avoid displaying negative zero.
+            ca.AxisX.LabelStyle.Format = "0;0;0";
             ca.BackColor = Color.FromArgb(22, 30, 46);
             ca.BorderColor = Color.FromArgb(103, 119, 148);
             ca.AxisX.LineColor = Color.FromArgb(103, 119, 148);
@@ -559,7 +565,6 @@ namespace DataManager
             UpdateDisplay();
             UpdateCharts();
 
-            // Show the first loaded image in the test preview.
             if (pbTestPreview != null && _allData.Count > 0)
             {
                 ShowFrame(0);
@@ -630,6 +635,7 @@ namespace DataManager
             dgvDataInfo.Rows[3].Cells[1].Value = data.Speed.ToString("F0");
             tbImageNavigator.Value = _currentIndex;
             UpdateTestIndexLabel();
+            ShowFrame(_currentIndex);
         }
 
         private bool EnsureDataLoaded()
@@ -647,6 +653,20 @@ namespace DataManager
         }
 
         private void StartPlayback() { if (!EnsureDataLoaded()) return; _playTimer.Interval = GetPlaybackInterval(); _playTimer.Start(); }
+        private void StartTestPlayback()
+        {
+            if (!EnsureDataLoaded()) return;
+
+            if (tbTestImageNavigator != null)
+            {
+                _currentIndex = Math.Max(0, Math.Min(tbTestImageNavigator.Value, _allData.Count - 1));
+            }
+
+            ShowFrame(_currentIndex);
+            _playTimer.Interval = GetPlaybackInterval();
+            _playTimer.Start();
+        }
+
         private void PlayTimer_Tick(object? sender, EventArgs e)
         {
             if (_isReversed) { if (_currentIndex > 0) _currentIndex--; else _playTimer.Stop(); }
@@ -657,6 +677,10 @@ namespace DataManager
         private void btnPlay_Click_1(object sender, EventArgs e) { _isReversed = false; StartPlayback(); }
         private void btnReverse_Click(object sender, EventArgs e) { _isReversed = true; StartPlayback(); }
         private void btnStop_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; _playTimer.Stop(); }
+
+        private void btnPlay_tab2_Click(object? sender, EventArgs e) { _isReversed = false; StartTestPlayback(); }
+        private void btnReverse_tab2_Click(object? sender, EventArgs e) { _isReversed = true; StartTestPlayback(); }
+        private void btnStop_tab2_Click(object? sender, EventArgs e) { if (!EnsureDataLoaded()) return; _playTimer.Stop(); }
 
         #endregion
 
@@ -716,7 +740,6 @@ namespace DataManager
 
             if (_uiContext != null && SynchronizationContext.Current != _uiContext)
             {
-                // Process output events arrive on background threads; marshal logs back to the UI thread.
                 _uiContext.Post(_ => AppendTrainingLog(message), null);
                 return;
             }
@@ -935,27 +958,21 @@ namespace DataManager
                     return;
                 }
 
-                // Configure the WSL training environment.
                 string envName = "e2e_env";
                 string projectPath = "~/mysim";
 
-                // Build the training commands.
                 string installCmd = "pip install numpy==1.24.3 pandas==2.0.3 tensorflow==2.13.0 albumentations imgaug";
                 string importCmd = $"rm -rf ./data && mkdir -p ./data && cp {BashQuote(wslTrainingZipPath)} ./training_data.zip && python -m zipfile -e ./training_data.zip ./data && test -d ./data/images && ls ./data/*.catalog >/dev/null";
                 string trainCmd = "python train.py --tubs ./data --model ./models/mypilot.h5";
 
-                // Configure the WSL training environment.
                 string bashCmd = BuildWslCondaCommand(envName, $"cd {projectPath} && {importCmd} && {installCmd} && {trainCmd}");
 
-                // Configure the WSL process.
                 ProcessStartInfo start = new ProcessStartInfo();
                 start.FileName = "wsl.exe";
 
-                // Implementation note.
                 string wslDistroArgument = GetWslDistroArgument();
                 start.Arguments = wslDistroArgument + "bash -lc \"" + bashCmd + "\"";
 
-                // Capture process output in the app log.
                 start.UseShellExecute = false;
                 start.RedirectStandardOutput = true;
                 start.RedirectStandardError = true;
@@ -1018,13 +1035,11 @@ namespace DataManager
                 string projectPath = "~/mysim";
                 string modelFile = "models/mypilot.h5";
 
-                // Prepare temporary files for test predictions.
                 string appDir = Application.StartupPath;
                 string winPathsFile = Path.Combine(appDir, "win_paths.txt");
                 string winResultsFile = Path.Combine(appDir, "results.csv");
                 if (File.Exists(winResultsFile)) File.Delete(winResultsFile);
 
-                // Convert selected image paths for WSL.
                 var linuxPaths = _allData.Select(d =>
                 {
                     string drive = Path.GetPathRoot(d.ImagePath).Substring(0, 1).ToLower();
@@ -1034,7 +1049,6 @@ namespace DataManager
                 File.WriteAllLines(winPathsFile, linuxPaths);
                 AppendTrainingLog($"Prepared {linuxPaths.Count} test images.");
 
-                // Resolve the app output directory inside WSL.
                 Process wslPathProc = new Process();
                 wslPathProc.StartInfo.FileName = "wsl.exe";
                 string wslDistroArgument = GetWslDistroArgument();
@@ -1058,7 +1072,6 @@ namespace DataManager
                 string winPredictScriptFile = Path.Combine(appDir, "predict_frames.py");
                 string wslPredictScriptFile = $"{wslAppDir}/predict_frames.py";
 
-                // Build the Python prediction script.
                 string pythonPredictScript = string.Join("\n", new[]
                 {
                     "import os",
@@ -1066,7 +1079,6 @@ namespace DataManager
                     "import numpy as np",
                     "from PIL import Image",
                     "def preprocess_image(image_path):",
-                    "    # DonkeyCar KerasLinear expects RGB image data normalized to [0, 1].",
                     "    image = Image.open(image_path).convert('RGB').resize((160, 120))",
                     "    image_array = np.asarray(image, dtype=np.float64) / 255.0",
                     "    return image_array",
@@ -1081,7 +1093,6 @@ namespace DataManager
                     "        throttles = arr[:, 1] if arr.shape[1] > 1 else np.zeros(count)",
                     "    return [(float(a), float(t)) for a, t in zip(angles[:count], throttles[:count])]",
                     "def predict_image_batch(model, image_paths):",
-                    "    # Batch inference: images -> preprocessing -> model.predict(batch) -> angle/throttle values.",
                     "    batch = np.stack([preprocess_image(path) for path in image_paths], axis=0)",
                     "    pred = model.predict(batch, verbose=0)",
                     "    return extract_predictions(pred, len(image_paths))",
@@ -1112,7 +1123,6 @@ namespace DataManager
                 File.WriteAllText(winPredictScriptFile, pythonPredictScript);
                 AppendTrainingLog("Starting prediction process. TensorFlow model loading may take a while.");
 
-                // Configure the WSL process.
                 ProcessStartInfo start = new ProcessStartInfo();
                 start.FileName = "wsl.exe";
                 string bashCmd = BuildWslCondaCommand(envName, $"cd {projectPath} && python {BashQuote(wslPredictScriptFile)}");
@@ -1200,14 +1210,14 @@ namespace DataManager
         private void tbTestImageNavigator_Scroll_1(object sender, EventArgs e)
         {
             if (!EnsureDataLoaded() || tbTestImageNavigator == null || pbTestPreview == null) return;
-            ShowFrame(tbTestImageNavigator.Value);
+            _currentIndex = Math.Max(0, Math.Min(tbTestImageNavigator.Value, _allData.Count - 1));
+            ShowFrame(_currentIndex);
         }
 
         #endregion
 
         #region [5. Filtering, deletion, and markers]
 
-        // Wire runtime event handlers.
         private void tbImageNavigator_Scroll(object sender, EventArgs e)
         {
             if (!EnsureDataLoaded()) return;
@@ -1477,7 +1487,6 @@ namespace DataManager
         {
             if (pbTestPreview == null || _allData.Count == 0) return;
 
-            // Keep frame navigation clamped to the loaded data range.
             int frameIndex = Math.Max(0, Math.Min(index, _allData.Count - 1));
             DrivingData data = _allData[frameIndex];
             UpdateTestIndexLabel(frameIndex);
@@ -1490,7 +1499,6 @@ namespace DataManager
             ReleaseTestPreviewImage();
             if (!File.Exists(data.ImagePath)) return;
 
-            // Copy the source image first so overlay drawing never modifies the original file or shared bitmap.
             using Image originalImage = LoadImageWithoutLock(data.ImagePath);
             Bitmap frameBitmap = new Bitmap(originalImage);
 
@@ -1507,7 +1515,6 @@ namespace DataManager
             using Graphics graphics = Graphics.FromImage(frameBitmap);
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
-            // Draw actual and predicted controls from the same bottom-center origin.
             float centerX = frameBitmap.Width / 2f;
             float bottomY = frameBitmap.Height - Math.Max(18f, frameBitmap.Height * 0.08f);
             PointF origin = new PointF(centerX, bottomY);
@@ -1535,7 +1542,6 @@ namespace DataManager
             double clampedAngle = Math.Max(-1.0, Math.Min(1.0, angle));
             double clampedThrottle = Math.Max(0.0, Math.Min(1.0, throttle));
 
-            // Angle maps from -1..1 to left..right, with 0 pointing straight upward.
             double radians = clampedAngle * (Math.PI / 2.0);
 
             float minLength = 18f;
@@ -1563,7 +1569,6 @@ namespace DataManager
 
         private double NormalizeThrottle(double value)
         {
-            // Existing speed values are stored as 0-100 for charts, so convert them back to throttle scale.
             double throttle = value > 1.0 ? value / 100.0 : value;
             return Math.Max(0.0, Math.Min(1.0, throttle));
         }
@@ -1639,7 +1644,6 @@ namespace DataManager
         private void ClearMarkers() { foreach (var m in _imageRangeMarkers) gbDataContent?.Controls.Remove(m); _imageRangeMarkers.Clear(); _isRangeSettingMode = false; }
         private int GetImageNavigatorMarkerLeft(int value, Size markerSize) { int min = tbImageNavigator.Minimum, max = tbImageNavigator.Maximum; double ratio = (max == min) ? 0 : (double)(value - min) / (max - min); return tbImageNavigator.Left + 10 + (int)((tbImageNavigator.Width - 20) * ratio) - (markerSize.Width / 2); }
 
-        // Handle marker placement after mouse release.
         private void tbImageNavigator_MouseUp(object sender, MouseEventArgs e)
         {
             _currentIndex = tbImageNavigator.Value;
@@ -1756,9 +1760,34 @@ namespace DataManager
         }
 
         private void InitializeDataInfoGrid() { dgvDataInfo.Rows.Clear(); dgvDataInfo.Rows.Add("데이터 수", "0"); dgvDataInfo.Rows.Add("이미지 인덱스", "0"); dgvDataInfo.Rows.Add("조향값", "0"); dgvDataInfo.Rows.Add("속도", "0"); }
-        private void UpdatePlaybackSpeedLabel() { if (lblPlaybackSpeed != null) lblPlaybackSpeed.Text = $"x{tbPlaybackSpeed.Value / 100.0:0.##}"; }
+        private void UpdatePlaybackSpeedLabel()
+        {
+            string speedText = $"x{tbPlaybackSpeed.Value / 100.0:0.##}";
+            if (lblPlaybackSpeed != null) lblPlaybackSpeed.Text = speedText;
+            if (lblPlaybackSpeed_tab2 != null) lblPlaybackSpeed_tab2.Text = speedText;
+        }
         private int GetPlaybackInterval() { return Math.Max(1, (int)(BasePlaybackIntervalMs / (tbPlaybackSpeed.Value / 100.0))); }
-        private void tbPlaybackSpeed_Scroll(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; UpdatePlaybackSpeedLabel(); if (_playTimer.Enabled) _playTimer.Interval = GetPlaybackInterval(); }
+
+        private void tbPlaybackSpeed_Scroll(object sender, EventArgs e)
+        {
+            if (!EnsureDataLoaded()) return;
+
+            if (trackBar_tab2 != null) trackBar_tab2.Value = tbPlaybackSpeed.Value;
+
+            UpdatePlaybackSpeedLabel();
+            if (_playTimer.Enabled) _playTimer.Interval = GetPlaybackInterval();
+        }
+
+        private void trackBar_tab2_Scroll(object sender, EventArgs e)
+        {
+            if (!EnsureDataLoaded()) return;
+
+            if (trackBar_tab2 != null) tbPlaybackSpeed.Value = trackBar_tab2.Value;
+
+            UpdatePlaybackSpeedLabel();
+            if (_playTimer.Enabled) _playTimer.Interval = GetPlaybackInterval();
+        }
+
         private void btnSetRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; _isRangeSettingMode = true; }
         private void btnCancelRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; ClearMarkers(); }
         private void gbDataContent_Resize(object sender, EventArgs e) { LayoutDataContentControls(); foreach (var m in _imageRangeMarkers) if (m.Tag is int val) m.Left = GetImageNavigatorMarkerLeft(val, m.Size); if (_allData.Count > 0) UpdateCharts(); }
