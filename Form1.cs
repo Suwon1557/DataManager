@@ -11,6 +11,9 @@ using System.Text.Json;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices; // Required for native logical string comparison.
 using System.IO.Compression;
+using System.Globalization;
+using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace DataManager
 {
@@ -25,9 +28,12 @@ namespace DataManager
         private bool _isRangeSettingMode = false;
         private int _listViewDragAnchorIndex = -1;
         private string _selectedDataFolderPath = "";
+        private bool _showTestOverlay = false;
+        private bool _isTestRunning = false;
         private Process? _trainingProcess;
         private bool _isTrainingRunning = false;
         private bool _trainingStopRequested = false;
+        private SynchronizationContext? _uiContext;
         private Image? _trainButtonIdleImage;
         private readonly Color _folderPathTextColor = Color.FromArgb(238, 243, 249);
         private readonly Color _folderPathWarningColor = Color.FromArgb(248, 113, 113);
@@ -56,6 +62,7 @@ namespace DataManager
         public Form1()
         {
             InitializeComponent();
+            _uiContext = SynchronizationContext.Current;
             _trainButtonIdleImage = btnTrain.BackgroundImage;
             AutoScaleMode = AutoScaleMode.None;
 
@@ -78,6 +85,7 @@ namespace DataManager
             tbPlaybackSpeed.Value = 100;
 
             InitializeDataInfoGrid();
+            ResetTrainingSummary();
             UpdatePlaybackSpeedLabel();
             ConfigureResponsiveLayout();
             lvDataItems.MultiSelect = true;
@@ -86,6 +94,7 @@ namespace DataManager
             _playTimer.Tick += PlayTimer_Tick;
             this.Shown += Form1_Shown;
             this.Resize += Form1_Resize;
+            this.FormClosed += Form1_FormClosed;
 
             // Wire runtime event handlers.
             lvDataItems.SelectedIndexChanged += lvDataItems_SelectedIndexChanged;
@@ -161,10 +170,10 @@ namespace DataManager
             ApplyResponsiveLayout();
             EnsureDataChartsLayout();
             EnsureTestChartsLayout();
-            SetupSafeChart(chtSteeringValue, "조향 데이터", Color.FromArgb(45, 212, 191), "실제 조향값");
-            SetupSafeChart(chtSpeedValue, "속도 데이터", Color.FromArgb(245, 176, 65), "실제 속도값");
-            SetupSafeChart(chtTestSteeringValue, "조향 예측 비교", Color.FromArgb(248, 113, 113), "예측값", "실제값", Color.FromArgb(45, 212, 191));
-            SetupSafeChart(chtTestSpeedValue, "속도 예측 비교", Color.FromArgb(248, 113, 113), "예측값", "실제값", Color.FromArgb(245, 176, 65));
+            SetupSafeChart(chtSteeringValue, "Steering Data", Color.FromArgb(45, 212, 191), "Actual Steering");
+            SetupSafeChart(chtSpeedValue, "Speed Data", Color.FromArgb(245, 176, 65), "Actual Speed");
+            SetupSafeChart(chtTestSteeringValue, "Steering Prediction", Color.FromArgb(248, 113, 113), "Predict", "Actual", Color.FromArgb(45, 212, 191));
+            SetupSafeChart(chtTestSpeedValue, "Speed Prediction", Color.FromArgb(248, 113, 113), "Predict", "Actual", Color.FromArgb(245, 176, 65));
 
             UpdateCharts();
         }
@@ -195,6 +204,31 @@ namespace DataManager
             AdjustDataListColumns();
         }
 
+        private void Form1_FormClosed(object? sender, FormClosedEventArgs e)
+        {
+            ShutdownWslForApp();
+        }
+
+        private void ShutdownWslForApp()
+        {
+            try
+            {
+                // Shut down WSL so TensorFlow memory is released when this app closes.
+                ProcessStartInfo start = new ProcessStartInfo
+                {
+                    FileName = "wsl.exe",
+                    Arguments = "--shutdown",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                Process.Start(start)?.Dispose();
+            }
+            catch
+            {
+                // App shutdown should not be blocked by WSL cleanup failures.
+            }
+        }
+
         private void ConfigureResponsiveLayout()
         {
             tcMain.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
@@ -212,7 +246,7 @@ namespace DataManager
 
             gbTrainingSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             gbModelTest.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             tbTestImageNavigator.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             ApplyResponsiveLayout();
             LayoutTestImageNavigatorAtBottom();
@@ -292,8 +326,28 @@ namespace DataManager
             const int margin = 18;
             int height = gbTrainingSetup.ClientSize.Height;
             int buttonHeight = Math.Max(50, height - 72);
+            int logWidth = Math.Max(260, (gbTrainingSetup.ClientSize.Width - (margin * 2)) / 2);
+            int logLeft = Math.Max(btnTrain.Right + 14, gbTrainingSetup.ClientSize.Width - margin - logWidth);
+            int summaryLeft = btnTrain.Right + 38;
+            int summaryWidth = Math.Max(220, logLeft - summaryLeft - 24);
+            int summaryMid = summaryLeft + Math.Max(120, summaryWidth / 2);
             btnTrain.SetBounds(margin, 41, 214, buttonHeight);
-            txtTrainingLog.SetBounds(btnTrain.Right + 14, 41, Math.Max(160, gbTrainingSetup.ClientSize.Width - btnTrain.Right - 43), buttonHeight + 2);
+            LayoutTrainingSummaryLabels(summaryLeft, summaryMid);
+            txtTrainingLog.SetBounds(logLeft, 41, logWidth, buttonHeight + 2);
+        }
+
+        private void LayoutTrainingSummaryLabels(int left, int middle)
+        {
+            if (lblTrainingEpochCaption == null) return;
+
+            lblTrainingEpochCaption.Location = new Point(left, 43);
+            lblTrainingEpochValue.Location = new Point(left + 75, 39);
+            lblTrainingLossCaption.Location = new Point(middle, 43);
+            lblTrainingLossValue.Location = new Point(middle + 75, 39);
+            lblTrainingValLossCaption.Location = new Point(left, 76);
+            lblTrainingValLossValue.Location = new Point(left + 75, 72);
+            lblTrainingStatusCaption.Location = new Point(left, 109);
+            lblTrainingStatusValue.Location = new Point(left + 75, 106);
         }
 
         private void LayoutModelTestControls()
@@ -308,7 +362,8 @@ namespace DataManager
 
             pbTestPreview.SetBounds(margin, 41, previewWidth, previewHeight);
             btnStartTest.SetBounds(margin, pbTestPreview.Bottom + 12, previewWidth, 46);
-            tbTestImageNavigator.SetBounds(margin, btnStartTest.Bottom + 10, Math.Max(120, width - (margin * 2)), 30);
+            btnShowCurrentPrediction.SetBounds(margin, btnStartTest.Bottom + 8, previewWidth, 40);
+            tbTestImageNavigator.SetBounds(margin, btnShowCurrentPrediction.Bottom + 10, Math.Max(120, width - (margin * 2)), 30);
         }
 
         private void EnsureDataChartsLayout()
@@ -354,9 +409,23 @@ namespace DataManager
             const int margin = 12;
             tbTestImageNavigator.SetBounds(
                 margin,
-                btnStartTest.Bottom + 10,
+                btnShowCurrentPrediction.Bottom + 10,
                 Math.Max(100, gbModelTest.ClientSize.Width - (margin * 2)),
                 30);
+        }
+
+        private void UpdateTestIndexLabel(int? displayIndex = null)
+        {
+            if (lblTestCurrentIndex == null) return;
+
+            if (_allData.Count == 0)
+            {
+                lblTestCurrentIndex.Text = "\uD604\uC7AC \uC778\uB371\uC2A4\r\n- / -";
+                return;
+            }
+
+            int index = displayIndex ?? Math.Max(0, Math.Min(tbTestImageNavigator?.Value ?? _currentIndex, _allData.Count - 1));
+            lblTestCurrentIndex.Text = $"\uD604\uC7AC \uC778\uB371\uC2A4\r\n{index} / {_allData.Count - 1}";
         }
 
         private TableLayoutPanel GetOrCreateChartLayout(Control parent, string name, int columnCount, int rowCount)
@@ -483,6 +552,7 @@ namespace DataManager
             }
 
             _currentIndex = 0;
+            _showTestOverlay = false;
             tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1);
             if (tbTestImageNavigator != null) tbTestImageNavigator.Maximum = Math.Max(0, _allData.Count - 1);
 
@@ -492,8 +562,7 @@ namespace DataManager
             // Show the first loaded image in the test preview.
             if (pbTestPreview != null && _allData.Count > 0)
             {
-                ReleaseTestPreviewImage();
-                if (File.Exists(_allData[0].ImagePath)) pbTestPreview.Image = LoadImageWithoutLock(_allData[0].ImagePath);
+                ShowFrame(0);
             }
         }
 
@@ -539,7 +608,7 @@ namespace DataManager
             if (!EnsureDataLoaded()) return;
             bool isDup = _allData.GroupBy(x => x.Index).Any(g => g.Count() > 1);
             bool isMissingFile = _allData.Any(x => !File.Exists(x.ImagePath));
-            MessageBox.Show($"중복 인덱스: {(isDup ? "문제 있음" : "정상")}\n이미지 파일 누락: {(isMissingFile ? "문제 있음" : "정상")}", "무결성 검사");
+            MessageBox.Show($"Duplicate index: {(isDup ? "Problem found" : "OK")}\nMissing image file: {(isMissingFile ? "Problem found" : "OK")}", "Data integrity check");
         }
 
         #endregion
@@ -560,6 +629,7 @@ namespace DataManager
             dgvDataInfo.Rows[2].Cells[1].Value = data.Steering.ToString("F2");
             dgvDataInfo.Rows[3].Cells[1].Value = data.Speed.ToString("F0");
             tbImageNavigator.Value = _currentIndex;
+            UpdateTestIndexLabel();
         }
 
         private bool EnsureDataLoaded()
@@ -641,18 +711,90 @@ namespace DataManager
 
         private void AppendTrainingLog(string message)
         {
-            if (txtTrainingLog == null) return;
-
             message = CleanTrainingLogMessage(message);
             if (string.IsNullOrWhiteSpace(message)) return;
 
-            if (txtTrainingLog.InvokeRequired)
+            if (_uiContext != null && SynchronizationContext.Current != _uiContext)
             {
-                txtTrainingLog.BeginInvoke(new Action<string>(AppendTrainingLog), message);
+                // Process output events arrive on background threads; marshal logs back to the UI thread.
+                _uiContext.Post(_ => AppendTrainingLog(message), null);
                 return;
             }
 
+            if (IsDisposed || !IsHandleCreated) return;
+            if (txtTrainingLog == null || txtTrainingLog.IsDisposed) return;
+            UpdateTrainingSummaryFromLog(message);
             txtTrainingLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}\r\n");
+        }
+
+        private void ResetTrainingSummary()
+        {
+            SetTrainingSummaryText("- / -", "-", "-", "-");
+        }
+
+        private void SetTrainingSummaryText(string epoch, string loss, string valLoss, string status)
+        {
+            if (lblTrainingEpochValue == null) return;
+
+            lblTrainingEpochValue.Text = epoch;
+            lblTrainingLossValue.Text = loss;
+            lblTrainingValLossValue.Text = valLoss;
+            lblTrainingStatusValue.Text = status;
+            lblTrainingStatusValue.ForeColor = Color.FromArgb(45, 212, 191);
+        }
+
+        private void UpdateTrainingSummaryFromLog(string message)
+        {
+            Match epochMatch = Regex.Match(message, @"Epoch\s+(\d+)\s*/\s*(\d+)", RegexOptions.IgnoreCase);
+            if (epochMatch.Success)
+            {
+                lblTrainingEpochValue.Text = $"{epochMatch.Groups[1].Value} / {epochMatch.Groups[2].Value}";
+                if (lblTrainingStatusValue.Text == "-")
+                {
+                    lblTrainingStatusValue.Text = "학습 중";
+                }
+            }
+
+            Match lossMatch = Regex.Match(message, @"(?:^|\s)-\s+loss:\s*([0-9.eE+-]+)");
+            if (lossMatch.Success)
+            {
+                lblTrainingLossValue.Text = lossMatch.Groups[1].Value;
+            }
+
+            Match valLossMatch = Regex.Match(message, @"(?:^|\s)-\s+val_loss:\s*([0-9.eE+-]+)");
+            if (valLossMatch.Success)
+            {
+                lblTrainingValLossValue.Text = valLossMatch.Groups[1].Value;
+            }
+
+            Match improvedMatch = Regex.Match(message, @"Epoch\s+\d+\s*:\s*val_loss\s+improved\s+from\s+([0-9.eE+-]+|inf)\s+to\s+([0-9.eE+-]+)", RegexOptions.IgnoreCase);
+            if (!improvedMatch.Success)
+            {
+                improvedMatch = Regex.Match(message, @"val_loss\s+improved\s+from\s+([0-9.eE+-]+|inf)\s+to\s+([0-9.eE+-]+)", RegexOptions.IgnoreCase);
+            }
+            if (improvedMatch.Success)
+            {
+                lblTrainingValLossValue.Text = improvedMatch.Groups[2].Value;
+                if (improvedMatch.Groups[1].Value.Equals("inf", StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+
+                lblTrainingStatusValue.Text = $"개선됨 {improvedMatch.Groups[1].Value} -> {improvedMatch.Groups[2].Value}";
+                lblTrainingStatusValue.ForeColor = Color.FromArgb(45, 212, 191);
+                return;
+            }
+
+            Match notImprovedMatch = Regex.Match(message, @"Epoch\s+\d+\s*:\s*val_loss\s+did\s+not\s+improve\s+from\s+([0-9.eE+-]+|inf)", RegexOptions.IgnoreCase);
+            if (!notImprovedMatch.Success)
+            {
+                notImprovedMatch = Regex.Match(message, @"val_loss\s+did\s+not\s+improve\s+from\s+([0-9.eE+-]+|inf)", RegexOptions.IgnoreCase);
+            }
+            if (notImprovedMatch.Success)
+            {
+                lblTrainingStatusValue.Text = $"개선 없음 best {notImprovedMatch.Groups[1].Value}";
+                lblTrainingStatusValue.ForeColor = Color.FromArgb(245, 176, 65);
+            }
         }
 
         private string CleanTrainingLogMessage(string message)
@@ -697,14 +839,14 @@ namespace DataManager
         private string CreateTrainingDataZip()
         {
             if (string.IsNullOrWhiteSpace(_selectedDataFolderPath) || !Directory.Exists(_selectedDataFolderPath))
-                throw new InvalidOperationException("선택한 데이터 폴더를 찾을 수 없습니다.");
+                throw new InvalidOperationException("?좏깮???곗씠???대뜑瑜?李얠쓣 ???놁뒿?덈떎.");
 
             if (!Directory.GetFiles(_selectedDataFolderPath, "*.catalog").Any())
-                throw new InvalidOperationException("선택한 폴더에 catalog 파일이 없습니다.");
+                throw new InvalidOperationException("?좏깮???대뜑??catalog ?뚯씪???놁뒿?덈떎.");
 
             string imagesPath = Path.Combine(_selectedDataFolderPath, "images");
             if (!Directory.Exists(imagesPath))
-                throw new InvalidOperationException("선택한 폴더에 images 폴더가 없습니다.");
+                throw new InvalidOperationException("?좏깮???대뜑??images ?대뜑媛 ?놁뒿?덈떎.");
 
             string zipPath = Path.Combine(Path.GetTempPath(), $"datamanager_training_data_{DateTime.Now:yyyyMMddHHmmss}.zip");
             if (File.Exists(zipPath)) File.Delete(zipPath);
@@ -718,7 +860,7 @@ namespace DataManager
             string fullPath = Path.GetFullPath(windowsPath);
             string root = Path.GetPathRoot(fullPath) ?? "";
             if (root.Length < 2 || root[1] != ':')
-                throw new InvalidOperationException("드라이브 문자 기반 Windows 경로만 WSL 경로로 변환할 수 있습니다.");
+                throw new InvalidOperationException("?쒕씪?대툕 臾몄옄 湲곕컲 Windows 寃쎈줈留?WSL 寃쎈줈濡?蹂?섑븷 ???덉뒿?덈떎.");
 
             string drive = char.ToLowerInvariant(root[0]).ToString();
             string subPath = fullPath.Substring(root.Length).Replace("\\", "/");
@@ -738,7 +880,7 @@ namespace DataManager
             {
                 btnTrain.Enabled = true;
                 btnTrain.BackgroundImage = null;
-                btnTrain.Text = "정지";
+                btnTrain.Text = "Stop";
                 StyleButton(btnTrain, Color.FromArgb(248, 113, 113), Color.White, Color.FromArgb(248, 113, 113));
                 return;
             }
@@ -752,7 +894,7 @@ namespace DataManager
         private void StopTrainingProcess()
         {
             _trainingStopRequested = true;
-            AppendTrainingLog("학습 중지를 요청했습니다.");
+            AppendTrainingLog("Training stop requested.");
 
             try
             {
@@ -763,7 +905,7 @@ namespace DataManager
             }
             catch (Exception ex)
             {
-                AppendTrainingLog("학습 중지 중 오류: " + ex.Message);
+                AppendTrainingLog("Error while stopping training: " + ex.Message);
             }
         }
 
@@ -781,14 +923,15 @@ namespace DataManager
             {
                 _isTrainingRunning = true;
                 _trainingStopRequested = false;
+                ResetTrainingSummary();
                 SetTrainingButtonRunningState(true);
-                AppendTrainingLog("선택한 데이터 폴더를 학습용 zip으로 압축합니다.");
+                AppendTrainingLog("Compressing selected data folder for training.");
                 string trainingZipPath = CreateTrainingDataZip();
                 string wslTrainingZipPath = ConvertWindowsPathToWslPath(trainingZipPath);
 
                 if (_trainingStopRequested)
                 {
-                    AppendTrainingLog("학습 시작 전에 중지되었습니다.");
+                    AppendTrainingLog("Training was stopped before it started.");
                     return;
                 }
 
@@ -828,7 +971,7 @@ namespace DataManager
                 {
                     if (!string.IsNullOrEmpty(args.Data)) AppendTrainingLog(args.Data);
                 };
-                AppendTrainingLog("WSL data 폴더 교체 후 학습 프로세스를 시작합니다.");
+                AppendTrainingLog("Starting WSL training process after replacing the data folder.");
                 process.Start();
                 _trainingProcess = process;
                 process.BeginOutputReadLine();
@@ -836,20 +979,20 @@ namespace DataManager
                 await process.WaitForExitAsync();
                 if (_trainingStopRequested)
                 {
-                    AppendTrainingLog($"학습이 중지되었습니다. ExitCode={process.ExitCode}");
+                    AppendTrainingLog($"Training stopped. ExitCode={process.ExitCode}");
                 }
                 else
                 {
-                    AppendTrainingLog($"\uD559\uC2B5 \uD504\uB85C\uC138\uC2A4\uAC00 \uC885\uB8CC\uB418\uC5C8\uC2B5\uB2C8\uB2E4. ExitCode={process.ExitCode}");
+                    AppendTrainingLog($"Training process finished. ExitCode={process.ExitCode}");
                 }
             }
             catch (Exception ex) when (!_trainingStopRequested)
             {
-                MessageBox.Show("프로세스 실행 중 오류: " + ex.Message);
+                MessageBox.Show("Error while running process: " + ex.Message);
             }
             catch
             {
-                AppendTrainingLog("학습이 중지되었습니다.");
+                AppendTrainingLog("Training stopped.");
             }
             finally
             {
@@ -860,13 +1003,17 @@ namespace DataManager
             }
         }
 
-        private void btnStartTest_Click(object sender, EventArgs e)
+        private async void btnStartTest_Click(object sender, EventArgs e)
         {
             if (!EnsureDataLoaded()) return;
+            if (_isTestRunning) return;
 
             try
             {
-                AppendTrainingLog("테스트 세션 시작 (경로 동기화 중...)");
+                _isTestRunning = true;
+                btnStartTest.Enabled = false;
+                btnStartTest.Text = "테스트 중...";
+                AppendTrainingLog("Test session started. Syncing paths.");
                 string envName = "e2e_env";
                 string projectPath = "~/mysim";
                 string modelFile = "models/mypilot.h5";
@@ -875,6 +1022,7 @@ namespace DataManager
                 string appDir = Application.StartupPath;
                 string winPathsFile = Path.Combine(appDir, "win_paths.txt");
                 string winResultsFile = Path.Combine(appDir, "results.csv");
+                if (File.Exists(winResultsFile)) File.Delete(winResultsFile);
 
                 // Convert selected image paths for WSL.
                 var linuxPaths = _allData.Select(d =>
@@ -884,6 +1032,7 @@ namespace DataManager
                     return $"/mnt/{drive}/{subPath}";
                 }).ToList();
                 File.WriteAllLines(winPathsFile, linuxPaths);
+                AppendTrainingLog($"Prepared {linuxPaths.Count} test images.");
 
                 // Resolve the app output directory inside WSL.
                 Process wslPathProc = new Process();
@@ -892,80 +1041,166 @@ namespace DataManager
                 wslPathProc.StartInfo.Arguments = $"{wslDistroArgument}wslpath '{appDir.Replace("\\", "/")}'";
                 wslPathProc.StartInfo.UseShellExecute = false;
                 wslPathProc.StartInfo.RedirectStandardOutput = true;
-                wslPathProc.Start();
-                string wslAppDir = wslPathProc.StandardOutput.ReadToEnd().Trim();
-                wslPathProc.WaitForExit();
+                wslPathProc.StartInfo.RedirectStandardError = true;
+                wslPathProc.StartInfo.CreateNoWindow = true;
+                if (!wslPathProc.Start())
+                    throw new InvalidOperationException("wslpath process could not be started.");
+
+                string wslAppDir = (await wslPathProc.StandardOutput.ReadToEndAsync()).Trim();
+                string wslPathError = await wslPathProc.StandardError.ReadToEndAsync();
+                await wslPathProc.WaitForExitAsync();
+                if (wslPathProc.ExitCode != 0)
+                    throw new InvalidOperationException($"wslpath failed: {wslPathError}");
+                AppendTrainingLog("WSL path conversion complete. Creating prediction script.");
 
                 string wslPathsFile = $"{wslAppDir}/win_paths.txt";
                 string wslResultsFile = $"{wslAppDir}/results.csv";
+                string winPredictScriptFile = Path.Combine(appDir, "predict_frames.py");
+                string wslPredictScriptFile = $"{wslAppDir}/predict_frames.py";
 
                 // Build the Python prediction script.
-                string pythonPredictScript =
-                    "import tensorflow as tf; import numpy as np; from PIL import Image; import os; " +
-                    $"model = tf.keras.models.load_model('{modelFile}'); " +
-                    $"with open('{wslPathsFile}', 'r') as f: paths = f.read().splitlines(); " +
-                    "results = []; " +
-                    "for p in paths: " +
-                    "    if not os.path.exists(p): results.append('0,0'); continue; " +
-                    "    img = np.array(Image.open(p).convert('RGB').resize((160, 120))) / 255.0; " +
-                    "    pred = model.predict(img[None, :], verbose=0); " +
-                    "    results.append(f'{pred[0][0][0]},{pred[1][0][0]}'); " +
-                    $"with open('{wslResultsFile}', 'w') as f: f.write('\\n'.join(results))";
+                string pythonPredictScript = string.Join("\n", new[]
+                {
+                    "import os",
+                    "import tensorflow as tf",
+                    "import numpy as np",
+                    "from PIL import Image",
+                    "def preprocess_image(image_path):",
+                    "    # DonkeyCar KerasLinear expects RGB image data normalized to [0, 1].",
+                    "    image = Image.open(image_path).convert('RGB').resize((160, 120))",
+                    "    image_array = np.asarray(image, dtype=np.float64) / 255.0",
+                    "    return image_array",
+                    "def extract_predictions(pred, count):",
+                    "    if isinstance(pred, (list, tuple)):",
+                    "        angles = np.asarray(pred[0]).reshape(-1)",
+                    "        throttles = np.asarray(pred[1]).reshape(-1) if len(pred) > 1 else np.zeros(count)",
+                    "    else:",
+                    "        arr = np.asarray(pred)",
+                    "        arr = arr.reshape((count, -1))",
+                    "        angles = arr[:, 0]",
+                    "        throttles = arr[:, 1] if arr.shape[1] > 1 else np.zeros(count)",
+                    "    return [(float(a), float(t)) for a, t in zip(angles[:count], throttles[:count])]",
+                    "def predict_image_batch(model, image_paths):",
+                    "    # Batch inference: images -> preprocessing -> model.predict(batch) -> angle/throttle values.",
+                    "    batch = np.stack([preprocess_image(path) for path in image_paths], axis=0)",
+                    "    pred = model.predict(batch, verbose=0)",
+                    "    return extract_predictions(pred, len(image_paths))",
+                    "print('Loading model...', flush=True)",
+                    $"model = tf.keras.models.load_model({JsonSerializer.Serialize(modelFile)})",
+                    "print('Model loaded.', flush=True)",
+                    $"with open({JsonSerializer.Serialize(wslPathsFile)}, 'r') as f:",
+                    "    paths = f.read().splitlines()",
+                    "total = len(paths)",
+                    "print(f'Predicting {total} frames...', flush=True)",
+                    "batch_size = 64",
+                    "results = ['0,0'] * total",
+                    "for start in range(0, total, batch_size):",
+                    "    end = min(start + batch_size, total)",
+                    "    indexed_paths = [(idx, paths[idx]) for idx in range(start, end) if os.path.exists(paths[idx])]",
+                    "    missing_count = (end - start) - len(indexed_paths)",
+                    "    if indexed_paths:",
+                    "        batch_indexes = [item[0] for item in indexed_paths]",
+                    "        batch_paths = [item[1] for item in indexed_paths]",
+                    "        predictions = predict_image_batch(model, batch_paths)",
+                    "        for idx, (angle, throttle) in zip(batch_indexes, predictions):",
+                    "            results[idx] = f'{angle},{throttle}'",
+                    "    print(f'[{end}/{total}] predicted batch; missing={missing_count}', flush=True)",
+                    $"with open({JsonSerializer.Serialize(wslResultsFile)}, 'w') as f:",
+                    "    f.write('\\n'.join(results))",
+                    "print('Prediction results saved.', flush=True)"
+                });
+                File.WriteAllText(winPredictScriptFile, pythonPredictScript);
+                AppendTrainingLog("Starting prediction process. TensorFlow model loading may take a while.");
 
                 // Configure the WSL process.
                 ProcessStartInfo start = new ProcessStartInfo();
                 start.FileName = "wsl.exe";
-                string bashCmd = BuildWslCondaCommand(envName, $"cd {projectPath} && python -c \\\"{pythonPredictScript}\\\"");
+                string bashCmd = BuildWslCondaCommand(envName, $"cd {projectPath} && python {BashQuote(wslPredictScriptFile)}");
                 start.Arguments = $"{wslDistroArgument}bash -lc \"{bashCmd}\"";
                 start.UseShellExecute = false;
-                start.RedirectStandardError = true; // Implementation note.
+                start.RedirectStandardOutput = true;
+                start.RedirectStandardError = true;
                 start.CreateNoWindow = true;
 
-                Process process = Process.Start(start);
-                string error = process.StandardError.ReadToEnd();
-                process.WaitForExit();
+                using Process process = Process.Start(start) ?? throw new InvalidOperationException("Prediction process could not be started.");
+                process.OutputDataReceived += (_, args) =>
+                {
+                    if (!string.IsNullOrWhiteSpace(args.Data)) AppendTrainingLog(args.Data);
+                };
+                process.ErrorDataReceived += (_, args) =>
+                {
+                    if (!string.IsNullOrWhiteSpace(args.Data)) AppendTrainingLog("[Prediction error] " + args.Data);
+                };
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+                await process.WaitForExitAsync();
+                if (process.ExitCode != 0)
+                    throw new InvalidOperationException($"prediction process failed. ExitCode={process.ExitCode}");
 
-                if (!string.IsNullOrEmpty(error))
-                {
-                    txtTrainingLog?.AppendText($"[예측 오류] {error}\r\n");
-                }
-
-                // Prepare temporary files for test predictions.
-                if (File.Exists(winResultsFile))
-                {
-                    string[] lines = File.ReadAllLines(winResultsFile);
-                    for (int i = 0; i < Math.Min(lines.Length, _allData.Count); i++)
-                    {
-                        string[] vals = lines[i].Split(',');
-                        if (vals.Length == 2)
-                        {
-                            _allData[i].PredictedSteering = double.Parse(vals[0]);
-                            _allData[i].PredictedSpeed = double.Parse(vals[1]) * 100;
-                        }
-                    }
-                    UpdateCharts();
-                    AppendTrainingLog("예측 완료! 차트를 확인하세요.");
-                }
-                else
-                {
-                    AppendTrainingLog("\uC624\uB958: results.csv\uAC00 \uC0DD\uC131\uB418\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4.");
-                }
+                if (LoadPredictionResultsFromCsv(winResultsFile))
+                    AppendTrainingLog("Prediction finished. Check the charts and overlay.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("테스트 실패: " + ex.Message);
+                MessageBox.Show("Test failed: " + ex.Message);
             }
+            finally
+            {
+                _isTestRunning = false;
+                btnStartTest.Enabled = true;
+                btnStartTest.Text = "테스트 시작";
+            }
+        }
+
+        private void btnShowCurrentPrediction_Click(object sender, EventArgs e)
+        {
+            if (!EnsureDataLoaded()) return;
+
+            string resultsFile = Path.Combine(Application.StartupPath, "results.csv");
+            if (LoadPredictionResultsFromCsv(resultsFile))
+            {
+                AppendTrainingLog("Loaded existing prediction results from results.csv.");
+            }
+        }
+
+        private bool LoadPredictionResultsFromCsv(string resultsFile)
+        {
+            if (!File.Exists(resultsFile))
+            {
+                AppendTrainingLog($"Error: prediction results file was not found. path={resultsFile}");
+                return false;
+            }
+
+            string[] lines = File.ReadAllLines(resultsFile);
+            if (lines.Length != _allData.Count)
+            {
+                AppendTrainingLog($"Prediction result count differs from data count. results={lines.Length}, data={_allData.Count}");
+            }
+
+            int count = Math.Min(lines.Length, _allData.Count);
+            for (int i = 0; i < count; i++)
+            {
+                string[] vals = lines[i].Split(',');
+                if (vals.Length != 2) continue;
+
+                if (double.TryParse(vals[0], NumberStyles.Float, CultureInfo.InvariantCulture, out double angle) &&
+                    double.TryParse(vals[1], NumberStyles.Float, CultureInfo.InvariantCulture, out double throttle))
+                {
+                    _allData[i].PredictedSteering = angle;
+                    _allData[i].PredictedSpeed = throttle * 100;
+                }
+            }
+
+            _showTestOverlay = true;
+            UpdateCharts();
+            ShowFrame(Math.Max(0, Math.Min(tbTestImageNavigator?.Value ?? 0, _allData.Count - 1)));
+            return true;
         }
 
         private void tbTestImageNavigator_Scroll_1(object sender, EventArgs e)
         {
             if (!EnsureDataLoaded() || tbTestImageNavigator == null || pbTestPreview == null) return;
-            int idx = tbTestImageNavigator.Value;
-            ReleaseTestPreviewImage();
-            if (idx >= 0 && idx < _allData.Count && File.Exists(_allData[idx].ImagePath))
-            {
-                pbTestPreview.Image = LoadImageWithoutLock(_allData[idx].ImagePath);
-            }
+            ShowFrame(tbTestImageNavigator.Value);
         }
 
         #endregion
@@ -1026,7 +1261,7 @@ namespace DataManager
             }
             catch (Exception ex)
             {
-                MessageBox.Show("복구 중 오류: " + ex.Message);
+                MessageBox.Show("Error while restoring item: " + ex.Message);
             }
         }
 
@@ -1058,7 +1293,7 @@ namespace DataManager
             catch (Exception ex)
             {
                 RestoreCatalogFiles(action);
-                MessageBox.Show("삭제 중 오류: " + ex.Message);
+                MessageBox.Show("Error while deleting item: " + ex.Message);
             }
         }
 
@@ -1238,6 +1473,101 @@ namespace DataManager
             }
         }
 
+        private void ShowFrame(int index)
+        {
+            if (pbTestPreview == null || _allData.Count == 0) return;
+
+            // Keep frame navigation clamped to the loaded data range.
+            int frameIndex = Math.Max(0, Math.Min(index, _allData.Count - 1));
+            DrivingData data = _allData[frameIndex];
+            UpdateTestIndexLabel(frameIndex);
+
+            if (tbTestImageNavigator != null && tbTestImageNavigator.Value != frameIndex)
+            {
+                tbTestImageNavigator.Value = frameIndex;
+            }
+
+            ReleaseTestPreviewImage();
+            if (!File.Exists(data.ImagePath)) return;
+
+            // Copy the source image first so overlay drawing never modifies the original file or shared bitmap.
+            using Image originalImage = LoadImageWithoutLock(data.ImagePath);
+            Bitmap frameBitmap = new Bitmap(originalImage);
+
+            if (_showTestOverlay)
+            {
+                DrawControlBars(frameBitmap, data);
+            }
+
+            pbTestPreview.Image = frameBitmap;
+        }
+
+        private void DrawControlBars(Bitmap frameBitmap, DrivingData data)
+        {
+            using Graphics graphics = Graphics.FromImage(frameBitmap);
+            graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+            // Draw actual and predicted controls from the same bottom-center origin.
+            float centerX = frameBitmap.Width / 2f;
+            float bottomY = frameBitmap.Height - Math.Max(18f, frameBitmap.Height * 0.08f);
+            PointF origin = new PointF(centerX, bottomY);
+            float maxLength = Math.Max(18f, Math.Min(frameBitmap.Width, frameBitmap.Height) * 0.76f);
+
+            DrawControlBar(
+                graphics,
+                origin,
+                data.Steering,
+                NormalizeThrottle(data.Speed),
+                Color.FromArgb(45, 212, 120),
+                maxLength);
+
+            DrawControlBar(
+                graphics,
+                origin,
+                data.PredictedSteering,
+                NormalizeThrottle(data.PredictedSpeed),
+                Color.FromArgb(59, 130, 246),
+                maxLength);
+        }
+
+        private void DrawControlBar(Graphics graphics, PointF start, double angle, double throttle, Color color, float maxLength)
+        {
+            double clampedAngle = Math.Max(-1.0, Math.Min(1.0, angle));
+            double clampedThrottle = Math.Max(0.0, Math.Min(1.0, throttle));
+
+            // Angle maps from -1..1 to left..right, with 0 pointing straight upward.
+            double radians = clampedAngle * (Math.PI / 2.0);
+
+            float minLength = 18f;
+            float length = (minLength + (float)clampedThrottle * (maxLength - minLength)) * 2f;
+            PointF end = new PointF(
+                start.X + (float)Math.Sin(radians) * length,
+                start.Y - (float)Math.Cos(radians) * length);
+
+            using Pen shadowPen = new Pen(Color.FromArgb(150, 0, 0, 0), 5f)
+            {
+                StartCap = LineCap.Round,
+                EndCap = LineCap.Round
+            };
+            using Pen barPen = new Pen(color, 2.5f)
+            {
+                StartCap = LineCap.Round,
+                EndCap = LineCap.Round
+            };
+            using SolidBrush baseBrush = new SolidBrush(color);
+
+            graphics.DrawLine(shadowPen, start, end);
+            graphics.DrawLine(barPen, start, end);
+            graphics.FillEllipse(baseBrush, start.X - 3f, start.Y - 3f, 6f, 6f);
+        }
+
+        private double NormalizeThrottle(double value)
+        {
+            // Existing speed values are stored as 0-100 for charts, so convert them back to throttle scale.
+            double throttle = value > 1.0 ? value / 100.0 : value;
+            return Math.Max(0.0, Math.Min(1.0, throttle));
+        }
+
         private Image LoadImageWithoutLock(string imagePath)
         {
             using var stream = new MemoryStream(File.ReadAllBytes(imagePath));
@@ -1330,9 +1660,6 @@ namespace DataManager
             if (chtSteeringValue != null) chtSteeringValue.Series[0].Points.Clear();
             if (chtSpeedValue != null) chtSpeedValue.Series[0].Points.Clear();
 
-            if (chtTestSteeringValue != null) { chtTestSteeringValue.Series[0].Points.Clear(); chtTestSteeringValue.Series[1].Points.Clear(); }
-            if (chtTestSpeedValue != null) { chtTestSpeedValue.Series[0].Points.Clear(); chtTestSpeedValue.Series[1].Points.Clear(); }
-
             for (int i = 0; i < _allData.Count; i += step)
             {
                 var d = _allData[i];
@@ -1341,13 +1668,13 @@ namespace DataManager
 
                 if (chtTestSteeringValue != null)
                 {
-                    chtTestSteeringValue.Series["실제값"].Points.AddXY(d.Index, d.Steering);
-                    chtTestSteeringValue.Series[0].Points.AddXY(d.Index, d.PredictedSteering);
+                    chtTestSteeringValue.Series["Actual"].Points.AddXY(d.Index, d.Steering);
+                    chtTestSteeringValue.Series["Predict"].Points.AddXY(d.Index, d.PredictedSteering);
                 }
                 if (chtTestSpeedValue != null)
                 {
-                    chtTestSpeedValue.Series["실제값"].Points.AddXY(d.Index, d.Speed);
-                    chtTestSpeedValue.Series[0].Points.AddXY(d.Index, d.PredictedSpeed);
+                    chtTestSpeedValue.Series["Actual"].Points.AddXY(d.Index, d.Speed);
+                    chtTestSpeedValue.Series["Predict"].Points.AddXY(d.Index, d.PredictedSpeed);
                 }
             }
 
@@ -1428,7 +1755,7 @@ namespace DataManager
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
         }
 
-        private void InitializeDataInfoGrid() { dgvDataInfo.Rows.Clear(); dgvDataInfo.Rows.Add("데이터 수", "0"); dgvDataInfo.Rows.Add("이미지", "0"); dgvDataInfo.Rows.Add("조향값", "0"); dgvDataInfo.Rows.Add("속도값", "0"); }
+        private void InitializeDataInfoGrid() { dgvDataInfo.Rows.Clear(); dgvDataInfo.Rows.Add("Data Count", "0"); dgvDataInfo.Rows.Add("Image Index", "0"); dgvDataInfo.Rows.Add("Steering", "0"); dgvDataInfo.Rows.Add("Speed", "0"); }
         private void UpdatePlaybackSpeedLabel() { if (lblPlaybackSpeed != null) lblPlaybackSpeed.Text = $"x{tbPlaybackSpeed.Value / 100.0:0.##}"; }
         private int GetPlaybackInterval() { return Math.Max(1, (int)(BasePlaybackIntervalMs / (tbPlaybackSpeed.Value / 100.0))); }
         private void tbPlaybackSpeed_Scroll(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; UpdatePlaybackSpeedLabel(); if (_playTimer.Enabled) _playTimer.Interval = GetPlaybackInterval(); }

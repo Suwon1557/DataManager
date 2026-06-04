@@ -13,11 +13,21 @@ namespace DataManager
         private GroupBox gbModelTest;
         private TrackBar tbTestImageNavigator;
         private PictureBox pbTestPreview;
+        private Label lblTestCurrentIndex;
         private Button btnStartTest;
+        private Button btnShowCurrentPrediction;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtTestSteeringValue;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtTestSpeedValue;
         private Button btnTrain;
         private TextBox txtTrainingLog;
+        private Label lblTrainingEpochCaption;
+        private Label lblTrainingEpochValue;
+        private Label lblTrainingLossCaption;
+        private Label lblTrainingLossValue;
+        private Label lblTrainingValLossCaption;
+        private Label lblTrainingValLossValue;
+        private Label lblTrainingStatusCaption;
+        private Label lblTrainingStatusValue;
         private GroupBox gbDataLoad;
         private GroupBox gbDataContent;
         private PictureBox pbDataPreview;
@@ -96,10 +106,20 @@ namespace DataManager
             tpTrainingTest = new TabPage();
             gbModelTest = new GroupBox();
             tbTestImageNavigator = new TrackBar();
+            lblTestCurrentIndex = new Label();
             btnStartTest = new Button();
+            btnShowCurrentPrediction = new Button();
             pbTestPreview = new PictureBox();
             gbTrainingSetup = new GroupBox();
             txtTrainingLog = new TextBox();
+            lblTrainingEpochCaption = new Label();
+            lblTrainingEpochValue = new Label();
+            lblTrainingLossCaption = new Label();
+            lblTrainingLossValue = new Label();
+            lblTrainingValLossCaption = new Label();
+            lblTrainingValLossValue = new Label();
+            lblTrainingStatusCaption = new Label();
+            lblTrainingStatusValue = new Label();
             btnTrain = new Button();
             lblTitle = new Label();
             tcMain.SuspendLayout();
@@ -379,7 +399,7 @@ namespace DataManager
             dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle3.BackColor = Color.FromArgb(22, 30, 46);
             dataGridViewCellStyle3.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle3.ForeColor = Color.FromArgb(238, 243, 249);
+            dataGridViewCellStyle3.ForeColor = Color.FromArgb(245, 176, 65);
             dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(49, 62, 88);
             dataGridViewCellStyle3.SelectionForeColor = Color.FromArgb(245, 176, 65);
             dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
@@ -439,8 +459,8 @@ namespace DataManager
             lvDataItems.DrawColumnHeader += lvDataItems_DrawColumnHeader;
             lvDataItems.DrawItem += lvDataItems_DrawItem;
             lvDataItems.DrawSubItem += lvDataItems_DrawSubItem;
-            lvDataItems.Resize += lvDataItems_Resize;
             lvDataItems.SelectedIndexChanged += lvDataItems_SelectedIndexChanged;
+            lvDataItems.Resize += lvDataItems_Resize;
             // 
             // pbDataPreview
             // 
@@ -540,6 +560,8 @@ namespace DataManager
             gbModelTest.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             gbModelTest.BackColor = Color.FromArgb(39, 50, 72);
             gbModelTest.Controls.Add(tbTestImageNavigator);
+            gbModelTest.Controls.Add(lblTestCurrentIndex);
+            gbModelTest.Controls.Add(btnShowCurrentPrediction);
             gbModelTest.Controls.Add(btnStartTest);
             gbModelTest.Controls.Add(pbTestPreview);
             gbModelTest.Font = new Font("맑은 고딕", 9.35F, FontStyle.Bold, GraphicsUnit.Point, 129);
@@ -565,6 +587,20 @@ namespace DataManager
             tbTestImageNavigator.TabIndex = 2;
             tbTestImageNavigator.Scroll += tbTestImageNavigator_Scroll_1;
             // 
+            // lblTestCurrentIndex
+            // 
+            lblTestCurrentIndex.BackColor = Color.FromArgb(22, 30, 46);
+            lblTestCurrentIndex.BorderStyle = BorderStyle.FixedSingle;
+            lblTestCurrentIndex.Font = new Font("맑은 고딕", 11F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTestCurrentIndex.ForeColor = Color.FromArgb(245, 176, 65);
+            lblTestCurrentIndex.Location = new Point(647, 41);
+            lblTestCurrentIndex.Margin = new Padding(7, 5, 7, 5);
+            lblTestCurrentIndex.Name = "lblTestCurrentIndex";
+            lblTestCurrentIndex.Size = new Size(220, 74);
+            lblTestCurrentIndex.TabIndex = 3;
+            lblTestCurrentIndex.Text = "현재 인덱스\r\n- / -";
+            lblTestCurrentIndex.TextAlign = ContentAlignment.MiddleCenter;
+            // 
             // btnStartTest
             // 
             btnStartTest.BackColor = Color.FromArgb(45, 212, 191);
@@ -580,6 +616,22 @@ namespace DataManager
             btnStartTest.Text = "테스트 시작";
             btnStartTest.UseVisualStyleBackColor = false;
             btnStartTest.Click += btnStartTest_Click;
+            // 
+            // btnShowCurrentPrediction
+            // 
+            btnShowCurrentPrediction.BackColor = Color.FromArgb(59, 130, 246);
+            btnShowCurrentPrediction.FlatAppearance.BorderColor = Color.FromArgb(59, 130, 246);
+            btnShowCurrentPrediction.FlatStyle = FlatStyle.Flat;
+            btnShowCurrentPrediction.Font = new Font("Microsoft Sans Serif", 10.52F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnShowCurrentPrediction.ForeColor = Color.White;
+            btnShowCurrentPrediction.Location = new Point(18, 552);
+            btnShowCurrentPrediction.Margin = new Padding(7, 5, 7, 5);
+            btnShowCurrentPrediction.Name = "btnShowCurrentPrediction";
+            btnShowCurrentPrediction.Size = new Size(606, 46);
+            btnShowCurrentPrediction.TabIndex = 4;
+            btnShowCurrentPrediction.Text = "현재 예측 보기";
+            btnShowCurrentPrediction.UseVisualStyleBackColor = false;
+            btnShowCurrentPrediction.Click += btnShowCurrentPrediction_Click;
             // 
             // pbTestPreview
             // 
@@ -598,6 +650,14 @@ namespace DataManager
             gbTrainingSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             gbTrainingSetup.BackColor = Color.FromArgb(39, 50, 72);
             gbTrainingSetup.Controls.Add(txtTrainingLog);
+            gbTrainingSetup.Controls.Add(lblTrainingStatusValue);
+            gbTrainingSetup.Controls.Add(lblTrainingStatusCaption);
+            gbTrainingSetup.Controls.Add(lblTrainingValLossValue);
+            gbTrainingSetup.Controls.Add(lblTrainingValLossCaption);
+            gbTrainingSetup.Controls.Add(lblTrainingLossValue);
+            gbTrainingSetup.Controls.Add(lblTrainingLossCaption);
+            gbTrainingSetup.Controls.Add(lblTrainingEpochValue);
+            gbTrainingSetup.Controls.Add(lblTrainingEpochCaption);
             gbTrainingSetup.Controls.Add(btnTrain);
             gbTrainingSetup.Font = new Font("맑은 고딕", 9.35F, FontStyle.Bold, GraphicsUnit.Point, 129);
             gbTrainingSetup.ForeColor = Color.FromArgb(245, 176, 65);
@@ -613,19 +673,107 @@ namespace DataManager
             // 
             // txtTrainingLog
             // 
-            txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             txtTrainingLog.BackColor = Color.FromArgb(12, 18, 30);
             txtTrainingLog.BorderStyle = BorderStyle.FixedSingle;
             txtTrainingLog.Font = new Font("맑은 고딕", 6.68F, FontStyle.Bold, GraphicsUnit.Point, 129);
             txtTrainingLog.ForeColor = Color.FromArgb(238, 243, 249);
-            txtTrainingLog.Location = new Point(246, 41);
+            txtTrainingLog.Location = new Point(1054, 41);
             txtTrainingLog.Margin = new Padding(7, 5, 7, 5);
             txtTrainingLog.Multiline = true;
             txtTrainingLog.Name = "txtTrainingLog";
             txtTrainingLog.ReadOnly = true;
             txtTrainingLog.ScrollBars = ScrollBars.Vertical;
-            txtTrainingLog.Size = new Size(1595, 86);
+            txtTrainingLog.Size = new Size(798, 86);
             txtTrainingLog.TabIndex = 1;
+            // 
+            // lblTrainingEpochCaption
+            // 
+            lblTrainingEpochCaption.AutoSize = true;
+            lblTrainingEpochCaption.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingEpochCaption.ForeColor = Color.FromArgb(245, 176, 65);
+            lblTrainingEpochCaption.Location = new Point(275, 43);
+            lblTrainingEpochCaption.Name = "lblTrainingEpochCaption";
+            lblTrainingEpochCaption.Size = new Size(55, 15);
+            lblTrainingEpochCaption.TabIndex = 2;
+            lblTrainingEpochCaption.Text = "회차";
+            // 
+            // lblTrainingEpochValue
+            // 
+            lblTrainingEpochValue.AutoSize = true;
+            lblTrainingEpochValue.Font = new Font("맑은 고딕", 11F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingEpochValue.ForeColor = Color.FromArgb(238, 243, 249);
+            lblTrainingEpochValue.Location = new Point(350, 39);
+            lblTrainingEpochValue.Name = "lblTrainingEpochValue";
+            lblTrainingEpochValue.Size = new Size(34, 20);
+            lblTrainingEpochValue.TabIndex = 3;
+            lblTrainingEpochValue.Text = "- / -";
+            //
+            // lblTrainingLossCaption
+            // 
+            lblTrainingLossCaption.AutoSize = true;
+            lblTrainingLossCaption.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingLossCaption.ForeColor = Color.FromArgb(245, 176, 65);
+            lblTrainingLossCaption.Location = new Point(275, 76);
+            lblTrainingLossCaption.Name = "lblTrainingLossCaption";
+            lblTrainingLossCaption.Size = new Size(31, 15);
+            lblTrainingLossCaption.TabIndex = 6;
+            lblTrainingLossCaption.Text = "손실";
+            // 
+            // lblTrainingLossValue
+            // 
+            lblTrainingLossValue.AutoSize = true;
+            lblTrainingLossValue.Font = new Font("맑은 고딕", 11F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingLossValue.ForeColor = Color.FromArgb(238, 243, 249);
+            lblTrainingLossValue.Location = new Point(350, 72);
+            lblTrainingLossValue.Name = "lblTrainingLossValue";
+            lblTrainingLossValue.Size = new Size(15, 20);
+            lblTrainingLossValue.TabIndex = 7;
+            lblTrainingLossValue.Text = "-";
+            // 
+            // lblTrainingValLossCaption
+            // 
+            lblTrainingValLossCaption.AutoSize = true;
+            lblTrainingValLossCaption.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingValLossCaption.ForeColor = Color.FromArgb(245, 176, 65);
+            lblTrainingValLossCaption.Location = new Point(515, 76);
+            lblTrainingValLossCaption.Name = "lblTrainingValLossCaption";
+            lblTrainingValLossCaption.Size = new Size(63, 15);
+            lblTrainingValLossCaption.TabIndex = 8;
+            lblTrainingValLossCaption.Text = "검증 손실";
+            // 
+            // lblTrainingValLossValue
+            // 
+            lblTrainingValLossValue.AutoSize = true;
+            lblTrainingValLossValue.Font = new Font("맑은 고딕", 11F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingValLossValue.ForeColor = Color.FromArgb(238, 243, 249);
+            lblTrainingValLossValue.Location = new Point(600, 72);
+            lblTrainingValLossValue.Name = "lblTrainingValLossValue";
+            lblTrainingValLossValue.Size = new Size(15, 20);
+            lblTrainingValLossValue.TabIndex = 9;
+            lblTrainingValLossValue.Text = "-";
+            // 
+            // lblTrainingStatusCaption
+            // 
+            lblTrainingStatusCaption.AutoSize = true;
+            lblTrainingStatusCaption.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingStatusCaption.ForeColor = Color.FromArgb(245, 176, 65);
+            lblTrainingStatusCaption.Location = new Point(275, 109);
+            lblTrainingStatusCaption.Name = "lblTrainingStatusCaption";
+            lblTrainingStatusCaption.Size = new Size(31, 15);
+            lblTrainingStatusCaption.TabIndex = 10;
+            lblTrainingStatusCaption.Text = "상태";
+            // 
+            // lblTrainingStatusValue
+            // 
+            lblTrainingStatusValue.AutoSize = true;
+            lblTrainingStatusValue.Font = new Font("맑은 고딕", 10F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingStatusValue.ForeColor = Color.FromArgb(45, 212, 191);
+            lblTrainingStatusValue.Location = new Point(350, 106);
+            lblTrainingStatusValue.Name = "lblTrainingStatusValue";
+            lblTrainingStatusValue.Size = new Size(15, 19);
+            lblTrainingStatusValue.TabIndex = 11;
+            lblTrainingStatusValue.Text = "-";
             // 
             // btnTrain
             // 
