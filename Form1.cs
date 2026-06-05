@@ -421,6 +421,7 @@ namespace DataManager
             s1.Color = c1;
             s1.BorderWidth = 3;
             s1.ShadowColor = Color.Transparent;
+            s1.LegendText = GetKoreanChartSeriesName(s1Name);
 
             if (s2Name != null)
             {
@@ -429,6 +430,7 @@ namespace DataManager
                 s2.Color = c2 ?? Color.FromArgb(45, 212, 191);
                 s2.BorderWidth = 3;
                 s2.ShadowColor = Color.Transparent;
+                s2.LegendText = GetKoreanChartSeriesName(s2Name);
             }
 
             chart.Legends.Clear();
@@ -443,6 +445,16 @@ namespace DataManager
 
             chart.Visible = true;
             chart.BringToFront();
+        }
+
+        private static string GetKoreanChartSeriesName(string seriesName)
+        {
+            return seriesName switch
+            {
+                "Predict" => "예측값",
+                "Actual" => "실제값",
+                _ => seriesName
+            };
         }
 
         #endregion
