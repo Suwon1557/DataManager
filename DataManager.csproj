@@ -19,6 +19,9 @@
     <None Include="Resources\icon_train_cap_theme.png" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Resources\icon_trash_theme.png" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Resources\icon_undo_theme.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Resources\icon_play_theme.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Resources\icon_reverse_theme.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Resources\icon_stop_theme.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

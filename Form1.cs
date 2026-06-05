@@ -273,48 +273,6 @@ namespace DataManager
             int dataLoadHeight = Math.Min(96, Math.Max(76, pageHeight / 6));
             gbDataLoad.SetBounds(margin, 3, pageWidth, dataLoadHeight);
             gbDataContent.SetBounds(margin, gbDataLoad.Bottom + 8, pageWidth, Math.Max(220, pageHeight - gbDataLoad.Bottom - 16));
-
-            LayoutDataContentControls();
-        }
-
-        private void LayoutDataContentControls()
-        {
-            if (gbDataContent == null) return;
-
-            const int margin = 18;
-            int width = gbDataContent.ClientSize.Width;
-            int height = gbDataContent.ClientSize.Height;
-            int gap = 12;
-
-            int topRowHeight = Math.Min(224, Math.Max(196, height / 3));
-            int previewWidth = Math.Min(514, Math.Max(240, (width - (gap * 4)) / 3));
-            int rightWidth = Math.Min(425, Math.Max(260, (width - (gap * 4)) / 4));
-            int gridLeft = margin + previewWidth + gap;
-            int listLeft = width - rightWidth - margin;
-            int gridWidth = Math.Max(240, listLeft - gridLeft - gap);
-
-            pbDataPreview.SetBounds(margin, 43, previewWidth, topRowHeight);
-            dgvDataInfo.SetBounds(gridLeft, 43, gridWidth, topRowHeight);
-            lvDataItems.SetBounds(listLeft, 43, rightWidth, topRowHeight);
-
-            int buttonTop = pbDataPreview.Bottom + 12;
-            int buttonHeight = Math.Min(72, Math.Max(42, height / 10));
-            btnFilter.SetBounds(gridLeft, buttonTop, Math.Min(251, Math.Max(130, gridWidth / 3)), buttonHeight);
-            btnCancelDelete.SetBounds(btnFilter.Right + gap, buttonTop, Math.Min(278, Math.Max(130, gridWidth / 3)), buttonHeight);
-            btnDelete.SetBounds(btnCancelDelete.Right + gap, buttonTop, Math.Min(221, Math.Max(120, listLeft - btnCancelDelete.Right - (gap * 2))), buttonHeight);
-
-            int controlsTop = btnFilter.Bottom + 10;
-            tbPlaybackSpeed.SetBounds(margin, controlsTop + 8, Math.Min(458, Math.Max(180, previewWidth - 56)), 26);
-            lblPlaybackSpeed.Location = new Point(tbPlaybackSpeed.Right + 8, controlsTop + 2);
-            btnPlay.SetBounds(Math.Max(gridLeft, lblPlaybackSpeed.Right + 18), controlsTop, 145, 38);
-            btnStop.SetBounds(btnPlay.Right + gap, controlsTop, 148, 38);
-            btnReverse.SetBounds(btnStop.Right + gap, controlsTop, 146, 38);
-            btnSetRange.SetBounds(Math.Max(btnReverse.Right + gap, width - 452), controlsTop, 226, 38);
-            btnCancelRange.SetBounds(width - 216, controlsTop, 198, 38);
-
-            int navigatorTop = btnSetRange.Bottom + 8;
-            tbImageNavigator.SetBounds(margin, navigatorTop, Math.Max(120, width - (margin * 2)), 30);
-            pnlImageRangeMarker.Top = tbImageNavigator.Top + 6;
         }
 
         private void LayoutTrainingControls()
@@ -1894,7 +1852,7 @@ namespace DataManager
 
         private void btnSetRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; _isRangeSettingMode = true; }
         private void btnCancelRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; ClearMarkers(); }
-        private void gbDataContent_Resize(object sender, EventArgs e) { LayoutDataContentControls(); foreach (var m in _imageRangeMarkers) if (m.Tag is int val) m.Left = GetImageNavigatorMarkerLeft(val, m.Size); if (_allData.Count > 0) UpdateCharts(); }
+        private void gbDataContent_Resize(object sender, EventArgs e) { foreach (var m in _imageRangeMarkers) if (m.Tag is int val) m.Left = GetImageNavigatorMarkerLeft(val, m.Size); if (_allData.Count > 0) UpdateCharts(); }
 
         #endregion
 
