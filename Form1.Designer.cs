@@ -54,6 +54,7 @@ namespace DataManager
         private Panel pnlImageRangeMarker;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtSteeringValue;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtSpeedValue;
+        private ToolTip toolTip;
 
         /// <summary>
         ///  Clean up any resources being used.
@@ -76,6 +77,7 @@ namespace DataManager
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
@@ -128,6 +130,7 @@ namespace DataManager
             lblTrainingEpochCaption = new Label();
             btnTrain = new Button();
             lblTitle = new Label();
+            toolTip = new ToolTip(components);
             tcMain.SuspendLayout();
             tpDataManager.SuspendLayout();
             gbDataContent.SuspendLayout();
@@ -211,7 +214,7 @@ namespace DataManager
             btnSetRange.BackColor = Color.FromArgb(49, 62, 88);
             btnSetRange.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
             btnSetRange.FlatStyle = FlatStyle.Flat;
-            btnSetRange.Font = new Font("한컴 고딕", 21.7499962F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnSetRange.Font = new Font("한컴 고딕", 17.9999981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnSetRange.ForeColor = Color.FromArgb(238, 243, 249);
             btnSetRange.Location = new Point(1332, 361);
             btnSetRange.Margin = new Padding(7, 5, 7, 5);
@@ -219,6 +222,7 @@ namespace DataManager
             btnSetRange.Size = new Size(226, 63);
             btnSetRange.TabIndex = 14;
             btnSetRange.Text = "범위 설정";
+            toolTip.SetToolTip(btnSetRange, "데이터 범위 설정");
             btnSetRange.UseVisualStyleBackColor = false;
             btnSetRange.Click += btnSetRange_Click;
             // 
@@ -236,6 +240,7 @@ namespace DataManager
             btnCancelRange.Size = new Size(198, 63);
             btnCancelRange.TabIndex = 12;
             btnCancelRange.Text = "X";
+            toolTip.SetToolTip(btnCancelRange, "범위 설정 취소");
             btnCancelRange.UseVisualStyleBackColor = false;
             btnCancelRange.Click += btnCancelRange_Click;
             // 
@@ -274,6 +279,7 @@ namespace DataManager
             btnCancelDelete.Name = "btnCancelDelete";
             btnCancelDelete.Size = new Size(278, 90);
             btnCancelDelete.TabIndex = 10;
+            toolTip.SetToolTip(btnCancelDelete, "삭제 작업 되돌리기");
             btnCancelDelete.UseVisualStyleBackColor = false;
             btnCancelDelete.Click += btnCancelDelete_Click;
             // 
@@ -290,6 +296,7 @@ namespace DataManager
             btnDelete.Name = "btnDelete";
             btnDelete.Size = new Size(221, 90);
             btnDelete.TabIndex = 9;
+            toolTip.SetToolTip(btnDelete, "데이터 삭제");
             btnDelete.UseVisualStyleBackColor = false;
             btnDelete.Click += btnDelete_Click;
             // 
@@ -307,6 +314,7 @@ namespace DataManager
             btnFilter.Name = "btnFilter";
             btnFilter.Size = new Size(251, 90);
             btnFilter.TabIndex = 8;
+            toolTip.SetToolTip(btnFilter, "정지 데이터 필터링");
             btnFilter.UseVisualStyleBackColor = false;
             btnFilter.Click += btnFilter_Click_1;
             // 
@@ -348,6 +356,7 @@ namespace DataManager
             btnReverse.Size = new Size(146, 48);
             btnReverse.TabIndex = 5;
             btnReverse.Text = "<<";
+            toolTip.SetToolTip(btnReverse, "데이터 역재생");
             btnReverse.UseVisualStyleBackColor = false;
             btnReverse.Click += btnReverse_Click;
             // 
@@ -364,6 +373,7 @@ namespace DataManager
             btnStop.Size = new Size(148, 48);
             btnStop.TabIndex = 4;
             btnStop.Text = "||";
+            toolTip.SetToolTip(btnStop, "데이터 재생 정지");
             btnStop.UseVisualStyleBackColor = false;
             btnStop.Click += btnStop_Click;
             // 
@@ -380,6 +390,7 @@ namespace DataManager
             btnPlay.Size = new Size(145, 48);
             btnPlay.TabIndex = 3;
             btnPlay.Text = ">>";
+            toolTip.SetToolTip(btnPlay, "데이터 재생");
             btnPlay.UseVisualStyleBackColor = false;
             btnPlay.Click += btnPlay_Click_1;
             // 
@@ -514,6 +525,7 @@ namespace DataManager
             btnCheckDataIntegrity.Size = new Size(293, 45);
             btnCheckDataIntegrity.TabIndex = 2;
             btnCheckDataIntegrity.Text = "무결성 검사";
+            toolTip.SetToolTip(btnCheckDataIntegrity, "데이터 무결성 검사");
             btnCheckDataIntegrity.UseVisualStyleBackColor = false;
             btnCheckDataIntegrity.Click += btnCheckDataIntegrity_Click;
             // 
@@ -547,6 +559,7 @@ namespace DataManager
             btnSelectFolder.Name = "btnSelectFolder";
             btnSelectFolder.Size = new Size(214, 45);
             btnSelectFolder.TabIndex = 0;
+            toolTip.SetToolTip(btnSelectFolder, "데이터 폴더 선택");
             btnSelectFolder.UseVisualStyleBackColor = false;
             btnSelectFolder.Click += btnSelectAdd_Click;
             // 
@@ -601,6 +614,7 @@ namespace DataManager
             btnReverse_tab2.Size = new Size(146, 48);
             btnReverse_tab2.TabIndex = 8;
             btnReverse_tab2.Text = "<<";
+            toolTip.SetToolTip(btnReverse_tab2, "테스트 프레임 역재생");
             btnReverse_tab2.UseVisualStyleBackColor = false;
             // 
             // trackBar_tab2
@@ -640,6 +654,7 @@ namespace DataManager
             btnStop_tab2.Size = new Size(148, 48);
             btnStop_tab2.TabIndex = 7;
             btnStop_tab2.Text = "||";
+            toolTip.SetToolTip(btnStop_tab2, "테스트 프레임 재생 정지");
             btnStop_tab2.UseVisualStyleBackColor = false;
             // 
             // btnPlay_tab2
@@ -655,6 +670,7 @@ namespace DataManager
             btnPlay_tab2.Size = new Size(145, 48);
             btnPlay_tab2.TabIndex = 6;
             btnPlay_tab2.Text = ">>";
+            toolTip.SetToolTip(btnPlay_tab2, "테스트 프레임 재생");
             btnPlay_tab2.UseVisualStyleBackColor = false;
             // 
             // tbTestImageNavigator
@@ -696,6 +712,7 @@ namespace DataManager
             btnShowCurrentPrediction.Size = new Size(458, 46);
             btnShowCurrentPrediction.TabIndex = 4;
             btnShowCurrentPrediction.Text = "현재 예측 보기";
+            toolTip.SetToolTip(btnShowCurrentPrediction, "현재 예측 결과 보기");
             btnShowCurrentPrediction.UseVisualStyleBackColor = false;
             btnShowCurrentPrediction.Click += btnShowCurrentPrediction_Click;
             // 
@@ -712,6 +729,7 @@ namespace DataManager
             btnStartTest.Size = new Size(458, 53);
             btnStartTest.TabIndex = 1;
             btnStartTest.Text = "테스트 시작";
+            toolTip.SetToolTip(btnStartTest, "모델 예측 테스트 시작");
             btnStartTest.UseVisualStyleBackColor = false;
             btnStartTest.Click += btnStartTest_Click;
             // 
@@ -871,6 +889,7 @@ namespace DataManager
             btnTrain.Name = "btnTrain";
             btnTrain.Size = new Size(214, 84);
             btnTrain.TabIndex = 0;
+            toolTip.SetToolTip(btnTrain, "모델 학습 시작 또는 중지");
             btnTrain.UseVisualStyleBackColor = false;
             btnTrain.Click += btnTrain_Click;
             // 
