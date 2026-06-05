@@ -1123,7 +1123,7 @@ namespace DataManager
                     "    paths = f.read().splitlines()",
                     "total = len(paths)",
                     "print(f'Predicting {total} frames...', flush=True)",
-                    "batch_size = 256",
+                    "batch_size = 1024",
                     "results = ['0,0'] * total",
                     "for start in range(0, total, batch_size):",
                     "    end = min(start + batch_size, total)",
