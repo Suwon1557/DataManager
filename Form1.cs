@@ -275,37 +275,6 @@ namespace DataManager
             gbDataContent.SetBounds(margin, gbDataLoad.Bottom + 8, pageWidth, Math.Max(220, pageHeight - gbDataLoad.Bottom - 16));
         }
 
-        private void LayoutTrainingControls()
-        {
-            if (gbTrainingSetup == null) return;
-
-            const int margin = 18;
-            int height = gbTrainingSetup.ClientSize.Height;
-            int buttonHeight = Math.Max(50, height - 72);
-            int logWidth = Math.Max(260, (gbTrainingSetup.ClientSize.Width - (margin * 2)) / 2);
-            int logLeft = Math.Max(btnTrain.Right + 14, gbTrainingSetup.ClientSize.Width - margin - logWidth);
-            int summaryLeft = btnTrain.Right + 38;
-            int summaryWidth = Math.Max(220, logLeft - summaryLeft - 24);
-            int summaryMid = summaryLeft + Math.Max(120, summaryWidth / 2);
-            btnTrain.SetBounds(margin, 41, 214, buttonHeight);
-            LayoutTrainingSummaryLabels(summaryLeft, summaryMid);
-            txtTrainingLog.SetBounds(logLeft, 41, logWidth, buttonHeight + 2);
-        }
-
-        private void LayoutTrainingSummaryLabels(int left, int middle)
-        {
-            if (lblTrainingEpochCaption == null) return;
-
-            lblTrainingEpochCaption.Location = new Point(left, 43);
-            lblTrainingEpochValue.Location = new Point(left + 75, 39);
-            lblTrainingLossCaption.Location = new Point(middle, 43);
-            lblTrainingLossValue.Location = new Point(middle + 75, 39);
-            lblTrainingValLossCaption.Location = new Point(left, 76);
-            lblTrainingValLossValue.Location = new Point(left + 75, 72);
-            lblTrainingStatusCaption.Location = new Point(left, 109);
-            lblTrainingStatusValue.Location = new Point(left + 75, 106);
-        }
-
         private void LayoutModelTestControls()
         {
             if (gbModelTest == null) return;

@@ -795,89 +795,81 @@ namespace DataManager
             // 
             // lblTrainingStatusValue
             // 
-            lblTrainingStatusValue.AutoSize = true;
-            lblTrainingStatusValue.Font = new Font("맑은 고딕", 10F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingStatusValue.Font = new Font("맑은 고딕", 13F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingStatusValue.ForeColor = Color.FromArgb(45, 212, 191);
-            lblTrainingStatusValue.Location = new Point(350, 106);
+            lblTrainingStatusValue.Location = new Point(515, 214);
             lblTrainingStatusValue.Name = "lblTrainingStatusValue";
-            lblTrainingStatusValue.Size = new Size(15, 19);
+            lblTrainingStatusValue.Size = new Size(235, 60);
             lblTrainingStatusValue.TabIndex = 11;
             lblTrainingStatusValue.Text = "-";
             // 
             // lblTrainingStatusCaption
             // 
-            lblTrainingStatusCaption.AutoSize = true;
-            lblTrainingStatusCaption.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingStatusCaption.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingStatusCaption.ForeColor = Color.FromArgb(245, 176, 65);
-            lblTrainingStatusCaption.Location = new Point(275, 109);
+            lblTrainingStatusCaption.Location = new Point(515, 176);
             lblTrainingStatusCaption.Name = "lblTrainingStatusCaption";
-            lblTrainingStatusCaption.Size = new Size(31, 15);
+            lblTrainingStatusCaption.Size = new Size(235, 29);
             lblTrainingStatusCaption.TabIndex = 10;
             lblTrainingStatusCaption.Text = "상태";
             // 
             // lblTrainingValLossValue
             // 
-            lblTrainingValLossValue.AutoSize = true;
-            lblTrainingValLossValue.Font = new Font("맑은 고딕", 11F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingValLossValue.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingValLossValue.ForeColor = Color.FromArgb(238, 243, 249);
-            lblTrainingValLossValue.Location = new Point(600, 72);
+            lblTrainingValLossValue.Location = new Point(275, 214);
             lblTrainingValLossValue.Name = "lblTrainingValLossValue";
-            lblTrainingValLossValue.Size = new Size(15, 20);
+            lblTrainingValLossValue.Size = new Size(210, 48);
             lblTrainingValLossValue.TabIndex = 9;
             lblTrainingValLossValue.Text = "-";
             // 
             // lblTrainingValLossCaption
             // 
-            lblTrainingValLossCaption.AutoSize = true;
-            lblTrainingValLossCaption.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingValLossCaption.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingValLossCaption.ForeColor = Color.FromArgb(245, 176, 65);
-            lblTrainingValLossCaption.Location = new Point(515, 76);
+            lblTrainingValLossCaption.Location = new Point(275, 176);
             lblTrainingValLossCaption.Name = "lblTrainingValLossCaption";
-            lblTrainingValLossCaption.Size = new Size(59, 15);
+            lblTrainingValLossCaption.Size = new Size(210, 29);
             lblTrainingValLossCaption.TabIndex = 8;
             lblTrainingValLossCaption.Text = "검증 손실";
             // 
             // lblTrainingLossValue
             // 
-            lblTrainingLossValue.AutoSize = true;
-            lblTrainingLossValue.Font = new Font("맑은 고딕", 11F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingLossValue.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingLossValue.ForeColor = Color.FromArgb(238, 243, 249);
-            lblTrainingLossValue.Location = new Point(350, 72);
+            lblTrainingLossValue.Location = new Point(515, 86);
             lblTrainingLossValue.Name = "lblTrainingLossValue";
-            lblTrainingLossValue.Size = new Size(15, 20);
+            lblTrainingLossValue.Size = new Size(235, 48);
             lblTrainingLossValue.TabIndex = 7;
             lblTrainingLossValue.Text = "-";
             // 
             // lblTrainingLossCaption
             // 
-            lblTrainingLossCaption.AutoSize = true;
-            lblTrainingLossCaption.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingLossCaption.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingLossCaption.ForeColor = Color.FromArgb(245, 176, 65);
-            lblTrainingLossCaption.Location = new Point(275, 76);
+            lblTrainingLossCaption.Location = new Point(515, 48);
             lblTrainingLossCaption.Name = "lblTrainingLossCaption";
-            lblTrainingLossCaption.Size = new Size(31, 15);
+            lblTrainingLossCaption.Size = new Size(235, 29);
             lblTrainingLossCaption.TabIndex = 6;
             lblTrainingLossCaption.Text = "손실";
             // 
             // lblTrainingEpochValue
             // 
-            lblTrainingEpochValue.AutoSize = true;
-            lblTrainingEpochValue.Font = new Font("맑은 고딕", 11F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingEpochValue.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingEpochValue.ForeColor = Color.FromArgb(238, 243, 249);
-            lblTrainingEpochValue.Location = new Point(350, 39);
+            lblTrainingEpochValue.Location = new Point(275, 86);
             lblTrainingEpochValue.Name = "lblTrainingEpochValue";
-            lblTrainingEpochValue.Size = new Size(38, 20);
+            lblTrainingEpochValue.Size = new Size(210, 48);
             lblTrainingEpochValue.TabIndex = 3;
             lblTrainingEpochValue.Text = "- / -";
             // 
             // lblTrainingEpochCaption
             // 
-            lblTrainingEpochCaption.AutoSize = true;
-            lblTrainingEpochCaption.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingEpochCaption.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingEpochCaption.ForeColor = Color.FromArgb(245, 176, 65);
-            lblTrainingEpochCaption.Location = new Point(275, 43);
+            lblTrainingEpochCaption.Location = new Point(275, 48);
             lblTrainingEpochCaption.Name = "lblTrainingEpochCaption";
-            lblTrainingEpochCaption.Size = new Size(31, 15);
+            lblTrainingEpochCaption.Size = new Size(210, 29);
             lblTrainingEpochCaption.TabIndex = 2;
             lblTrainingEpochCaption.Text = "회차";
             // 
