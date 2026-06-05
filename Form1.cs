@@ -1719,6 +1719,16 @@ namespace DataManager
 
             if (chtSteeringValue != null) chtSteeringValue.Series[0].Points.Clear();
             if (chtSpeedValue != null) chtSpeedValue.Series[0].Points.Clear();
+            if (chtTestSteeringValue != null)
+            {
+                chtTestSteeringValue.Series["Actual"].Points.Clear();
+                chtTestSteeringValue.Series["Predict"].Points.Clear();
+            }
+            if (chtTestSpeedValue != null)
+            {
+                chtTestSpeedValue.Series["Actual"].Points.Clear();
+                chtTestSpeedValue.Series["Predict"].Points.Clear();
+            }
 
             for (int i = 0; i < _allData.Count; i += step)
             {
