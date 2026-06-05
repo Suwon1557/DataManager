@@ -41,6 +41,9 @@ namespace DataManager
         private System.Windows.Forms.Timer _playTimer = new System.Windows.Forms.Timer();
         private const int BasePlaybackIntervalMs = 50;
         private const string UiFontFamily = "Malgun Gothic";
+        private const string WslSimulationProjectPath = "~/mysim";
+        private const string WslModelFile = "models/mypilot.h5";
+        private const string WslPredictionResultsFile = "models/results.csv";
 
         private class DeleteAction
         {
@@ -961,7 +964,7 @@ namespace DataManager
                 }
 
                 string envName = "e2e_env";
-                string projectPath = "~/mysim";
+                string projectPath = WslSimulationProjectPath;
 
                 string installCmd = "pip install numpy==1.24.3 pandas==2.0.3 tensorflow==2.13.0 albumentations imgaug";
                 string importCmd = $"rm -rf ./data && mkdir -p ./data && cp {BashQuote(wslTrainingZipPath)} ./training_data.zip && python -m zipfile -e ./training_data.zip ./data && test -d ./data/images && ls ./data/*.catalog >/dev/null";
@@ -1039,13 +1042,12 @@ namespace DataManager
                 SetTestButtonRunningState(true);
                 AppendTrainingLog("Test session started. Syncing paths.");
                 string envName = "e2e_env";
-                string projectPath = "~/mysim";
-                string modelFile = "models/mypilot.h5";
+                string projectPath = WslSimulationProjectPath;
+                string modelFile = WslModelFile;
+                string resultsFile = WslPredictionResultsFile;
 
                 string appDir = Application.StartupPath;
                 string winPathsFile = Path.Combine(appDir, "win_paths.txt");
-                string winResultsFile = Path.Combine(appDir, "results.csv");
-                if (File.Exists(winResultsFile)) File.Delete(winResultsFile);
 
                 var linuxPaths = _allData.Select(d =>
                 {
@@ -1087,7 +1089,6 @@ namespace DataManager
                 }
 
                 string wslPathsFile = $"{wslAppDir}/win_paths.txt";
-                string wslResultsFile = $"{wslAppDir}/results.csv";
                 string winPredictScriptFile = Path.Combine(appDir, "predict_frames.py");
                 string wslPredictScriptFile = $"{wslAppDir}/predict_frames.py";
 
@@ -1122,7 +1123,7 @@ namespace DataManager
                     "    paths = f.read().splitlines()",
                     "total = len(paths)",
                     "print(f'Predicting {total} frames...', flush=True)",
-                    "batch_size = 64",
+                    "batch_size = 256",
                     "results = ['0,0'] * total",
                     "for start in range(0, total, batch_size):",
                     "    end = min(start + batch_size, total)",
@@ -1135,9 +1136,9 @@ namespace DataManager
                     "        for idx, (angle, throttle) in zip(batch_indexes, predictions):",
                     "            results[idx] = f'{angle},{throttle}'",
                     "    print(f'[{end}/{total}] predicted batch; missing={missing_count}', flush=True)",
-                    $"with open({JsonSerializer.Serialize(wslResultsFile)}, 'w') as f:",
+                    $"with open({JsonSerializer.Serialize(resultsFile)}, 'w') as f:",
                     "    f.write('\\n'.join(results))",
-                    "print('Prediction results saved.', flush=True)"
+                    $"print('Prediction results saved to {resultsFile}.', flush=True)"
                 });
                 File.WriteAllText(winPredictScriptFile, pythonPredictScript);
                 AppendTrainingLog("Starting prediction process. TensorFlow model loading may take a while.");
@@ -1173,7 +1174,8 @@ namespace DataManager
                 if (process.ExitCode != 0)
                     throw new InvalidOperationException($"prediction process failed. ExitCode={process.ExitCode}");
 
-                if (LoadPredictionResultsFromCsv(winResultsFile))
+                string[] resultLines = await ReadWslPredictionResultsAsync(projectPath, resultsFile);
+                if (LoadPredictionResults(resultLines))
                     AppendTrainingLog("Prediction finished. Check the charts and overlay.");
             }
             catch (Exception ex) when (!_testStopRequested)
@@ -1193,26 +1195,49 @@ namespace DataManager
             }
         }
 
-        private void btnShowCurrentPrediction_Click(object sender, EventArgs e)
+        private async void btnShowCurrentPrediction_Click(object sender, EventArgs e)
         {
             if (!EnsureDataLoaded()) return;
 
-            string resultsFile = Path.Combine(Application.StartupPath, "results.csv");
-            if (LoadPredictionResultsFromCsv(resultsFile))
+            try
             {
-                AppendTrainingLog("Loaded existing prediction results from results.csv.");
+                string[] resultLines = await ReadWslPredictionResultsAsync(WslSimulationProjectPath, WslPredictionResultsFile);
+                if (LoadPredictionResults(resultLines))
+                {
+                    AppendTrainingLog($"Loaded existing prediction results from {WslSimulationProjectPath}/{WslPredictionResultsFile}.");
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendTrainingLog("Error while loading prediction results: " + ex.Message);
             }
         }
 
-        private bool LoadPredictionResultsFromCsv(string resultsFile)
+        private async Task<string[]> ReadWslPredictionResultsAsync(string projectPath, string resultsFile)
         {
-            if (!File.Exists(resultsFile))
-            {
-                AppendTrainingLog($"Error: prediction results file was not found. path={resultsFile}");
-                return false;
-            }
+            ProcessStartInfo start = new ProcessStartInfo();
+            start.FileName = "wsl.exe";
+            start.Arguments = $"{GetWslDistroArgument()}bash -lc \"cd {projectPath} && test -f {resultsFile} && cat {resultsFile}\"";
+            start.UseShellExecute = false;
+            start.RedirectStandardOutput = true;
+            start.RedirectStandardError = true;
+            start.CreateNoWindow = true;
 
-            string[] lines = File.ReadAllLines(resultsFile);
+            using Process process = Process.Start(start) ?? throw new InvalidOperationException("WSL results reader could not be started.");
+            Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
+            Task<string> errorTask = process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
+
+            string output = await outputTask;
+            string error = await errorTask;
+            if (process.ExitCode != 0)
+                throw new InvalidOperationException($"{projectPath}/{resultsFile} was not found or could not be read. {error}".Trim());
+
+            return output.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        private bool LoadPredictionResults(string[] lines)
+        {
             if (lines.Length != _allData.Count)
             {
                 AppendTrainingLog($"Prediction result count differs from data count. results={lines.Length}, data={_allData.Count}");
