@@ -41,6 +41,9 @@ namespace DataManager
         private System.Windows.Forms.Timer _playTimer = new System.Windows.Forms.Timer();
         private const int BasePlaybackIntervalMs = 50;
         private const string UiFontFamily = "Malgun Gothic";
+        private const string WslSimulationProjectPath = "~/mysim";
+        private const string WslModelFile = "models/mypilot.h5";
+        private const string WslPredictionResultsFile = "models/results.csv";
 
         private class DeleteAction
         {
@@ -273,79 +276,6 @@ namespace DataManager
             int dataLoadHeight = Math.Min(96, Math.Max(76, pageHeight / 6));
             gbDataLoad.SetBounds(margin, 3, pageWidth, dataLoadHeight);
             gbDataContent.SetBounds(margin, gbDataLoad.Bottom + 8, pageWidth, Math.Max(220, pageHeight - gbDataLoad.Bottom - 16));
-
-            LayoutDataContentControls();
-        }
-
-        private void LayoutDataContentControls()
-        {
-            if (gbDataContent == null) return;
-
-            const int margin = 18;
-            int width = gbDataContent.ClientSize.Width;
-            int height = gbDataContent.ClientSize.Height;
-            int gap = 12;
-
-            int topRowHeight = Math.Min(224, Math.Max(196, height / 3));
-            int previewWidth = Math.Min(514, Math.Max(240, (width - (gap * 4)) / 3));
-            int rightWidth = Math.Min(425, Math.Max(260, (width - (gap * 4)) / 4));
-            int gridLeft = margin + previewWidth + gap;
-            int listLeft = width - rightWidth - margin;
-            int gridWidth = Math.Max(240, listLeft - gridLeft - gap);
-
-            pbDataPreview.SetBounds(margin, 43, previewWidth, topRowHeight);
-            dgvDataInfo.SetBounds(gridLeft, 43, gridWidth, topRowHeight);
-            lvDataItems.SetBounds(listLeft, 43, rightWidth, topRowHeight);
-
-            int buttonTop = pbDataPreview.Bottom + 12;
-            int buttonHeight = Math.Min(72, Math.Max(42, height / 10));
-            btnFilter.SetBounds(gridLeft, buttonTop, Math.Min(251, Math.Max(130, gridWidth / 3)), buttonHeight);
-            btnCancelDelete.SetBounds(btnFilter.Right + gap, buttonTop, Math.Min(278, Math.Max(130, gridWidth / 3)), buttonHeight);
-            btnDelete.SetBounds(btnCancelDelete.Right + gap, buttonTop, Math.Min(221, Math.Max(120, listLeft - btnCancelDelete.Right - (gap * 2))), buttonHeight);
-
-            int controlsTop = btnFilter.Bottom + 10;
-            tbPlaybackSpeed.SetBounds(margin, controlsTop + 8, Math.Min(458, Math.Max(180, previewWidth - 56)), 26);
-            lblPlaybackSpeed.Location = new Point(tbPlaybackSpeed.Right + 8, controlsTop + 2);
-            btnPlay.SetBounds(Math.Max(gridLeft, lblPlaybackSpeed.Right + 18), controlsTop, 145, 38);
-            btnStop.SetBounds(btnPlay.Right + gap, controlsTop, 148, 38);
-            btnReverse.SetBounds(btnStop.Right + gap, controlsTop, 146, 38);
-            btnSetRange.SetBounds(Math.Max(btnReverse.Right + gap, width - 452), controlsTop, 226, 38);
-            btnCancelRange.SetBounds(width - 216, controlsTop, 198, 38);
-
-            int navigatorTop = btnSetRange.Bottom + 8;
-            tbImageNavigator.SetBounds(margin, navigatorTop, Math.Max(120, width - (margin * 2)), 30);
-            pnlImageRangeMarker.Top = tbImageNavigator.Top + 6;
-        }
-
-        private void LayoutTrainingControls()
-        {
-            if (gbTrainingSetup == null) return;
-
-            const int margin = 18;
-            int height = gbTrainingSetup.ClientSize.Height;
-            int buttonHeight = Math.Max(50, height - 72);
-            int logWidth = Math.Max(260, (gbTrainingSetup.ClientSize.Width - (margin * 2)) / 2);
-            int logLeft = Math.Max(btnTrain.Right + 14, gbTrainingSetup.ClientSize.Width - margin - logWidth);
-            int summaryLeft = btnTrain.Right + 38;
-            int summaryWidth = Math.Max(220, logLeft - summaryLeft - 24);
-            int summaryMid = summaryLeft + Math.Max(120, summaryWidth / 2);
-            btnTrain.SetBounds(margin, 41, 214, buttonHeight);
-            LayoutTrainingSummaryLabels(summaryLeft, summaryMid);
-            txtTrainingLog.SetBounds(logLeft, 41, logWidth, buttonHeight + 2);
-        }
-
-        private void LayoutTrainingSummaryLabels(int left, int middle)
-        {
-            if (lblTrainingEpochCaption == null) return;
-
-            lblTrainingEpochCaption.Location = new Point(left, 43);
-            lblTrainingEpochValue.Location = new Point(left + 75, 39);
-            lblTrainingLossCaption.Location = new Point(middle, 43);
-            lblTrainingLossValue.Location = new Point(middle + 75, 39);
-            lblTrainingValLossCaption.Location = new Point(left, 76);
-            lblTrainingValLossValue.Location = new Point(left + 75, 72);
-            lblTrainingStatusCaption.Location = new Point(left, 109);
-            lblTrainingStatusValue.Location = new Point(left + 75, 106);
         }
 
         private void LayoutModelTestControls()
@@ -491,6 +421,7 @@ namespace DataManager
             s1.Color = c1;
             s1.BorderWidth = 3;
             s1.ShadowColor = Color.Transparent;
+            s1.LegendText = GetKoreanChartSeriesName(s1Name);
 
             if (s2Name != null)
             {
@@ -499,6 +430,7 @@ namespace DataManager
                 s2.Color = c2 ?? Color.FromArgb(45, 212, 191);
                 s2.BorderWidth = 3;
                 s2.ShadowColor = Color.Transparent;
+                s2.LegendText = GetKoreanChartSeriesName(s2Name);
             }
 
             chart.Legends.Clear();
@@ -513,6 +445,16 @@ namespace DataManager
 
             chart.Visible = true;
             chart.BringToFront();
+        }
+
+        private static string GetKoreanChartSeriesName(string seriesName)
+        {
+            return seriesName switch
+            {
+                "Predict" => "예측값",
+                "Actual" => "실제값",
+                _ => seriesName
+            };
         }
 
         #endregion
@@ -1034,7 +976,7 @@ namespace DataManager
                 }
 
                 string envName = "e2e_env";
-                string projectPath = "~/mysim";
+                string projectPath = WslSimulationProjectPath;
 
                 string installCmd = "pip install numpy==1.24.3 pandas==2.0.3 tensorflow==2.13.0 albumentations imgaug";
                 string importCmd = $"rm -rf ./data && mkdir -p ./data && cp {BashQuote(wslTrainingZipPath)} ./training_data.zip && python -m zipfile -e ./training_data.zip ./data && test -d ./data/images && ls ./data/*.catalog >/dev/null";
@@ -1112,13 +1054,12 @@ namespace DataManager
                 SetTestButtonRunningState(true);
                 AppendTrainingLog("Test session started. Syncing paths.");
                 string envName = "e2e_env";
-                string projectPath = "~/mysim";
-                string modelFile = "models/mypilot.h5";
+                string projectPath = WslSimulationProjectPath;
+                string modelFile = WslModelFile;
+                string resultsFile = WslPredictionResultsFile;
 
                 string appDir = Application.StartupPath;
                 string winPathsFile = Path.Combine(appDir, "win_paths.txt");
-                string winResultsFile = Path.Combine(appDir, "results.csv");
-                if (File.Exists(winResultsFile)) File.Delete(winResultsFile);
 
                 var linuxPaths = _allData.Select(d =>
                 {
@@ -1160,7 +1101,6 @@ namespace DataManager
                 }
 
                 string wslPathsFile = $"{wslAppDir}/win_paths.txt";
-                string wslResultsFile = $"{wslAppDir}/results.csv";
                 string winPredictScriptFile = Path.Combine(appDir, "predict_frames.py");
                 string wslPredictScriptFile = $"{wslAppDir}/predict_frames.py";
 
@@ -1195,7 +1135,7 @@ namespace DataManager
                     "    paths = f.read().splitlines()",
                     "total = len(paths)",
                     "print(f'Predicting {total} frames...', flush=True)",
-                    "batch_size = 64",
+                    "batch_size = 1024",
                     "results = ['0,0'] * total",
                     "for start in range(0, total, batch_size):",
                     "    end = min(start + batch_size, total)",
@@ -1208,9 +1148,9 @@ namespace DataManager
                     "        for idx, (angle, throttle) in zip(batch_indexes, predictions):",
                     "            results[idx] = f'{angle},{throttle}'",
                     "    print(f'[{end}/{total}] predicted batch; missing={missing_count}', flush=True)",
-                    $"with open({JsonSerializer.Serialize(wslResultsFile)}, 'w') as f:",
+                    $"with open({JsonSerializer.Serialize(resultsFile)}, 'w') as f:",
                     "    f.write('\\n'.join(results))",
-                    "print('Prediction results saved.', flush=True)"
+                    $"print('Prediction results saved to {resultsFile}.', flush=True)"
                 });
                 File.WriteAllText(winPredictScriptFile, pythonPredictScript);
                 AppendTrainingLog("Starting prediction process. TensorFlow model loading may take a while.");
@@ -1246,7 +1186,8 @@ namespace DataManager
                 if (process.ExitCode != 0)
                     throw new InvalidOperationException($"prediction process failed. ExitCode={process.ExitCode}");
 
-                if (LoadPredictionResultsFromCsv(winResultsFile))
+                string[] resultLines = await ReadWslPredictionResultsAsync(projectPath, resultsFile);
+                if (LoadPredictionResults(resultLines))
                     AppendTrainingLog("Prediction finished. Check the charts and overlay.");
             }
             catch (Exception ex) when (!_testStopRequested)
@@ -1266,26 +1207,49 @@ namespace DataManager
             }
         }
 
-        private void btnShowCurrentPrediction_Click(object sender, EventArgs e)
+        private async void btnShowCurrentPrediction_Click(object sender, EventArgs e)
         {
             if (!EnsureDataLoaded()) return;
 
-            string resultsFile = Path.Combine(Application.StartupPath, "results.csv");
-            if (LoadPredictionResultsFromCsv(resultsFile))
+            try
             {
-                AppendTrainingLog("Loaded existing prediction results from results.csv.");
+                string[] resultLines = await ReadWslPredictionResultsAsync(WslSimulationProjectPath, WslPredictionResultsFile);
+                if (LoadPredictionResults(resultLines))
+                {
+                    AppendTrainingLog($"Loaded existing prediction results from {WslSimulationProjectPath}/{WslPredictionResultsFile}.");
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendTrainingLog("Error while loading prediction results: " + ex.Message);
             }
         }
 
-        private bool LoadPredictionResultsFromCsv(string resultsFile)
+        private async Task<string[]> ReadWslPredictionResultsAsync(string projectPath, string resultsFile)
         {
-            if (!File.Exists(resultsFile))
-            {
-                AppendTrainingLog($"Error: prediction results file was not found. path={resultsFile}");
-                return false;
-            }
+            ProcessStartInfo start = new ProcessStartInfo();
+            start.FileName = "wsl.exe";
+            start.Arguments = $"{GetWslDistroArgument()}bash -lc \"cd {projectPath} && test -f {resultsFile} && cat {resultsFile}\"";
+            start.UseShellExecute = false;
+            start.RedirectStandardOutput = true;
+            start.RedirectStandardError = true;
+            start.CreateNoWindow = true;
 
-            string[] lines = File.ReadAllLines(resultsFile);
+            using Process process = Process.Start(start) ?? throw new InvalidOperationException("WSL results reader could not be started.");
+            Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
+            Task<string> errorTask = process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
+
+            string output = await outputTask;
+            string error = await errorTask;
+            if (process.ExitCode != 0)
+                throw new InvalidOperationException($"{projectPath}/{resultsFile} was not found or could not be read. {error}".Trim());
+
+            return output.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        private bool LoadPredictionResults(string[] lines)
+        {
             if (lines.Length != _allData.Count)
             {
                 AppendTrainingLog($"Prediction result count differs from data count. results={lines.Length}, data={_allData.Count}");
@@ -1767,6 +1731,16 @@ namespace DataManager
 
             if (chtSteeringValue != null) chtSteeringValue.Series[0].Points.Clear();
             if (chtSpeedValue != null) chtSpeedValue.Series[0].Points.Clear();
+            if (chtTestSteeringValue != null)
+            {
+                chtTestSteeringValue.Series["Actual"].Points.Clear();
+                chtTestSteeringValue.Series["Predict"].Points.Clear();
+            }
+            if (chtTestSpeedValue != null)
+            {
+                chtTestSpeedValue.Series["Actual"].Points.Clear();
+                chtTestSpeedValue.Series["Predict"].Points.Clear();
+            }
 
             for (int i = 0; i < _allData.Count; i += step)
             {
@@ -1894,7 +1868,7 @@ namespace DataManager
 
         private void btnSetRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; _isRangeSettingMode = true; }
         private void btnCancelRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; ClearMarkers(); }
-        private void gbDataContent_Resize(object sender, EventArgs e) { LayoutDataContentControls(); foreach (var m in _imageRangeMarkers) if (m.Tag is int val) m.Left = GetImageNavigatorMarkerLeft(val, m.Size); if (_allData.Count > 0) UpdateCharts(); }
+        private void gbDataContent_Resize(object sender, EventArgs e) { foreach (var m in _imageRangeMarkers) if (m.Tag is int val) m.Left = GetImageNavigatorMarkerLeft(val, m.Size); if (_allData.Count > 0) UpdateCharts(); }
 
         #endregion
 
