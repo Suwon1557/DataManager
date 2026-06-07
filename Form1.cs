@@ -62,6 +62,16 @@ namespace DataManager
         [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
         private static extern int StrCmpLogicalW(string psz1, string psz2);
 
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, ref Point lParam);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+        private const int EmGetScrollPos = 0x04DD;
+        private const int EmSetScrollPos = 0x04DE;
+        private const int WmSetRedraw = 0x000B;
+
         public Form1()
         {
             InitializeComponent();
@@ -732,7 +742,47 @@ namespace DataManager
             if (IsDisposed || !IsHandleCreated) return;
             if (txtTrainingLog == null || txtTrainingLog.IsDisposed) return;
             UpdateTrainingSummaryFromLog(message);
-            txtTrainingLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}\r\n");
+            AppendTrainingLogLine($"[{DateTime.Now:HH:mm:ss}] {message}\r\n");
+        }
+
+        private void AppendTrainingLogLine(string logLine)
+        {
+            bool shouldAutoScroll = IsTrainingLogScrolledToBottom();
+            int selectionStart = txtTrainingLog.SelectionStart;
+            int selectionLength = txtTrainingLog.SelectionLength;
+            Point scrollPosition = Point.Empty;
+
+            if (!shouldAutoScroll)
+            {
+                SendMessage(txtTrainingLog.Handle, EmGetScrollPos, IntPtr.Zero, ref scrollPosition);
+                SendMessage(txtTrainingLog.Handle, WmSetRedraw, IntPtr.Zero, IntPtr.Zero);
+            }
+
+            txtTrainingLog.AppendText(logLine);
+
+            if (shouldAutoScroll)
+            {
+                txtTrainingLog.SelectionStart = txtTrainingLog.TextLength;
+                txtTrainingLog.SelectionLength = 0;
+                txtTrainingLog.ScrollToCaret();
+                return;
+            }
+
+            txtTrainingLog.SelectionStart = Math.Min(selectionStart, txtTrainingLog.TextLength);
+            txtTrainingLog.SelectionLength = Math.Min(selectionLength, txtTrainingLog.TextLength - txtTrainingLog.SelectionStart);
+            SendMessage(txtTrainingLog.Handle, EmSetScrollPos, IntPtr.Zero, ref scrollPosition);
+            SendMessage(txtTrainingLog.Handle, WmSetRedraw, new IntPtr(1), IntPtr.Zero);
+            txtTrainingLog.Invalidate();
+        }
+
+        private bool IsTrainingLogScrolledToBottom()
+        {
+            if (txtTrainingLog.TextLength == 0) return true;
+
+            int bottomCharIndex = txtTrainingLog.GetCharIndexFromPosition(new Point(1, txtTrainingLog.ClientSize.Height - 1));
+            int bottomVisibleLine = txtTrainingLog.GetLineFromCharIndex(bottomCharIndex);
+            int lastLine = txtTrainingLog.GetLineFromCharIndex(txtTrainingLog.TextLength);
+            return bottomVisibleLine >= lastLine - 1;
         }
 
         private void ResetTrainingSummary()
