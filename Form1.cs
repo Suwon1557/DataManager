@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Text.Json;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.IO.Compression;
 using System.Globalization;
@@ -78,26 +79,27 @@ namespace DataManager
             tbPlaybackSpeed.AutoSize = false;
             tbImageNavigator.AutoSize = false;
             tbTestImageNavigator.AutoSize = false;
-            if (trackBar_tab2 != null) trackBar_tab2.AutoSize = false;
+            if (tbTestBrightness != null) tbTestBrightness.AutoSize = false;
 
             tbPlaybackSpeed.TickStyle = TickStyle.None;
             tbImageNavigator.TickStyle = TickStyle.BottomRight;
             tbTestImageNavigator.TickStyle = TickStyle.BottomRight;
-            if (trackBar_tab2 != null) trackBar_tab2.TickStyle = TickStyle.None;
+            if (tbTestBrightness != null) tbTestBrightness.TickStyle = TickStyle.None;
 
             tbPlaybackSpeed.Minimum = 25;
             tbPlaybackSpeed.Maximum = 400;
             tbPlaybackSpeed.Value = 100;
-            if (trackBar_tab2 != null)
+            if (tbTestBrightness != null)
             {
-                trackBar_tab2.Minimum = 25;
-                trackBar_tab2.Maximum = 400;
-                trackBar_tab2.Value = 100;
+                tbTestBrightness.Minimum = 0;
+                tbTestBrightness.Maximum = 4;
+                tbTestBrightness.Value = 2;
             }
 
             InitializeDataInfoGrid();
             ResetTrainingSummary();
             UpdatePlaybackSpeedLabel();
+            UpdateTestBrightnessLabel();
             ConfigureResponsiveLayout();
             lvDataItems.MultiSelect = true;
             lvDataItems.HideSelection = false;
@@ -113,14 +115,14 @@ namespace DataManager
             lvDataItems.MouseUp += lvDataItems_MouseUp;
 
             tbImageNavigator.Scroll += tbImageNavigator_Scroll;
-            if (trackBar_tab2 != null) trackBar_tab2.Scroll += trackBar_tab2_Scroll;
+            if (tbTestBrightness != null) tbTestBrightness.Scroll += tbTestBrightness_Scroll;
 
-            btnPlay_tab2.Click -= btnPlay_tab2_Click;
-            btnPlay_tab2.Click += btnPlay_tab2_Click;
-            btnStop_tab2.Click -= btnStop_tab2_Click;
-            btnStop_tab2.Click += btnStop_tab2_Click;
-            btnReverse_tab2.Click -= btnReverse_tab2_Click;
-            btnReverse_tab2.Click += btnReverse_tab2_Click;
+            btnTestPlay.Click -= btnTestPlay_Click;
+            btnTestPlay.Click += btnTestPlay_Click;
+            btnTestStop.Click -= btnTestStop_Click;
+            btnTestStop.Click += btnTestStop_Click;
+            btnTestReverse.Click -= btnTestReverse_Click;
+            btnTestReverse.Click += btnTestReverse_Click;
 
             if (tbTestImageNavigator != null)
             {
@@ -291,7 +293,7 @@ namespace DataManager
             pbTestPreview.SetBounds(margin, 41, previewWidth, previewHeight);
             btnStartTest.SetBounds(margin, pbTestPreview.Bottom + 12, previewWidth, 46);
             btnShowCurrentPrediction.SetBounds(margin, btnStartTest.Bottom + 8, previewWidth, 40);
-            lblPlaybackSpeed_tab2.SetBounds(trackBar_tab2.Right + 8, trackBar_tab2.Top + 2, 70, 32);
+            lblTestBrightness.SetBounds(tbTestBrightness.Right + 8, tbTestBrightness.Top + 2, 70, 32);
             tbTestImageNavigator.SetBounds(margin, btnShowCurrentPrediction.Bottom + 10, Math.Max(120, width - (margin * 2)), 30);
         }
 
@@ -661,9 +663,9 @@ namespace DataManager
         private void btnReverse_Click(object sender, EventArgs e) { _isReversed = true; StartPlayback(); }
         private void btnStop_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; _playTimer.Stop(); }
 
-        private void btnPlay_tab2_Click(object? sender, EventArgs e) { _isReversed = false; StartTestPlayback(); }
-        private void btnReverse_tab2_Click(object? sender, EventArgs e) { _isReversed = true; StartTestPlayback(); }
-        private void btnStop_tab2_Click(object? sender, EventArgs e) { if (!EnsureDataLoaded()) return; _playTimer.Stop(); }
+        private void btnTestPlay_Click(object? sender, EventArgs e) { _isReversed = false; StartTestPlayback(); }
+        private void btnTestReverse_Click(object? sender, EventArgs e) { _isReversed = true; StartTestPlayback(); }
+        private void btnTestStop_Click(object? sender, EventArgs e) { if (!EnsureDataLoaded()) return; _playTimer.Stop(); }
 
         #endregion
 
@@ -798,7 +800,7 @@ namespace DataManager
             }
             if (notImprovedMatch.Success)
             {
-                lblTrainingStatusValue.Text = $"개선 없음 best {notImprovedMatch.Groups[1].Value}";
+                lblTrainingStatusValue.Text = $"개선 없음 최적값 {notImprovedMatch.Groups[1].Value}";
                 lblTrainingStatusValue.ForeColor = Color.FromArgb(245, 176, 65);
             }
         }
@@ -886,7 +888,7 @@ namespace DataManager
             {
                 btnTrain.Enabled = true;
                 btnTrain.BackgroundImage = null;
-                btnTrain.Text = "Stop";
+                btnTrain.Text = "멈춤";
                 StyleButton(btnTrain, Color.FromArgb(248, 113, 113), Color.White, Color.FromArgb(248, 113, 113));
                 return;
             }
@@ -1172,7 +1174,7 @@ namespace DataManager
                 };
                 process.ErrorDataReceived += (_, args) =>
                 {
-                    if (!string.IsNullOrWhiteSpace(args.Data)) AppendTrainingLog("[Prediction error] " + args.Data);
+                    if (!string.IsNullOrWhiteSpace(args.Data)) AppendTrainingLog(args.Data);
                 };
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
@@ -1568,7 +1570,7 @@ namespace DataManager
             if (!File.Exists(data.ImagePath)) return;
 
             using Image originalImage = LoadImageWithoutLock(data.ImagePath);
-            Bitmap frameBitmap = new Bitmap(originalImage);
+            Bitmap frameBitmap = CreateBrightnessAdjustedBitmap(originalImage, GetTestBrightnessFactor());
 
             if (_showTestOverlay)
             {
@@ -1576,6 +1578,35 @@ namespace DataManager
             }
 
             pbTestPreview.Image = frameBitmap;
+        }
+
+        private Bitmap CreateBrightnessAdjustedBitmap(Image sourceImage, float brightnessFactor)
+        {
+            Bitmap bitmap = new Bitmap(sourceImage.Width, sourceImage.Height);
+            using Graphics graphics = Graphics.FromImage(bitmap);
+
+            ColorMatrix colorMatrix = new ColorMatrix(new[]
+            {
+                new[] { brightnessFactor, 0f, 0f, 0f, 0f },
+                new[] { 0f, brightnessFactor, 0f, 0f, 0f },
+                new[] { 0f, 0f, brightnessFactor, 0f, 0f },
+                new[] { 0f, 0f, 0f, 1f, 0f },
+                new[] { 0f, 0f, 0f, 0f, 1f }
+            });
+
+            using ImageAttributes attributes = new ImageAttributes();
+            attributes.SetColorMatrix(colorMatrix);
+            graphics.DrawImage(
+                sourceImage,
+                new Rectangle(0, 0, sourceImage.Width, sourceImage.Height),
+                0,
+                0,
+                sourceImage.Width,
+                sourceImage.Height,
+                GraphicsUnit.Pixel,
+                attributes);
+
+            return bitmap;
         }
 
         private void DrawControlBars(Bitmap frameBitmap, DrivingData data)
@@ -1842,28 +1873,33 @@ namespace DataManager
         {
             string speedText = $"x{tbPlaybackSpeed.Value / 100.0:0.##}";
             if (lblPlaybackSpeed != null) lblPlaybackSpeed.Text = speedText;
-            if (lblPlaybackSpeed_tab2 != null) lblPlaybackSpeed_tab2.Text = speedText;
         }
         private int GetPlaybackInterval() { return Math.Max(1, (int)(BasePlaybackIntervalMs / (tbPlaybackSpeed.Value / 100.0))); }
+
+        private float GetTestBrightnessFactor()
+        {
+            return tbTestBrightness == null ? 1f : Math.Max(0f, tbTestBrightness.Value / 2f);
+        }
+
+        private void UpdateTestBrightnessLabel()
+        {
+            if (lblTestBrightness != null) lblTestBrightness.Text = $"x{GetTestBrightnessFactor():0.##}";
+        }
 
         private void tbPlaybackSpeed_Scroll(object sender, EventArgs e)
         {
             if (!EnsureDataLoaded()) return;
 
-            if (trackBar_tab2 != null) trackBar_tab2.Value = tbPlaybackSpeed.Value;
-
             UpdatePlaybackSpeedLabel();
             if (_playTimer.Enabled) _playTimer.Interval = GetPlaybackInterval();
         }
 
-        private void trackBar_tab2_Scroll(object sender, EventArgs e)
+        private void tbTestBrightness_Scroll(object sender, EventArgs e)
         {
             if (!EnsureDataLoaded()) return;
 
-            if (trackBar_tab2 != null) tbPlaybackSpeed.Value = trackBar_tab2.Value;
-
-            UpdatePlaybackSpeedLabel();
-            if (_playTimer.Enabled) _playTimer.Interval = GetPlaybackInterval();
+            UpdateTestBrightnessLabel();
+            ShowFrame(_currentIndex);
         }
 
         private void btnSetRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; _isRangeSettingMode = true; }
