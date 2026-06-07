@@ -46,6 +46,9 @@ namespace DataManager
         private int _testCurrentIndex = -1;
         private bool _isTestReversed = false;
         private const int BasePlaybackIntervalMs = 50;
+        private const int TestBrightnessMin = 40;
+        private const int TestBrightnessMax = 200;
+        private const int TestBrightnessDefault = 100;
         private const string UiFontFamily = "Malgun Gothic";
         private const string WslSimulationProjectPath = "~/mysim";
         private const string WslModelDirectory = "models";
@@ -115,9 +118,11 @@ namespace DataManager
             }
             if (tbTestBrightness != null)
             {
-                tbTestBrightness.Minimum = 0;
-                tbTestBrightness.Maximum = 4;
-                tbTestBrightness.Value = 2;
+                tbTestBrightness.Minimum = TestBrightnessMin;
+                tbTestBrightness.Maximum = TestBrightnessMax;
+                tbTestBrightness.SmallChange = 1;
+                tbTestBrightness.LargeChange = 10;
+                tbTestBrightness.Value = TestBrightnessDefault;
             }
 
             InitializeDataInfoGrid();
@@ -2137,9 +2142,7 @@ namespace DataManager
         {
             if (tbTestBrightness == null) return 1f;
 
-            return tbTestBrightness.Value <= 2
-                ? 0.4f + (tbTestBrightness.Value * 0.3f)
-                : 1f + ((tbTestBrightness.Value - 2) * 0.5f);
+            return tbTestBrightness.Value / 100f;
         }
 
         private void UpdateTestBrightnessLabel()
