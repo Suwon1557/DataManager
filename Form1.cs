@@ -36,6 +36,8 @@ namespace DataManager
         private bool _trainingStopRequested = false;
         private SynchronizationContext? _uiContext;
         private Image? _trainButtonIdleImage;
+        private string _selectedModelFile = "";
+        private string _selectedPredictionResultsFile = "";
         private readonly Color _folderPathTextColor = Color.FromArgb(238, 243, 249);
         private readonly Color _folderPathWarningColor = Color.FromArgb(248, 113, 113);
         private readonly List<Panel> _imageRangeMarkers = new List<Panel>();
@@ -43,8 +45,9 @@ namespace DataManager
         private const int BasePlaybackIntervalMs = 50;
         private const string UiFontFamily = "Malgun Gothic";
         private const string WslSimulationProjectPath = "~/mysim";
-        private const string WslModelFile = "models/mypilot.h5";
-        private const string WslPredictionResultsFile = "models/results.csv";
+        private const string WslModelDirectory = "models";
+        private const string WslModelFilePattern = "models/*.h5";
+        private const string WslPredictionResultsFilePattern = "models/*.csv";
 
         private class DeleteAction
         {
@@ -90,15 +93,23 @@ namespace DataManager
             tbImageNavigator.AutoSize = false;
             tbTestImageNavigator.AutoSize = false;
             if (tbTestBrightness != null) tbTestBrightness.AutoSize = false;
+            if (tbTestPlaybackSpeed != null) tbTestPlaybackSpeed.AutoSize = false;
 
             tbPlaybackSpeed.TickStyle = TickStyle.None;
             tbImageNavigator.TickStyle = TickStyle.BottomRight;
             tbTestImageNavigator.TickStyle = TickStyle.BottomRight;
             if (tbTestBrightness != null) tbTestBrightness.TickStyle = TickStyle.None;
+            if (tbTestPlaybackSpeed != null) tbTestPlaybackSpeed.TickStyle = TickStyle.None;
 
             tbPlaybackSpeed.Minimum = 25;
             tbPlaybackSpeed.Maximum = 400;
             tbPlaybackSpeed.Value = 100;
+            if (tbTestPlaybackSpeed != null)
+            {
+                tbTestPlaybackSpeed.Minimum = 25;
+                tbTestPlaybackSpeed.Maximum = 400;
+                tbTestPlaybackSpeed.Value = 100;
+            }
             if (tbTestBrightness != null)
             {
                 tbTestBrightness.Minimum = 0;
@@ -109,7 +120,9 @@ namespace DataManager
             InitializeDataInfoGrid();
             ResetTrainingSummary();
             UpdatePlaybackSpeedLabel();
+            UpdateTestPlaybackSpeedLabel();
             UpdateTestBrightnessLabel();
+            UpdateSelectedArtifactTextBoxes();
             ConfigureResponsiveLayout();
             lvDataItems.MultiSelect = true;
             lvDataItems.HideSelection = false;
@@ -126,6 +139,12 @@ namespace DataManager
 
             tbImageNavigator.Scroll += tbImageNavigator_Scroll;
             if (tbTestBrightness != null) tbTestBrightness.Scroll += tbTestBrightness_Scroll;
+            if (tbTestPlaybackSpeed != null) tbTestPlaybackSpeed.Scroll += tbTestPlaybackSpeed_Scroll;
+
+            btnSelectModelFile.Click -= btnSelectModelFile_Click;
+            btnSelectModelFile.Click += btnSelectModelFile_Click;
+            btnSelectPredictionCsv.Click -= btnSelectPredictionCsv_Click;
+            btnSelectPredictionCsv.Click += btnSelectPredictionCsv_Click;
 
             btnTestPlay.Click -= btnTestPlay_Click;
             btnTestPlay.Click += btnTestPlay_Click;
@@ -303,8 +322,23 @@ namespace DataManager
             pbTestPreview.SetBounds(margin, 41, previewWidth, previewHeight);
             btnStartTest.SetBounds(margin, pbTestPreview.Bottom + 12, previewWidth, 46);
             btnShowCurrentPrediction.SetBounds(margin, btnStartTest.Bottom + 8, previewWidth, 40);
+            int controlLeft = pbTestPreview.Right + 23;
+            int controlWidth = Math.Min(460, Math.Max(280, width - controlLeft - 12));
+            lblTestCurrentIndex.SetBounds(controlLeft, 41, 220, 74);
+            btnStartTest.SetBounds(lblTestCurrentIndex.Right + 14, 41, Math.Max(160, controlWidth - 234), 74);
+            btnShowCurrentPrediction.SetBounds(controlLeft, 139, controlWidth, 46);
+            btnSelectModelFile.SetBounds(controlLeft, 195, 132, 32);
+            txtSelectedModelFile.SetBounds(btnSelectModelFile.Right + 8, 195, Math.Max(160, controlWidth - 140), 32);
+            btnSelectPredictionCsv.SetBounds(controlLeft, 235, 132, 32);
+            txtSelectedPredictionCsv.SetBounds(btnSelectPredictionCsv.Right + 8, 235, Math.Max(160, controlWidth - 140), 32);
+            tbTestPlaybackSpeed.SetBounds(controlLeft, 278, Math.Max(120, controlWidth - 70), 45);
+            lblTestPlaybackSpeed.SetBounds(tbTestPlaybackSpeed.Right + 8, tbTestPlaybackSpeed.Top + 2, 70, 32);
+            tbTestBrightness.SetBounds(controlLeft, 325, Math.Max(120, controlWidth - 70), 45);
             lblTestBrightness.SetBounds(tbTestBrightness.Right + 8, tbTestBrightness.Top + 2, 70, 32);
-            tbTestImageNavigator.SetBounds(margin, btnShowCurrentPrediction.Bottom + 10, Math.Max(120, width - (margin * 2)), 30);
+            btnTestPlay.SetBounds(controlLeft, 378, 145, 48);
+            btnTestStop.SetBounds(btnTestPlay.Right + 11, 378, 148, 48);
+            btnTestReverse.SetBounds(btnTestStop.Right + 11, 378, 146, 48);
+            tbTestImageNavigator.SetBounds(margin, Math.Max(40, height - 58), Math.Max(120, width - (margin * 2)), 30);
         }
 
         private void EnsureDataChartsLayout()
@@ -348,7 +382,7 @@ namespace DataManager
             const int margin = 12;
             tbTestImageNavigator.SetBounds(
                 margin,
-                btnShowCurrentPrediction.Bottom + 10,
+                Math.Max(40, gbModelTest.ClientSize.Height - 58),
                 Math.Max(100, gbModelTest.ClientSize.Width - (margin * 2)),
                 30);
         }
@@ -658,7 +692,7 @@ namespace DataManager
             }
 
             ShowFrame(_currentIndex);
-            _playTimer.Interval = GetPlaybackInterval();
+            _playTimer.Interval = GetTestPlaybackInterval();
             _playTimer.Start();
         }
 
@@ -930,6 +964,121 @@ namespace DataManager
             return "'" + value.Replace("'", "'\"'\"'") + "'";
         }
 
+        private string CreateTimestampedWslArtifactPath(string prefix, string extension)
+        {
+            return $"{WslModelDirectory}/{prefix}_{DateTime.Now:yyyyMMdd_HHmmss}{extension}";
+        }
+
+        private string NormalizeSelectedArtifactPath(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath)) return "";
+
+            string fileName = Path.GetFileName(filePath);
+            return string.IsNullOrWhiteSpace(fileName)
+                ? filePath.Replace("\\", "/")
+                : $"{WslModelDirectory}/{fileName}";
+        }
+
+        private void UpdateSelectedArtifactTextBoxes()
+        {
+            if (txtSelectedModelFile != null)
+                txtSelectedModelFile.Text = GetDisplayArtifactName(_selectedModelFile);
+            if (txtSelectedPredictionCsv != null)
+                txtSelectedPredictionCsv.Text = GetDisplayArtifactName(_selectedPredictionResultsFile);
+        }
+
+        private string GetDisplayArtifactName(string artifactPath)
+        {
+            return string.IsNullOrWhiteSpace(artifactPath) ? "최신 파일 자동 선택" : Path.GetFileName(artifactPath);
+        }
+
+        private async Task<string> ResolveModelFileForPredictionAsync()
+        {
+            if (!string.IsNullOrWhiteSpace(_selectedModelFile)) return _selectedModelFile;
+            return await GetLatestWslArtifactAsync(WslModelFilePattern, "학습 모델(.h5)");
+        }
+
+        private async Task<string> ResolvePredictionResultsFileAsync()
+        {
+            if (!string.IsNullOrWhiteSpace(_selectedPredictionResultsFile)) return _selectedPredictionResultsFile;
+            return await GetLatestWslArtifactAsync(WslPredictionResultsFilePattern, "예측 결과(.csv)");
+        }
+
+        private async Task<string> GetLatestWslArtifactAsync(string pattern, string displayName)
+        {
+            string command = $"cd {WslSimulationProjectPath} || exit 2; ls -t {pattern} 2>/dev/null | head -n 1";
+            string latest = (await RunWslBashCommandAsync(command)).Trim();
+            if (string.IsNullOrWhiteSpace(latest))
+                throw new InvalidOperationException($"{displayName} 파일을 찾을 수 없습니다.");
+
+            return latest;
+        }
+
+        private async Task<string> GetWslModelsWindowsPathAsync()
+        {
+            string command = $"cd {WslSimulationProjectPath} && mkdir -p {BashQuote(WslModelDirectory)} && wslpath -w {BashQuote(WslModelDirectory)}";
+            return (await RunWslBashCommandAsync(command)).Trim();
+        }
+
+        private async Task<string> RunWslBashCommandAsync(string bashCommand)
+        {
+            ProcessStartInfo start = new ProcessStartInfo();
+            start.FileName = "wsl.exe";
+            start.Arguments = GetWslDistroArgument() + "bash -lc \"" + bashCommand.Replace("\"", "\\\"") + "\"";
+            start.UseShellExecute = false;
+            start.RedirectStandardOutput = true;
+            start.RedirectStandardError = true;
+            start.CreateNoWindow = true;
+
+            using Process process = Process.Start(start) ?? throw new InvalidOperationException("WSL command could not be started.");
+            string output = await process.StandardOutput.ReadToEndAsync();
+            string error = await process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
+
+            if (process.ExitCode != 0)
+                throw new InvalidOperationException(string.IsNullOrWhiteSpace(error) ? $"WSL command failed. ExitCode={process.ExitCode}" : error.Trim());
+
+            return output;
+        }
+
+        private async void btnSelectModelFile_Click(object? sender, EventArgs e)
+        {
+            await SelectArtifactFileAsync("학습 모델 선택", "H5 model (*.h5)|*.h5|All files (*.*)|*.*", path =>
+            {
+                _selectedModelFile = NormalizeSelectedArtifactPath(path);
+            });
+        }
+
+        private async void btnSelectPredictionCsv_Click(object? sender, EventArgs e)
+        {
+            await SelectArtifactFileAsync("예측 결과 선택", "CSV file (*.csv)|*.csv|All files (*.*)|*.*", path =>
+            {
+                _selectedPredictionResultsFile = NormalizeSelectedArtifactPath(path);
+            });
+        }
+
+        private async Task SelectArtifactFileAsync(string title, string filter, Action<string> setSelectedPath)
+        {
+            try
+            {
+                using OpenFileDialog dialog = new OpenFileDialog();
+                dialog.Title = title;
+                dialog.Filter = filter;
+                dialog.InitialDirectory = await GetWslModelsWindowsPathAsync();
+                dialog.CheckFileExists = true;
+                dialog.Multiselect = false;
+
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+                setSelectedPath(dialog.FileName);
+                UpdateSelectedArtifactTextBoxes();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("파일 선택 중 오류가 발생했습니다: " + ex.Message);
+            }
+        }
+
         private void SetTrainingButtonRunningState(bool isRunning)
         {
             if (btnTrain == null) return;
@@ -1029,10 +1178,11 @@ namespace DataManager
 
                 string envName = "e2e_env";
                 string projectPath = WslSimulationProjectPath;
+                string outputModelFile = CreateTimestampedWslArtifactPath("mypilot", ".h5");
 
                 string installCmd = "pip install numpy==1.24.3 pandas==2.0.3 tensorflow==2.13.0 albumentations imgaug";
                 string importCmd = $"rm -rf ./data && mkdir -p ./data && cp {BashQuote(wslTrainingZipPath)} ./training_data.zip && python -m zipfile -e ./training_data.zip ./data && test -d ./data/images && ls ./data/*.catalog >/dev/null";
-                string trainCmd = "python train.py --tubs ./data --model ./models/mypilot.h5";
+                string trainCmd = $"python train.py --tubs ./data --model {BashQuote(outputModelFile)}";
 
                 string bashCmd = BuildWslCondaCommand(envName, $"cd {projectPath} && {importCmd} && {installCmd} && {trainCmd}");
 
@@ -1070,6 +1220,12 @@ namespace DataManager
                 else
                 {
                     AppendTrainingLog($"Training process finished. ExitCode={process.ExitCode}");
+                    if (process.ExitCode == 0)
+                    {
+                        _selectedModelFile = outputModelFile;
+                        UpdateSelectedArtifactTextBoxes();
+                        AppendTrainingLog($"Model saved: {outputModelFile}");
+                    }
                 }
             }
             catch (Exception ex) when (!_trainingStopRequested)
@@ -1107,8 +1263,11 @@ namespace DataManager
                 AppendTrainingLog("Test session started. Syncing paths.");
                 string envName = "e2e_env";
                 string projectPath = WslSimulationProjectPath;
-                string modelFile = WslModelFile;
-                string resultsFile = WslPredictionResultsFile;
+                string modelFile = await ResolveModelFileForPredictionAsync();
+                string resultsFile = CreateTimestampedWslArtifactPath("results", ".csv");
+                _selectedModelFile = modelFile;
+                _selectedPredictionResultsFile = resultsFile;
+                UpdateSelectedArtifactTextBoxes();
 
                 string appDir = Application.StartupPath;
                 string winPathsFile = Path.Combine(appDir, "win_paths.txt");
@@ -1240,11 +1399,16 @@ namespace DataManager
 
                 string[] resultLines = await ReadWslPredictionResultsAsync(projectPath, resultsFile);
                 if (LoadPredictionResults(resultLines))
+                {
+                    _selectedPredictionResultsFile = resultsFile;
+                    UpdateSelectedArtifactTextBoxes();
                     AppendTrainingLog("Prediction finished. Check the charts and overlay.");
+                    AppendTrainingLog($"Prediction results saved: {resultsFile}");
+                }
             }
             catch (Exception ex) when (!_testStopRequested)
             {
-                MessageBox.Show("Test failed: " + ex.Message);
+                MessageBox.Show("테스트 실패: " + ex.Message);
             }
             catch
             {
@@ -1265,10 +1429,13 @@ namespace DataManager
 
             try
             {
-                string[] resultLines = await ReadWslPredictionResultsAsync(WslSimulationProjectPath, WslPredictionResultsFile);
+                string resultsFile = await ResolvePredictionResultsFileAsync();
+                _selectedPredictionResultsFile = resultsFile;
+                UpdateSelectedArtifactTextBoxes();
+                string[] resultLines = await ReadWslPredictionResultsAsync(WslSimulationProjectPath, resultsFile);
                 if (LoadPredictionResults(resultLines))
                 {
-                    AppendTrainingLog($"Loaded existing prediction results from {WslSimulationProjectPath}/{WslPredictionResultsFile}.");
+                    AppendTrainingLog($"Loaded existing prediction results from {WslSimulationProjectPath}/{resultsFile}.");
                 }
             }
             catch (Exception ex)
@@ -1926,6 +2093,16 @@ namespace DataManager
         }
         private int GetPlaybackInterval() { return Math.Max(1, (int)(BasePlaybackIntervalMs / (tbPlaybackSpeed.Value / 100.0))); }
 
+        private void UpdateTestPlaybackSpeedLabel()
+        {
+            if (lblTestPlaybackSpeed != null) lblTestPlaybackSpeed.Text = $"x{tbTestPlaybackSpeed.Value / 100.0:0.##}";
+        }
+
+        private int GetTestPlaybackInterval()
+        {
+            return Math.Max(1, (int)(BasePlaybackIntervalMs / (tbTestPlaybackSpeed.Value / 100.0)));
+        }
+
         private float GetTestBrightnessFactor()
         {
             return tbTestBrightness == null ? 1f : Math.Max(0f, tbTestBrightness.Value / 2f);
@@ -1942,6 +2119,14 @@ namespace DataManager
 
             UpdatePlaybackSpeedLabel();
             if (_playTimer.Enabled) _playTimer.Interval = GetPlaybackInterval();
+        }
+
+        private void tbTestPlaybackSpeed_Scroll(object? sender, EventArgs e)
+        {
+            if (!EnsureDataLoaded()) return;
+
+            UpdateTestPlaybackSpeedLabel();
+            if (_playTimer.Enabled) _playTimer.Interval = GetTestPlaybackInterval();
         }
 
         private void tbTestBrightness_Scroll(object sender, EventArgs e)
@@ -2007,6 +2192,7 @@ namespace DataManager
         {
 
         }
+
     }
 
     public class DrivingData

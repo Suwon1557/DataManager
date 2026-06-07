@@ -16,6 +16,13 @@ namespace DataManager
         private Label lblTestCurrentIndex;
         private Button btnStartTest;
         private Button btnShowCurrentPrediction;
+        private Button btnSelectModelFile;
+        private TextBox txtSelectedModelFile;
+        private Button btnSelectPredictionCsv;
+        private TextBox txtSelectedPredictionCsv;
+        private TrackBar tbTestPlaybackSpeed;
+        private Label lblTestPlaybackSpeed;
+        private Label lblTestBrightness;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtTestSteeringValue;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtTestSpeedValue;
         private Button btnTrain;
@@ -44,7 +51,6 @@ namespace DataManager
         private Button btnPlay;
         private TrackBar tbPlaybackSpeed;
         private Label lblPlaybackSpeed;
-        private Label lblTestBrightness;
         private TrackBar tbImageNavigator;
         private Button btnSetRange;
         private Button btnCancelRange;
@@ -79,9 +85,9 @@ namespace DataManager
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle7 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle8 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle9 = new DataGridViewCellStyle();
             tcMain = new ThemedTabControl();
             tpDataManager = new TabPage();
             gbDataContent = new GroupBox();
@@ -117,6 +123,12 @@ namespace DataManager
             lblTestCurrentIndex = new Label();
             btnShowCurrentPrediction = new Button();
             btnStartTest = new Button();
+            btnSelectModelFile = new Button();
+            txtSelectedModelFile = new TextBox();
+            btnSelectPredictionCsv = new Button();
+            txtSelectedPredictionCsv = new TextBox();
+            tbTestPlaybackSpeed = new TrackBar();
+            lblTestPlaybackSpeed = new Label();
             pbTestPreview = new PictureBox();
             gbTrainingSetup = new GroupBox();
             txtTrainingLog = new TextBox();
@@ -143,6 +155,7 @@ namespace DataManager
             gbModelTest.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)tbTestBrightness).BeginInit();
             ((System.ComponentModel.ISupportInitialize)tbTestImageNavigator).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)tbTestPlaybackSpeed).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbTestPreview).BeginInit();
             gbTrainingSetup.SuspendLayout();
             SuspendLayout();
@@ -403,29 +416,29 @@ namespace DataManager
             dgvDataInfo.AllowUserToDeleteRows = false;
             dgvDataInfo.AllowUserToResizeColumns = false;
             dgvDataInfo.AllowUserToResizeRows = false;
-            dataGridViewCellStyle1.BackColor = Color.FromArgb(28, 36, 54);
-            dgvDataInfo.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle7.BackColor = Color.FromArgb(28, 36, 54);
+            dgvDataInfo.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle7;
             dgvDataInfo.BackgroundColor = Color.FromArgb(22, 30, 46);
             dgvDataInfo.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = Color.FromArgb(49, 62, 88);
-            dataGridViewCellStyle2.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle2.ForeColor = Color.FromArgb(245, 176, 65);
-            dataGridViewCellStyle2.SelectionBackColor = Color.FromArgb(49, 62, 88);
-            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
-            dgvDataInfo.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle8.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle8.BackColor = Color.FromArgb(49, 62, 88);
+            dataGridViewCellStyle8.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle8.ForeColor = Color.FromArgb(245, 176, 65);
+            dataGridViewCellStyle8.SelectionBackColor = Color.FromArgb(49, 62, 88);
+            dataGridViewCellStyle8.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle8.WrapMode = DataGridViewTriState.False;
+            dgvDataInfo.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle8;
             dgvDataInfo.ColumnHeadersHeight = 42;
             dgvDataInfo.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvDataInfo.Columns.AddRange(new DataGridViewColumn[] { colDataName, colDataValue });
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = Color.FromArgb(22, 30, 46);
-            dataGridViewCellStyle3.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle3.ForeColor = Color.FromArgb(245, 176, 65);
-            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(49, 62, 88);
-            dataGridViewCellStyle3.SelectionForeColor = Color.FromArgb(245, 176, 65);
-            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
-            dgvDataInfo.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle9.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle9.BackColor = Color.FromArgb(22, 30, 46);
+            dataGridViewCellStyle9.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle9.ForeColor = Color.FromArgb(245, 176, 65);
+            dataGridViewCellStyle9.SelectionBackColor = Color.FromArgb(49, 62, 88);
+            dataGridViewCellStyle9.SelectionForeColor = Color.FromArgb(245, 176, 65);
+            dataGridViewCellStyle9.WrapMode = DataGridViewTriState.False;
+            dgvDataInfo.DefaultCellStyle = dataGridViewCellStyle9;
             dgvDataInfo.EnableHeadersVisualStyles = false;
             dgvDataInfo.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
             dgvDataInfo.GridColor = Color.FromArgb(103, 119, 148);
@@ -592,6 +605,12 @@ namespace DataManager
             gbModelTest.Controls.Add(lblTestCurrentIndex);
             gbModelTest.Controls.Add(btnShowCurrentPrediction);
             gbModelTest.Controls.Add(btnStartTest);
+            gbModelTest.Controls.Add(btnSelectModelFile);
+            gbModelTest.Controls.Add(txtSelectedModelFile);
+            gbModelTest.Controls.Add(btnSelectPredictionCsv);
+            gbModelTest.Controls.Add(txtSelectedPredictionCsv);
+            gbModelTest.Controls.Add(tbTestPlaybackSpeed);
+            gbModelTest.Controls.Add(lblTestPlaybackSpeed);
             gbModelTest.Controls.Add(pbTestPreview);
             gbModelTest.Font = new Font("맑은 고딕", 9.35F, FontStyle.Bold, GraphicsUnit.Point, 129);
             gbModelTest.ForeColor = Color.FromArgb(245, 176, 65);
@@ -613,7 +632,7 @@ namespace DataManager
             btnTestReverse.FlatStyle = FlatStyle.Flat;
             btnTestReverse.Font = new Font("굴림", 14.78F, FontStyle.Bold);
             btnTestReverse.ForeColor = Color.FromArgb(238, 243, 249);
-            btnTestReverse.Location = new Point(962, 250);
+            btnTestReverse.Location = new Point(962, 415);
             btnTestReverse.Margin = new Padding(7, 5, 7, 5);
             btnTestReverse.Name = "btnTestReverse";
             btnTestReverse.Size = new Size(146, 48);
@@ -625,7 +644,7 @@ namespace DataManager
             // 
             tbTestBrightness.BackColor = Color.FromArgb(39, 50, 72);
             tbTestBrightness.LargeChange = 1;
-            tbTestBrightness.Location = new Point(650, 195);
+            tbTestBrightness.Location = new Point(650, 283);
             tbTestBrightness.Margin = new Padding(7, 5, 7, 5);
             tbTestBrightness.Maximum = 4;
             tbTestBrightness.Name = "tbTestBrightness";
@@ -636,13 +655,13 @@ namespace DataManager
             // lblTestBrightness
             // 
             lblTestBrightness.AutoSize = true;
-            lblTestBrightness.Font = new Font("맑은 고딕", 13.36F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTestBrightness.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTestBrightness.ForeColor = Color.FromArgb(45, 212, 191);
-            lblTestBrightness.Location = new Point(1112, 213);
+            lblTestBrightness.Location = new Point(1112, 283);
             lblTestBrightness.Margin = new Padding(7, 0, 7, 0);
             lblTestBrightness.Name = "lblTestBrightness";
-            lblTestBrightness.Size = new Size(32, 25);
-            lblTestBrightness.TabIndex = 9;
+            lblTestBrightness.Size = new Size(41, 32);
+            lblTestBrightness.TabIndex = 16;
             lblTestBrightness.Text = "x1";
             // 
             // btnTestStop
@@ -654,7 +673,7 @@ namespace DataManager
             btnTestStop.FlatStyle = FlatStyle.Flat;
             btnTestStop.Font = new Font("굴림", 14.78F, FontStyle.Bold);
             btnTestStop.ForeColor = Color.FromArgb(238, 243, 249);
-            btnTestStop.Location = new Point(803, 250);
+            btnTestStop.Location = new Point(804, 415);
             btnTestStop.Margin = new Padding(7, 5, 7, 5);
             btnTestStop.Name = "btnTestStop";
             btnTestStop.Size = new Size(148, 48);
@@ -671,7 +690,7 @@ namespace DataManager
             btnTestPlay.FlatStyle = FlatStyle.Flat;
             btnTestPlay.Font = new Font("굴림", 14.78F, FontStyle.Bold);
             btnTestPlay.ForeColor = Color.FromArgb(238, 243, 249);
-            btnTestPlay.Location = new Point(647, 250);
+            btnTestPlay.Location = new Point(650, 415);
             btnTestPlay.Margin = new Padding(7, 5, 7, 5);
             btnTestPlay.Name = "btnTestPlay";
             btnTestPlay.Size = new Size(145, 48);
@@ -738,6 +757,91 @@ namespace DataManager
             toolTip.SetToolTip(btnStartTest, "모델 예측 테스트 시작");
             btnStartTest.UseVisualStyleBackColor = false;
             btnStartTest.Click += btnStartTest_Click;
+            // 
+            // btnSelectModelFile
+            // 
+            btnSelectModelFile.BackColor = Color.FromArgb(49, 62, 88);
+            btnSelectModelFile.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
+            btnSelectModelFile.FlatStyle = FlatStyle.Flat;
+            btnSelectModelFile.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnSelectModelFile.ForeColor = Color.FromArgb(238, 243, 249);
+            btnSelectModelFile.Location = new Point(647, 195);
+            btnSelectModelFile.Margin = new Padding(7, 5, 7, 5);
+            btnSelectModelFile.Name = "btnSelectModelFile";
+            btnSelectModelFile.Size = new Size(132, 32);
+            btnSelectModelFile.TabIndex = 10;
+            btnSelectModelFile.Text = "모델 선택";
+            toolTip.SetToolTip(btnSelectModelFile, "사용할 .h5 모델 파일 선택");
+            btnSelectModelFile.UseVisualStyleBackColor = false;
+            // 
+            // txtSelectedModelFile
+            // 
+            txtSelectedModelFile.BackColor = Color.FromArgb(12, 18, 30);
+            txtSelectedModelFile.BorderStyle = BorderStyle.FixedSingle;
+            txtSelectedModelFile.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            txtSelectedModelFile.ForeColor = Color.FromArgb(238, 243, 249);
+            txtSelectedModelFile.Location = new Point(787, 195);
+            txtSelectedModelFile.Margin = new Padding(7, 5, 7, 5);
+            txtSelectedModelFile.Name = "txtSelectedModelFile";
+            txtSelectedModelFile.ReadOnly = true;
+            txtSelectedModelFile.Size = new Size(321, 23);
+            txtSelectedModelFile.TabIndex = 11;
+            txtSelectedModelFile.Text = "최신 파일 자동 선택";
+            // 
+            // btnSelectPredictionCsv
+            // 
+            btnSelectPredictionCsv.BackColor = Color.FromArgb(49, 62, 88);
+            btnSelectPredictionCsv.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
+            btnSelectPredictionCsv.FlatStyle = FlatStyle.Flat;
+            btnSelectPredictionCsv.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnSelectPredictionCsv.ForeColor = Color.FromArgb(238, 243, 249);
+            btnSelectPredictionCsv.Location = new Point(647, 235);
+            btnSelectPredictionCsv.Margin = new Padding(7, 5, 7, 5);
+            btnSelectPredictionCsv.Name = "btnSelectPredictionCsv";
+            btnSelectPredictionCsv.Size = new Size(132, 32);
+            btnSelectPredictionCsv.TabIndex = 12;
+            btnSelectPredictionCsv.Text = "CSV 선택";
+            toolTip.SetToolTip(btnSelectPredictionCsv, "불러올 .csv 예측 결과 파일 선택");
+            btnSelectPredictionCsv.UseVisualStyleBackColor = false;
+            // 
+            // txtSelectedPredictionCsv
+            // 
+            txtSelectedPredictionCsv.BackColor = Color.FromArgb(12, 18, 30);
+            txtSelectedPredictionCsv.BorderStyle = BorderStyle.FixedSingle;
+            txtSelectedPredictionCsv.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            txtSelectedPredictionCsv.ForeColor = Color.FromArgb(238, 243, 249);
+            txtSelectedPredictionCsv.Location = new Point(787, 235);
+            txtSelectedPredictionCsv.Margin = new Padding(7, 5, 7, 5);
+            txtSelectedPredictionCsv.Name = "txtSelectedPredictionCsv";
+            txtSelectedPredictionCsv.ReadOnly = true;
+            txtSelectedPredictionCsv.Size = new Size(321, 23);
+            txtSelectedPredictionCsv.TabIndex = 13;
+            txtSelectedPredictionCsv.Text = "최신 파일 자동 선택";
+            // 
+            // tbTestPlaybackSpeed
+            // 
+            tbTestPlaybackSpeed.BackColor = Color.FromArgb(39, 50, 72);
+            tbTestPlaybackSpeed.LargeChange = 1;
+            tbTestPlaybackSpeed.Location = new Point(659, 338);
+            tbTestPlaybackSpeed.Margin = new Padding(7, 5, 7, 5);
+            tbTestPlaybackSpeed.Maximum = 400;
+            tbTestPlaybackSpeed.Minimum = 25;
+            tbTestPlaybackSpeed.Name = "tbTestPlaybackSpeed";
+            tbTestPlaybackSpeed.Size = new Size(388, 45);
+            tbTestPlaybackSpeed.TabIndex = 14;
+            tbTestPlaybackSpeed.Value = 100;
+            // 
+            // lblTestPlaybackSpeed
+            // 
+            lblTestPlaybackSpeed.AutoSize = true;
+            lblTestPlaybackSpeed.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTestPlaybackSpeed.ForeColor = Color.FromArgb(45, 212, 191);
+            lblTestPlaybackSpeed.Location = new Point(1061, 338);
+            lblTestPlaybackSpeed.Margin = new Padding(7, 0, 7, 0);
+            lblTestPlaybackSpeed.Name = "lblTestPlaybackSpeed";
+            lblTestPlaybackSpeed.Size = new Size(41, 32);
+            lblTestPlaybackSpeed.TabIndex = 15;
+            lblTestPlaybackSpeed.Text = "x1";
             // 
             // pbTestPreview
             // 
@@ -932,6 +1036,7 @@ namespace DataManager
             gbModelTest.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)tbTestBrightness).EndInit();
             ((System.ComponentModel.ISupportInitialize)tbTestImageNavigator).EndInit();
+            ((System.ComponentModel.ISupportInitialize)tbTestPlaybackSpeed).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbTestPreview).EndInit();
             gbTrainingSetup.ResumeLayout(false);
             gbTrainingSetup.PerformLayout();
