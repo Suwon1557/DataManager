@@ -1474,6 +1474,13 @@ namespace DataManager
                 AppendTrainingLog($"Prediction result count differs from data count. results={lines.Length}, data={_allData.Count}");
             }
 
+            foreach (var data in _allData)
+            {
+                data.PredictedSteering = 0;
+                data.PredictedSpeed = 0;
+                data.HasPrediction = false;
+            }
+
             int count = Math.Min(lines.Length, _allData.Count);
             for (int i = 0; i < count; i++)
             {
@@ -1485,6 +1492,7 @@ namespace DataManager
                 {
                     _allData[i].PredictedSteering = angle;
                     _allData[i].PredictedSpeed = throttle * 100;
+                    _allData[i].HasPrediction = true;
                 }
             }
 
@@ -1844,13 +1852,16 @@ namespace DataManager
                 Color.FromArgb(45, 212, 120),
                 maxLength);
 
-            DrawControlBar(
-                graphics,
-                origin,
-                data.PredictedSteering,
-                NormalizeThrottle(data.PredictedSpeed),
-                Color.FromArgb(59, 130, 246),
-                maxLength);
+            if (data.HasPrediction)
+            {
+                DrawControlBar(
+                    graphics,
+                    origin,
+                    data.PredictedSteering,
+                    NormalizeThrottle(data.PredictedSpeed),
+                    Color.FromArgb(59, 130, 246),
+                    maxLength);
+            }
         }
 
         private void DrawControlBar(Graphics graphics, PointF start, double angle, double throttle, Color color, float maxLength)
@@ -1974,7 +1985,7 @@ namespace DataManager
         private void UpdateCharts()
         {
             if (_allData.Count == 0) return;
-            int step = Math.Max(1, _allData.Count / 100);
+            int step = Math.Max(1, _allData.Count / (_showTestOverlay ? 500 : 100));
             int maxIdx = _allData.Count - 1;
 
             if (chtSteeringValue != null) chtSteeringValue.Series[0].Points.Clear();
@@ -1999,12 +2010,14 @@ namespace DataManager
                 if (chtTestSteeringValue != null)
                 {
                     chtTestSteeringValue.Series["Actual"].Points.AddXY(d.Index, d.Steering);
-                    chtTestSteeringValue.Series["Predict"].Points.AddXY(d.Index, d.PredictedSteering);
+                    if (_showTestOverlay && d.HasPrediction)
+                        chtTestSteeringValue.Series["Predict"].Points.AddXY(d.Index, d.PredictedSteering);
                 }
                 if (chtTestSpeedValue != null)
                 {
                     chtTestSpeedValue.Series["Actual"].Points.AddXY(d.Index, d.Speed);
-                    chtTestSpeedValue.Series["Predict"].Points.AddXY(d.Index, d.PredictedSpeed);
+                    if (_showTestOverlay && d.HasPrediction)
+                        chtTestSpeedValue.Series["Predict"].Points.AddXY(d.Index, d.PredictedSpeed);
                 }
             }
 
@@ -2013,6 +2026,7 @@ namespace DataManager
                 if (c == null) continue;
                 c.ChartAreas[0].AxisX.Minimum = 0; c.ChartAreas[0].AxisX.Maximum = maxIdx;
                 c.ChartAreas[0].AxisX.LabelStyle.Format = "0;0;0";
+                c.ChartAreas[0].RecalculateAxesScale();
                 c.Invalidate();
             }
         }
@@ -2095,7 +2109,7 @@ namespace DataManager
 
         private void UpdateTestPlaybackSpeedLabel()
         {
-            if (lblTestPlaybackSpeed != null) lblTestPlaybackSpeed.Text = $"x{tbTestPlaybackSpeed.Value / 100.0:0.##}";
+            if (lblTestPlaybackSpeed != null) lblTestPlaybackSpeed.Text = $"배속 x{tbTestPlaybackSpeed.Value / 100.0:0.##}";
         }
 
         private int GetTestPlaybackInterval()
@@ -2105,12 +2119,16 @@ namespace DataManager
 
         private float GetTestBrightnessFactor()
         {
-            return tbTestBrightness == null ? 1f : Math.Max(0f, tbTestBrightness.Value / 2f);
+            if (tbTestBrightness == null) return 1f;
+
+            return tbTestBrightness.Value <= 2
+                ? 0.4f + (tbTestBrightness.Value * 0.3f)
+                : 1f + ((tbTestBrightness.Value - 2) * 0.5f);
         }
 
         private void UpdateTestBrightnessLabel()
         {
-            if (lblTestBrightness != null) lblTestBrightness.Text = $"x{GetTestBrightnessFactor():0.##}";
+            if (lblTestBrightness != null) lblTestBrightness.Text = $"밝기 x{GetTestBrightnessFactor():0.##}";
         }
 
         private void tbPlaybackSpeed_Scroll(object sender, EventArgs e)
@@ -2193,6 +2211,10 @@ namespace DataManager
 
         }
 
+        private void lblTestPlaybackSpeed_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 
     public class DrivingData
@@ -2203,6 +2225,7 @@ namespace DataManager
         public double Speed { get; set; }
         public double PredictedSteering { get; set; }
         public double PredictedSpeed { get; set; }
+        public bool HasPrediction { get; set; }
         public string CatalogFilePath { get; set; } = "";
         public string CatalogImageName { get; set; } = "";
         public int CatalogLineNumber { get; set; } = -1;

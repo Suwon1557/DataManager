@@ -85,9 +85,9 @@ namespace DataManager
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            DataGridViewCellStyle dataGridViewCellStyle7 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle8 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle9 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
             tcMain = new ThemedTabControl();
             tpDataManager = new TabPage();
             gbDataContent = new GroupBox();
@@ -416,29 +416,29 @@ namespace DataManager
             dgvDataInfo.AllowUserToDeleteRows = false;
             dgvDataInfo.AllowUserToResizeColumns = false;
             dgvDataInfo.AllowUserToResizeRows = false;
-            dataGridViewCellStyle7.BackColor = Color.FromArgb(28, 36, 54);
-            dgvDataInfo.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle7;
+            dataGridViewCellStyle4.BackColor = Color.FromArgb(28, 36, 54);
+            dgvDataInfo.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
             dgvDataInfo.BackgroundColor = Color.FromArgb(22, 30, 46);
             dgvDataInfo.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            dataGridViewCellStyle8.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle8.BackColor = Color.FromArgb(49, 62, 88);
-            dataGridViewCellStyle8.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle8.ForeColor = Color.FromArgb(245, 176, 65);
-            dataGridViewCellStyle8.SelectionBackColor = Color.FromArgb(49, 62, 88);
-            dataGridViewCellStyle8.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle8.WrapMode = DataGridViewTriState.False;
-            dgvDataInfo.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = Color.FromArgb(49, 62, 88);
+            dataGridViewCellStyle5.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle5.ForeColor = Color.FromArgb(245, 176, 65);
+            dataGridViewCellStyle5.SelectionBackColor = Color.FromArgb(49, 62, 88);
+            dataGridViewCellStyle5.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
+            dgvDataInfo.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
             dgvDataInfo.ColumnHeadersHeight = 42;
             dgvDataInfo.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvDataInfo.Columns.AddRange(new DataGridViewColumn[] { colDataName, colDataValue });
-            dataGridViewCellStyle9.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle9.BackColor = Color.FromArgb(22, 30, 46);
-            dataGridViewCellStyle9.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle9.ForeColor = Color.FromArgb(245, 176, 65);
-            dataGridViewCellStyle9.SelectionBackColor = Color.FromArgb(49, 62, 88);
-            dataGridViewCellStyle9.SelectionForeColor = Color.FromArgb(245, 176, 65);
-            dataGridViewCellStyle9.WrapMode = DataGridViewTriState.False;
-            dgvDataInfo.DefaultCellStyle = dataGridViewCellStyle9;
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = Color.FromArgb(22, 30, 46);
+            dataGridViewCellStyle6.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle6.ForeColor = Color.FromArgb(245, 176, 65);
+            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(49, 62, 88);
+            dataGridViewCellStyle6.SelectionForeColor = Color.FromArgb(245, 176, 65);
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
+            dgvDataInfo.DefaultCellStyle = dataGridViewCellStyle6;
             dgvDataInfo.EnableHeadersVisualStyles = false;
             dgvDataInfo.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
             dgvDataInfo.GridColor = Color.FromArgb(103, 119, 148);
@@ -660,9 +660,9 @@ namespace DataManager
             lblTestBrightness.Location = new Point(1112, 283);
             lblTestBrightness.Margin = new Padding(7, 0, 7, 0);
             lblTestBrightness.Name = "lblTestBrightness";
-            lblTestBrightness.Size = new Size(41, 32);
+            lblTestBrightness.Size = new Size(97, 32);
             lblTestBrightness.TabIndex = 16;
-            lblTestBrightness.Text = "x1";
+            lblTestBrightness.Text = "밝기 x1";
             // 
             // btnTestStop
             // 
@@ -827,7 +827,7 @@ namespace DataManager
             tbTestPlaybackSpeed.Maximum = 400;
             tbTestPlaybackSpeed.Minimum = 25;
             tbTestPlaybackSpeed.Name = "tbTestPlaybackSpeed";
-            tbTestPlaybackSpeed.Size = new Size(388, 45);
+            tbTestPlaybackSpeed.Size = new Size(439, 45);
             tbTestPlaybackSpeed.TabIndex = 14;
             tbTestPlaybackSpeed.Value = 100;
             // 
@@ -836,12 +836,13 @@ namespace DataManager
             lblTestPlaybackSpeed.AutoSize = true;
             lblTestPlaybackSpeed.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTestPlaybackSpeed.ForeColor = Color.FromArgb(45, 212, 191);
-            lblTestPlaybackSpeed.Location = new Point(1061, 338);
+            lblTestPlaybackSpeed.Location = new Point(1112, 338);
             lblTestPlaybackSpeed.Margin = new Padding(7, 0, 7, 0);
             lblTestPlaybackSpeed.Name = "lblTestPlaybackSpeed";
-            lblTestPlaybackSpeed.Size = new Size(41, 32);
+            lblTestPlaybackSpeed.Size = new Size(97, 32);
             lblTestPlaybackSpeed.TabIndex = 15;
-            lblTestPlaybackSpeed.Text = "x1";
+            lblTestPlaybackSpeed.Text = "배속 x1";
+            lblTestPlaybackSpeed.Click += lblTestPlaybackSpeed_Click;
             // 
             // pbTestPreview
             // 
