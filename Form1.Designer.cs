@@ -16,6 +16,13 @@ namespace DataManager
         private Label lblTestCurrentIndex;
         private Button btnStartTest;
         private Button btnShowCurrentPrediction;
+        private Button btnSelectModelFile;
+        private TextBox txtSelectedModelFile;
+        private Button btnSelectPredictionCsv;
+        private TextBox txtSelectedPredictionCsv;
+        private TrackBar tbTestPlaybackSpeed;
+        private Label lblTestPlaybackSpeed;
+        private Label lblTestBrightness;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtTestSteeringValue;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtTestSpeedValue;
         private Button btnTrain;
@@ -44,7 +51,6 @@ namespace DataManager
         private Button btnPlay;
         private TrackBar tbPlaybackSpeed;
         private Label lblPlaybackSpeed;
-        private Label lblPlaybackSpeed_tab2;
         private TrackBar tbImageNavigator;
         private Button btnSetRange;
         private Button btnCancelRange;
@@ -79,9 +85,9 @@ namespace DataManager
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
             tcMain = new ThemedTabControl();
             tpDataManager = new TabPage();
             gbDataContent = new GroupBox();
@@ -108,15 +114,21 @@ namespace DataManager
             btnSelectFolder = new Button();
             tpTrainingTest = new TabPage();
             gbModelTest = new GroupBox();
-            btnReverse_tab2 = new Button();
-            trackBar_tab2 = new TrackBar();
-            lblPlaybackSpeed_tab2 = new Label();
-            btnStop_tab2 = new Button();
-            btnPlay_tab2 = new Button();
+            btnTestReverse = new Button();
+            tbTestBrightness = new TrackBar();
+            lblTestBrightness = new Label();
+            btnTestStop = new Button();
+            btnTestPlay = new Button();
             tbTestImageNavigator = new TrackBar();
             lblTestCurrentIndex = new Label();
             btnShowCurrentPrediction = new Button();
             btnStartTest = new Button();
+            btnSelectModelFile = new Button();
+            txtSelectedModelFile = new TextBox();
+            btnSelectPredictionCsv = new Button();
+            txtSelectedPredictionCsv = new TextBox();
+            tbTestPlaybackSpeed = new TrackBar();
+            lblTestPlaybackSpeed = new Label();
             pbTestPreview = new PictureBox();
             gbTrainingSetup = new GroupBox();
             txtTrainingLog = new TextBox();
@@ -141,8 +153,9 @@ namespace DataManager
             gbDataLoad.SuspendLayout();
             tpTrainingTest.SuspendLayout();
             gbModelTest.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)trackBar_tab2).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)tbTestBrightness).BeginInit();
             ((System.ComponentModel.ISupportInitialize)tbTestImageNavigator).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)tbTestPlaybackSpeed).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbTestPreview).BeginInit();
             gbTrainingSetup.SuspendLayout();
             SuspendLayout();
@@ -403,29 +416,29 @@ namespace DataManager
             dgvDataInfo.AllowUserToDeleteRows = false;
             dgvDataInfo.AllowUserToResizeColumns = false;
             dgvDataInfo.AllowUserToResizeRows = false;
-            dataGridViewCellStyle1.BackColor = Color.FromArgb(28, 36, 54);
-            dgvDataInfo.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.BackColor = Color.FromArgb(28, 36, 54);
+            dgvDataInfo.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
             dgvDataInfo.BackgroundColor = Color.FromArgb(22, 30, 46);
             dgvDataInfo.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = Color.FromArgb(49, 62, 88);
-            dataGridViewCellStyle2.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle2.ForeColor = Color.FromArgb(245, 176, 65);
-            dataGridViewCellStyle2.SelectionBackColor = Color.FromArgb(49, 62, 88);
-            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
-            dgvDataInfo.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = Color.FromArgb(49, 62, 88);
+            dataGridViewCellStyle5.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle5.ForeColor = Color.FromArgb(245, 176, 65);
+            dataGridViewCellStyle5.SelectionBackColor = Color.FromArgb(49, 62, 88);
+            dataGridViewCellStyle5.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
+            dgvDataInfo.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
             dgvDataInfo.ColumnHeadersHeight = 42;
             dgvDataInfo.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvDataInfo.Columns.AddRange(new DataGridViewColumn[] { colDataName, colDataValue });
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = Color.FromArgb(22, 30, 46);
-            dataGridViewCellStyle3.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle3.ForeColor = Color.FromArgb(245, 176, 65);
-            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(49, 62, 88);
-            dataGridViewCellStyle3.SelectionForeColor = Color.FromArgb(245, 176, 65);
-            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
-            dgvDataInfo.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = Color.FromArgb(22, 30, 46);
+            dataGridViewCellStyle6.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle6.ForeColor = Color.FromArgb(245, 176, 65);
+            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(49, 62, 88);
+            dataGridViewCellStyle6.SelectionForeColor = Color.FromArgb(245, 176, 65);
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
+            dgvDataInfo.DefaultCellStyle = dataGridViewCellStyle6;
             dgvDataInfo.EnableHeadersVisualStyles = false;
             dgvDataInfo.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
             dgvDataInfo.GridColor = Color.FromArgb(103, 119, 148);
@@ -583,15 +596,21 @@ namespace DataManager
             // 
             gbModelTest.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             gbModelTest.BackColor = Color.FromArgb(39, 50, 72);
-            gbModelTest.Controls.Add(btnReverse_tab2);
-            gbModelTest.Controls.Add(trackBar_tab2);
-            gbModelTest.Controls.Add(lblPlaybackSpeed_tab2);
-            gbModelTest.Controls.Add(btnStop_tab2);
-            gbModelTest.Controls.Add(btnPlay_tab2);
+            gbModelTest.Controls.Add(btnTestReverse);
+            gbModelTest.Controls.Add(tbTestBrightness);
+            gbModelTest.Controls.Add(lblTestBrightness);
+            gbModelTest.Controls.Add(btnTestStop);
+            gbModelTest.Controls.Add(btnTestPlay);
             gbModelTest.Controls.Add(tbTestImageNavigator);
             gbModelTest.Controls.Add(lblTestCurrentIndex);
             gbModelTest.Controls.Add(btnShowCurrentPrediction);
             gbModelTest.Controls.Add(btnStartTest);
+            gbModelTest.Controls.Add(btnSelectModelFile);
+            gbModelTest.Controls.Add(txtSelectedModelFile);
+            gbModelTest.Controls.Add(btnSelectPredictionCsv);
+            gbModelTest.Controls.Add(txtSelectedPredictionCsv);
+            gbModelTest.Controls.Add(tbTestPlaybackSpeed);
+            gbModelTest.Controls.Add(lblTestPlaybackSpeed);
             gbModelTest.Controls.Add(pbTestPreview);
             gbModelTest.Font = new Font("맑은 고딕", 9.35F, FontStyle.Bold, GraphicsUnit.Point, 129);
             gbModelTest.ForeColor = Color.FromArgb(245, 176, 65);
@@ -604,80 +623,80 @@ namespace DataManager
             gbModelTest.TabStop = false;
             gbModelTest.Text = "모델 테스트";
             // 
-            // btnReverse_tab2
+            // btnTestReverse
             // 
-            btnReverse_tab2.BackColor = Color.FromArgb(49, 62, 88);
-            btnReverse_tab2.BackgroundImage = Properties.Resources.icon_reverse_theme;
-            btnReverse_tab2.BackgroundImageLayout = ImageLayout.Zoom;
-            btnReverse_tab2.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
-            btnReverse_tab2.FlatStyle = FlatStyle.Flat;
-            btnReverse_tab2.Font = new Font("굴림", 14.78F, FontStyle.Bold);
-            btnReverse_tab2.ForeColor = Color.FromArgb(238, 243, 249);
-            btnReverse_tab2.Location = new Point(962, 144);
-            btnReverse_tab2.Margin = new Padding(7, 5, 7, 5);
-            btnReverse_tab2.Name = "btnReverse_tab2";
-            btnReverse_tab2.Size = new Size(146, 48);
-            btnReverse_tab2.TabIndex = 8;
-            toolTip.SetToolTip(btnReverse_tab2, "테스트 프레임 역재생");
-            btnReverse_tab2.UseVisualStyleBackColor = false;
+            btnTestReverse.BackColor = Color.FromArgb(49, 62, 88);
+            btnTestReverse.BackgroundImage = Properties.Resources.icon_reverse_theme;
+            btnTestReverse.BackgroundImageLayout = ImageLayout.Zoom;
+            btnTestReverse.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
+            btnTestReverse.FlatStyle = FlatStyle.Flat;
+            btnTestReverse.Font = new Font("굴림", 14.78F, FontStyle.Bold);
+            btnTestReverse.ForeColor = Color.FromArgb(238, 243, 249);
+            btnTestReverse.Location = new Point(962, 415);
+            btnTestReverse.Margin = new Padding(7, 5, 7, 5);
+            btnTestReverse.Name = "btnTestReverse";
+            btnTestReverse.Size = new Size(146, 48);
+            btnTestReverse.TabIndex = 8;
+            toolTip.SetToolTip(btnTestReverse, "테스트 프레임 역재생");
+            btnTestReverse.UseVisualStyleBackColor = false;
             // 
-            // trackBar_tab2
+            // tbTestBrightness
             // 
-            trackBar_tab2.BackColor = Color.FromArgb(39, 50, 72);
-            trackBar_tab2.LargeChange = 1;
-            trackBar_tab2.Location = new Point(647, 224);
-            trackBar_tab2.Margin = new Padding(7, 5, 7, 5);
-            trackBar_tab2.Maximum = 4;
-            trackBar_tab2.Name = "trackBar_tab2";
-            trackBar_tab2.Size = new Size(458, 45);
-            trackBar_tab2.TabIndex = 7;
-            trackBar_tab2.Value = 2;
+            tbTestBrightness.BackColor = Color.FromArgb(39, 50, 72);
+            tbTestBrightness.LargeChange = 1;
+            tbTestBrightness.Location = new Point(650, 283);
+            tbTestBrightness.Margin = new Padding(7, 5, 7, 5);
+            tbTestBrightness.Maximum = 4;
+            tbTestBrightness.Name = "tbTestBrightness";
+            tbTestBrightness.Size = new Size(458, 45);
+            tbTestBrightness.TabIndex = 7;
+            tbTestBrightness.Value = 2;
             // 
-            // lblPlaybackSpeed_tab2
+            // lblTestBrightness
             // 
-            lblPlaybackSpeed_tab2.AutoSize = true;
-            lblPlaybackSpeed_tab2.Font = new Font("맑은 고딕", 13.36F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            lblPlaybackSpeed_tab2.ForeColor = Color.FromArgb(45, 212, 191);
-            lblPlaybackSpeed_tab2.Location = new Point(1112, 213);
-            lblPlaybackSpeed_tab2.Margin = new Padding(7, 0, 7, 0);
-            lblPlaybackSpeed_tab2.Name = "lblPlaybackSpeed_tab2";
-            lblPlaybackSpeed_tab2.Size = new Size(32, 25);
-            lblPlaybackSpeed_tab2.TabIndex = 9;
-            lblPlaybackSpeed_tab2.Text = "x1";
+            lblTestBrightness.AutoSize = true;
+            lblTestBrightness.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTestBrightness.ForeColor = Color.FromArgb(45, 212, 191);
+            lblTestBrightness.Location = new Point(1112, 283);
+            lblTestBrightness.Margin = new Padding(7, 0, 7, 0);
+            lblTestBrightness.Name = "lblTestBrightness";
+            lblTestBrightness.Size = new Size(97, 32);
+            lblTestBrightness.TabIndex = 16;
+            lblTestBrightness.Text = "밝기 x1";
             // 
-            // btnStop_tab2
+            // btnTestStop
             // 
-            btnStop_tab2.BackColor = Color.FromArgb(49, 62, 88);
-            btnStop_tab2.BackgroundImage = Properties.Resources.icon_stop_theme;
-            btnStop_tab2.BackgroundImageLayout = ImageLayout.Zoom;
-            btnStop_tab2.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
-            btnStop_tab2.FlatStyle = FlatStyle.Flat;
-            btnStop_tab2.Font = new Font("굴림", 14.78F, FontStyle.Bold);
-            btnStop_tab2.ForeColor = Color.FromArgb(238, 243, 249);
-            btnStop_tab2.Location = new Point(805, 145);
-            btnStop_tab2.Margin = new Padding(7, 5, 7, 5);
-            btnStop_tab2.Name = "btnStop_tab2";
-            btnStop_tab2.Size = new Size(148, 48);
-            btnStop_tab2.TabIndex = 7;
-            toolTip.SetToolTip(btnStop_tab2, "테스트 프레임 재생 정지");
-            btnStop_tab2.UseVisualStyleBackColor = false;
+            btnTestStop.BackColor = Color.FromArgb(49, 62, 88);
+            btnTestStop.BackgroundImage = Properties.Resources.icon_stop_theme;
+            btnTestStop.BackgroundImageLayout = ImageLayout.Zoom;
+            btnTestStop.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
+            btnTestStop.FlatStyle = FlatStyle.Flat;
+            btnTestStop.Font = new Font("굴림", 14.78F, FontStyle.Bold);
+            btnTestStop.ForeColor = Color.FromArgb(238, 243, 249);
+            btnTestStop.Location = new Point(804, 415);
+            btnTestStop.Margin = new Padding(7, 5, 7, 5);
+            btnTestStop.Name = "btnTestStop";
+            btnTestStop.Size = new Size(148, 48);
+            btnTestStop.TabIndex = 7;
+            toolTip.SetToolTip(btnTestStop, "테스트 프레임 재생 정지");
+            btnTestStop.UseVisualStyleBackColor = false;
             // 
-            // btnPlay_tab2
+            // btnTestPlay
             // 
-            btnPlay_tab2.BackColor = Color.FromArgb(49, 62, 88);
-            btnPlay_tab2.BackgroundImage = Properties.Resources.icon_play_theme;
-            btnPlay_tab2.BackgroundImageLayout = ImageLayout.Zoom;
-            btnPlay_tab2.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
-            btnPlay_tab2.FlatStyle = FlatStyle.Flat;
-            btnPlay_tab2.Font = new Font("굴림", 14.78F, FontStyle.Bold);
-            btnPlay_tab2.ForeColor = Color.FromArgb(238, 243, 249);
-            btnPlay_tab2.Location = new Point(651, 145);
-            btnPlay_tab2.Margin = new Padding(7, 5, 7, 5);
-            btnPlay_tab2.Name = "btnPlay_tab2";
-            btnPlay_tab2.Size = new Size(145, 48);
-            btnPlay_tab2.TabIndex = 6;
-            toolTip.SetToolTip(btnPlay_tab2, "테스트 프레임 재생");
-            btnPlay_tab2.UseVisualStyleBackColor = false;
+            btnTestPlay.BackColor = Color.FromArgb(49, 62, 88);
+            btnTestPlay.BackgroundImage = Properties.Resources.icon_play_theme;
+            btnTestPlay.BackgroundImageLayout = ImageLayout.Zoom;
+            btnTestPlay.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
+            btnTestPlay.FlatStyle = FlatStyle.Flat;
+            btnTestPlay.Font = new Font("굴림", 14.78F, FontStyle.Bold);
+            btnTestPlay.ForeColor = Color.FromArgb(238, 243, 249);
+            btnTestPlay.Location = new Point(650, 415);
+            btnTestPlay.Margin = new Padding(7, 5, 7, 5);
+            btnTestPlay.Name = "btnTestPlay";
+            btnTestPlay.Size = new Size(145, 48);
+            btnTestPlay.TabIndex = 6;
+            toolTip.SetToolTip(btnTestPlay, "테스트 프레임 재생");
+            btnTestPlay.UseVisualStyleBackColor = false;
             // 
             // tbTestImageNavigator
             // 
@@ -712,10 +731,10 @@ namespace DataManager
             btnShowCurrentPrediction.FlatStyle = FlatStyle.Flat;
             btnShowCurrentPrediction.Font = new Font("Microsoft Sans Serif", 10.52F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnShowCurrentPrediction.ForeColor = Color.White;
-            btnShowCurrentPrediction.Location = new Point(647, 372);
+            btnShowCurrentPrediction.Location = new Point(647, 139);
             btnShowCurrentPrediction.Margin = new Padding(7, 5, 7, 5);
             btnShowCurrentPrediction.Name = "btnShowCurrentPrediction";
-            btnShowCurrentPrediction.Size = new Size(458, 46);
+            btnShowCurrentPrediction.Size = new Size(461, 46);
             btnShowCurrentPrediction.TabIndex = 4;
             btnShowCurrentPrediction.Text = "현재 예측 보기";
             toolTip.SetToolTip(btnShowCurrentPrediction, "현재 예측 결과 보기");
@@ -729,15 +748,101 @@ namespace DataManager
             btnStartTest.FlatStyle = FlatStyle.Flat;
             btnStartTest.Font = new Font("Microsoft Sans Serif", 10.52F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnStartTest.ForeColor = Color.FromArgb(6, 42, 43);
-            btnStartTest.Location = new Point(647, 290);
+            btnStartTest.Location = new Point(881, 41);
             btnStartTest.Margin = new Padding(7, 5, 7, 5);
             btnStartTest.Name = "btnStartTest";
-            btnStartTest.Size = new Size(458, 53);
+            btnStartTest.Size = new Size(227, 74);
             btnStartTest.TabIndex = 1;
             btnStartTest.Text = "테스트 시작";
             toolTip.SetToolTip(btnStartTest, "모델 예측 테스트 시작");
             btnStartTest.UseVisualStyleBackColor = false;
             btnStartTest.Click += btnStartTest_Click;
+            // 
+            // btnSelectModelFile
+            // 
+            btnSelectModelFile.BackColor = Color.FromArgb(49, 62, 88);
+            btnSelectModelFile.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
+            btnSelectModelFile.FlatStyle = FlatStyle.Flat;
+            btnSelectModelFile.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnSelectModelFile.ForeColor = Color.FromArgb(238, 243, 249);
+            btnSelectModelFile.Location = new Point(647, 195);
+            btnSelectModelFile.Margin = new Padding(7, 5, 7, 5);
+            btnSelectModelFile.Name = "btnSelectModelFile";
+            btnSelectModelFile.Size = new Size(132, 32);
+            btnSelectModelFile.TabIndex = 10;
+            btnSelectModelFile.Text = "모델 선택";
+            toolTip.SetToolTip(btnSelectModelFile, "사용할 .h5 모델 파일 선택");
+            btnSelectModelFile.UseVisualStyleBackColor = false;
+            // 
+            // txtSelectedModelFile
+            // 
+            txtSelectedModelFile.BackColor = Color.FromArgb(12, 18, 30);
+            txtSelectedModelFile.BorderStyle = BorderStyle.FixedSingle;
+            txtSelectedModelFile.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            txtSelectedModelFile.ForeColor = Color.FromArgb(238, 243, 249);
+            txtSelectedModelFile.Location = new Point(787, 195);
+            txtSelectedModelFile.Margin = new Padding(7, 5, 7, 5);
+            txtSelectedModelFile.Name = "txtSelectedModelFile";
+            txtSelectedModelFile.ReadOnly = true;
+            txtSelectedModelFile.Size = new Size(321, 23);
+            txtSelectedModelFile.TabIndex = 11;
+            txtSelectedModelFile.Text = "최신 파일 자동 선택";
+            // 
+            // btnSelectPredictionCsv
+            // 
+            btnSelectPredictionCsv.BackColor = Color.FromArgb(49, 62, 88);
+            btnSelectPredictionCsv.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
+            btnSelectPredictionCsv.FlatStyle = FlatStyle.Flat;
+            btnSelectPredictionCsv.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnSelectPredictionCsv.ForeColor = Color.FromArgb(238, 243, 249);
+            btnSelectPredictionCsv.Location = new Point(647, 235);
+            btnSelectPredictionCsv.Margin = new Padding(7, 5, 7, 5);
+            btnSelectPredictionCsv.Name = "btnSelectPredictionCsv";
+            btnSelectPredictionCsv.Size = new Size(132, 32);
+            btnSelectPredictionCsv.TabIndex = 12;
+            btnSelectPredictionCsv.Text = "CSV 선택";
+            toolTip.SetToolTip(btnSelectPredictionCsv, "불러올 .csv 예측 결과 파일 선택");
+            btnSelectPredictionCsv.UseVisualStyleBackColor = false;
+            // 
+            // txtSelectedPredictionCsv
+            // 
+            txtSelectedPredictionCsv.BackColor = Color.FromArgb(12, 18, 30);
+            txtSelectedPredictionCsv.BorderStyle = BorderStyle.FixedSingle;
+            txtSelectedPredictionCsv.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            txtSelectedPredictionCsv.ForeColor = Color.FromArgb(238, 243, 249);
+            txtSelectedPredictionCsv.Location = new Point(787, 235);
+            txtSelectedPredictionCsv.Margin = new Padding(7, 5, 7, 5);
+            txtSelectedPredictionCsv.Name = "txtSelectedPredictionCsv";
+            txtSelectedPredictionCsv.ReadOnly = true;
+            txtSelectedPredictionCsv.Size = new Size(321, 23);
+            txtSelectedPredictionCsv.TabIndex = 13;
+            txtSelectedPredictionCsv.Text = "최신 파일 자동 선택";
+            // 
+            // tbTestPlaybackSpeed
+            // 
+            tbTestPlaybackSpeed.BackColor = Color.FromArgb(39, 50, 72);
+            tbTestPlaybackSpeed.LargeChange = 1;
+            tbTestPlaybackSpeed.Location = new Point(659, 338);
+            tbTestPlaybackSpeed.Margin = new Padding(7, 5, 7, 5);
+            tbTestPlaybackSpeed.Maximum = 400;
+            tbTestPlaybackSpeed.Minimum = 25;
+            tbTestPlaybackSpeed.Name = "tbTestPlaybackSpeed";
+            tbTestPlaybackSpeed.Size = new Size(439, 45);
+            tbTestPlaybackSpeed.TabIndex = 14;
+            tbTestPlaybackSpeed.Value = 100;
+            // 
+            // lblTestPlaybackSpeed
+            // 
+            lblTestPlaybackSpeed.AutoSize = true;
+            lblTestPlaybackSpeed.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTestPlaybackSpeed.ForeColor = Color.FromArgb(45, 212, 191);
+            lblTestPlaybackSpeed.Location = new Point(1112, 338);
+            lblTestPlaybackSpeed.Margin = new Padding(7, 0, 7, 0);
+            lblTestPlaybackSpeed.Name = "lblTestPlaybackSpeed";
+            lblTestPlaybackSpeed.Size = new Size(97, 32);
+            lblTestPlaybackSpeed.TabIndex = 15;
+            lblTestPlaybackSpeed.Text = "배속 x1";
+            lblTestPlaybackSpeed.Click += lblTestPlaybackSpeed_Click;
             // 
             // pbTestPreview
             // 
@@ -930,8 +1035,9 @@ namespace DataManager
             tpTrainingTest.ResumeLayout(false);
             gbModelTest.ResumeLayout(false);
             gbModelTest.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)trackBar_tab2).EndInit();
+            ((System.ComponentModel.ISupportInitialize)tbTestBrightness).EndInit();
             ((System.ComponentModel.ISupportInitialize)tbTestImageNavigator).EndInit();
+            ((System.ComponentModel.ISupportInitialize)tbTestPlaybackSpeed).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbTestPreview).EndInit();
             gbTrainingSetup.ResumeLayout(false);
             gbTrainingSetup.PerformLayout();
@@ -941,9 +1047,9 @@ namespace DataManager
 
         #endregion
 
-        private TrackBar trackBar_tab2;
-        private Button btnReverse_tab2;
-        private Button btnStop_tab2;
-        private Button btnPlay_tab2;
+        private TrackBar tbTestBrightness;
+        private Button btnTestReverse;
+        private Button btnTestStop;
+        private Button btnTestPlay;
     }
 }

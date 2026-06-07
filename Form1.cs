@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Text.Json;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.IO.Compression;
 using System.Globalization;
@@ -35,6 +36,8 @@ namespace DataManager
         private bool _trainingStopRequested = false;
         private SynchronizationContext? _uiContext;
         private Image? _trainButtonIdleImage;
+        private string _selectedModelFile = "";
+        private string _selectedPredictionResultsFile = "";
         private readonly Color _folderPathTextColor = Color.FromArgb(238, 243, 249);
         private readonly Color _folderPathWarningColor = Color.FromArgb(248, 113, 113);
         private readonly List<Panel> _imageRangeMarkers = new List<Panel>();
@@ -42,8 +45,9 @@ namespace DataManager
         private const int BasePlaybackIntervalMs = 50;
         private const string UiFontFamily = "Malgun Gothic";
         private const string WslSimulationProjectPath = "~/mysim";
-        private const string WslModelFile = "models/mypilot.h5";
-        private const string WslPredictionResultsFile = "models/results.csv";
+        private const string WslModelDirectory = "models";
+        private const string WslModelFilePattern = "models/*.h5";
+        private const string WslPredictionResultsFilePattern = "models/*.csv";
 
         private class DeleteAction
         {
@@ -60,6 +64,16 @@ namespace DataManager
 
         [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
         private static extern int StrCmpLogicalW(string psz1, string psz2);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, ref Point lParam);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+        private const int EmGetScrollPos = 0x04DD;
+        private const int EmSetScrollPos = 0x04DE;
+        private const int WmSetRedraw = 0x000B;
 
         public Form1()
         {
@@ -78,26 +92,37 @@ namespace DataManager
             tbPlaybackSpeed.AutoSize = false;
             tbImageNavigator.AutoSize = false;
             tbTestImageNavigator.AutoSize = false;
-            if (trackBar_tab2 != null) trackBar_tab2.AutoSize = false;
+            if (tbTestBrightness != null) tbTestBrightness.AutoSize = false;
+            if (tbTestPlaybackSpeed != null) tbTestPlaybackSpeed.AutoSize = false;
 
             tbPlaybackSpeed.TickStyle = TickStyle.None;
             tbImageNavigator.TickStyle = TickStyle.BottomRight;
             tbTestImageNavigator.TickStyle = TickStyle.BottomRight;
-            if (trackBar_tab2 != null) trackBar_tab2.TickStyle = TickStyle.None;
+            if (tbTestBrightness != null) tbTestBrightness.TickStyle = TickStyle.None;
+            if (tbTestPlaybackSpeed != null) tbTestPlaybackSpeed.TickStyle = TickStyle.None;
 
             tbPlaybackSpeed.Minimum = 25;
             tbPlaybackSpeed.Maximum = 400;
             tbPlaybackSpeed.Value = 100;
-            if (trackBar_tab2 != null)
+            if (tbTestPlaybackSpeed != null)
             {
-                trackBar_tab2.Minimum = 25;
-                trackBar_tab2.Maximum = 400;
-                trackBar_tab2.Value = 100;
+                tbTestPlaybackSpeed.Minimum = 25;
+                tbTestPlaybackSpeed.Maximum = 400;
+                tbTestPlaybackSpeed.Value = 100;
+            }
+            if (tbTestBrightness != null)
+            {
+                tbTestBrightness.Minimum = 0;
+                tbTestBrightness.Maximum = 4;
+                tbTestBrightness.Value = 2;
             }
 
             InitializeDataInfoGrid();
             ResetTrainingSummary();
             UpdatePlaybackSpeedLabel();
+            UpdateTestPlaybackSpeedLabel();
+            UpdateTestBrightnessLabel();
+            UpdateSelectedArtifactTextBoxes();
             ConfigureResponsiveLayout();
             lvDataItems.MultiSelect = true;
             lvDataItems.HideSelection = false;
@@ -113,14 +138,20 @@ namespace DataManager
             lvDataItems.MouseUp += lvDataItems_MouseUp;
 
             tbImageNavigator.Scroll += tbImageNavigator_Scroll;
-            if (trackBar_tab2 != null) trackBar_tab2.Scroll += trackBar_tab2_Scroll;
+            if (tbTestBrightness != null) tbTestBrightness.Scroll += tbTestBrightness_Scroll;
+            if (tbTestPlaybackSpeed != null) tbTestPlaybackSpeed.Scroll += tbTestPlaybackSpeed_Scroll;
 
-            btnPlay_tab2.Click -= btnPlay_tab2_Click;
-            btnPlay_tab2.Click += btnPlay_tab2_Click;
-            btnStop_tab2.Click -= btnStop_tab2_Click;
-            btnStop_tab2.Click += btnStop_tab2_Click;
-            btnReverse_tab2.Click -= btnReverse_tab2_Click;
-            btnReverse_tab2.Click += btnReverse_tab2_Click;
+            btnSelectModelFile.Click -= btnSelectModelFile_Click;
+            btnSelectModelFile.Click += btnSelectModelFile_Click;
+            btnSelectPredictionCsv.Click -= btnSelectPredictionCsv_Click;
+            btnSelectPredictionCsv.Click += btnSelectPredictionCsv_Click;
+
+            btnTestPlay.Click -= btnTestPlay_Click;
+            btnTestPlay.Click += btnTestPlay_Click;
+            btnTestStop.Click -= btnTestStop_Click;
+            btnTestStop.Click += btnTestStop_Click;
+            btnTestReverse.Click -= btnTestReverse_Click;
+            btnTestReverse.Click += btnTestReverse_Click;
 
             if (tbTestImageNavigator != null)
             {
@@ -291,8 +322,23 @@ namespace DataManager
             pbTestPreview.SetBounds(margin, 41, previewWidth, previewHeight);
             btnStartTest.SetBounds(margin, pbTestPreview.Bottom + 12, previewWidth, 46);
             btnShowCurrentPrediction.SetBounds(margin, btnStartTest.Bottom + 8, previewWidth, 40);
-            lblPlaybackSpeed_tab2.SetBounds(trackBar_tab2.Right + 8, trackBar_tab2.Top + 2, 70, 32);
-            tbTestImageNavigator.SetBounds(margin, btnShowCurrentPrediction.Bottom + 10, Math.Max(120, width - (margin * 2)), 30);
+            int controlLeft = pbTestPreview.Right + 23;
+            int controlWidth = Math.Min(460, Math.Max(280, width - controlLeft - 12));
+            lblTestCurrentIndex.SetBounds(controlLeft, 41, 220, 74);
+            btnStartTest.SetBounds(lblTestCurrentIndex.Right + 14, 41, Math.Max(160, controlWidth - 234), 74);
+            btnShowCurrentPrediction.SetBounds(controlLeft, 139, controlWidth, 46);
+            btnSelectModelFile.SetBounds(controlLeft, 195, 132, 32);
+            txtSelectedModelFile.SetBounds(btnSelectModelFile.Right + 8, 195, Math.Max(160, controlWidth - 140), 32);
+            btnSelectPredictionCsv.SetBounds(controlLeft, 235, 132, 32);
+            txtSelectedPredictionCsv.SetBounds(btnSelectPredictionCsv.Right + 8, 235, Math.Max(160, controlWidth - 140), 32);
+            tbTestPlaybackSpeed.SetBounds(controlLeft, 278, Math.Max(120, controlWidth - 70), 45);
+            lblTestPlaybackSpeed.SetBounds(tbTestPlaybackSpeed.Right + 8, tbTestPlaybackSpeed.Top + 2, 70, 32);
+            tbTestBrightness.SetBounds(controlLeft, 325, Math.Max(120, controlWidth - 70), 45);
+            lblTestBrightness.SetBounds(tbTestBrightness.Right + 8, tbTestBrightness.Top + 2, 70, 32);
+            btnTestPlay.SetBounds(controlLeft, 378, 145, 48);
+            btnTestStop.SetBounds(btnTestPlay.Right + 11, 378, 148, 48);
+            btnTestReverse.SetBounds(btnTestStop.Right + 11, 378, 146, 48);
+            tbTestImageNavigator.SetBounds(margin, Math.Max(40, height - 58), Math.Max(120, width - (margin * 2)), 30);
         }
 
         private void EnsureDataChartsLayout()
@@ -336,7 +382,7 @@ namespace DataManager
             const int margin = 12;
             tbTestImageNavigator.SetBounds(
                 margin,
-                btnShowCurrentPrediction.Bottom + 10,
+                Math.Max(40, gbModelTest.ClientSize.Height - 58),
                 Math.Max(100, gbModelTest.ClientSize.Width - (margin * 2)),
                 30);
         }
@@ -646,7 +692,7 @@ namespace DataManager
             }
 
             ShowFrame(_currentIndex);
-            _playTimer.Interval = GetPlaybackInterval();
+            _playTimer.Interval = GetTestPlaybackInterval();
             _playTimer.Start();
         }
 
@@ -661,9 +707,9 @@ namespace DataManager
         private void btnReverse_Click(object sender, EventArgs e) { _isReversed = true; StartPlayback(); }
         private void btnStop_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; _playTimer.Stop(); }
 
-        private void btnPlay_tab2_Click(object? sender, EventArgs e) { _isReversed = false; StartTestPlayback(); }
-        private void btnReverse_tab2_Click(object? sender, EventArgs e) { _isReversed = true; StartTestPlayback(); }
-        private void btnStop_tab2_Click(object? sender, EventArgs e) { if (!EnsureDataLoaded()) return; _playTimer.Stop(); }
+        private void btnTestPlay_Click(object? sender, EventArgs e) { _isReversed = false; StartTestPlayback(); }
+        private void btnTestReverse_Click(object? sender, EventArgs e) { _isReversed = true; StartTestPlayback(); }
+        private void btnTestStop_Click(object? sender, EventArgs e) { if (!EnsureDataLoaded()) return; _playTimer.Stop(); }
 
         #endregion
 
@@ -730,7 +776,47 @@ namespace DataManager
             if (IsDisposed || !IsHandleCreated) return;
             if (txtTrainingLog == null || txtTrainingLog.IsDisposed) return;
             UpdateTrainingSummaryFromLog(message);
-            txtTrainingLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}\r\n");
+            AppendTrainingLogLine($"[{DateTime.Now:HH:mm:ss}] {message}\r\n");
+        }
+
+        private void AppendTrainingLogLine(string logLine)
+        {
+            bool shouldAutoScroll = IsTrainingLogScrolledToBottom();
+            int selectionStart = txtTrainingLog.SelectionStart;
+            int selectionLength = txtTrainingLog.SelectionLength;
+            Point scrollPosition = Point.Empty;
+
+            if (!shouldAutoScroll)
+            {
+                SendMessage(txtTrainingLog.Handle, EmGetScrollPos, IntPtr.Zero, ref scrollPosition);
+                SendMessage(txtTrainingLog.Handle, WmSetRedraw, IntPtr.Zero, IntPtr.Zero);
+            }
+
+            txtTrainingLog.AppendText(logLine);
+
+            if (shouldAutoScroll)
+            {
+                txtTrainingLog.SelectionStart = txtTrainingLog.TextLength;
+                txtTrainingLog.SelectionLength = 0;
+                txtTrainingLog.ScrollToCaret();
+                return;
+            }
+
+            txtTrainingLog.SelectionStart = Math.Min(selectionStart, txtTrainingLog.TextLength);
+            txtTrainingLog.SelectionLength = Math.Min(selectionLength, txtTrainingLog.TextLength - txtTrainingLog.SelectionStart);
+            SendMessage(txtTrainingLog.Handle, EmSetScrollPos, IntPtr.Zero, ref scrollPosition);
+            SendMessage(txtTrainingLog.Handle, WmSetRedraw, new IntPtr(1), IntPtr.Zero);
+            txtTrainingLog.Invalidate();
+        }
+
+        private bool IsTrainingLogScrolledToBottom()
+        {
+            if (txtTrainingLog.TextLength == 0) return true;
+
+            int bottomCharIndex = txtTrainingLog.GetCharIndexFromPosition(new Point(1, txtTrainingLog.ClientSize.Height - 1));
+            int bottomVisibleLine = txtTrainingLog.GetLineFromCharIndex(bottomCharIndex);
+            int lastLine = txtTrainingLog.GetLineFromCharIndex(txtTrainingLog.TextLength);
+            return bottomVisibleLine >= lastLine - 1;
         }
 
         private void ResetTrainingSummary()
@@ -798,7 +884,7 @@ namespace DataManager
             }
             if (notImprovedMatch.Success)
             {
-                lblTrainingStatusValue.Text = $"개선 없음 best {notImprovedMatch.Groups[1].Value}";
+                lblTrainingStatusValue.Text = $"개선 없음 최적값 {notImprovedMatch.Groups[1].Value}";
                 lblTrainingStatusValue.ForeColor = Color.FromArgb(245, 176, 65);
             }
         }
@@ -878,6 +964,121 @@ namespace DataManager
             return "'" + value.Replace("'", "'\"'\"'") + "'";
         }
 
+        private string CreateTimestampedWslArtifactPath(string prefix, string extension)
+        {
+            return $"{WslModelDirectory}/{prefix}_{DateTime.Now:yyyyMMdd_HHmmss}{extension}";
+        }
+
+        private string NormalizeSelectedArtifactPath(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath)) return "";
+
+            string fileName = Path.GetFileName(filePath);
+            return string.IsNullOrWhiteSpace(fileName)
+                ? filePath.Replace("\\", "/")
+                : $"{WslModelDirectory}/{fileName}";
+        }
+
+        private void UpdateSelectedArtifactTextBoxes()
+        {
+            if (txtSelectedModelFile != null)
+                txtSelectedModelFile.Text = GetDisplayArtifactName(_selectedModelFile);
+            if (txtSelectedPredictionCsv != null)
+                txtSelectedPredictionCsv.Text = GetDisplayArtifactName(_selectedPredictionResultsFile);
+        }
+
+        private string GetDisplayArtifactName(string artifactPath)
+        {
+            return string.IsNullOrWhiteSpace(artifactPath) ? "최신 파일 자동 선택" : Path.GetFileName(artifactPath);
+        }
+
+        private async Task<string> ResolveModelFileForPredictionAsync()
+        {
+            if (!string.IsNullOrWhiteSpace(_selectedModelFile)) return _selectedModelFile;
+            return await GetLatestWslArtifactAsync(WslModelFilePattern, "학습 모델(.h5)");
+        }
+
+        private async Task<string> ResolvePredictionResultsFileAsync()
+        {
+            if (!string.IsNullOrWhiteSpace(_selectedPredictionResultsFile)) return _selectedPredictionResultsFile;
+            return await GetLatestWslArtifactAsync(WslPredictionResultsFilePattern, "예측 결과(.csv)");
+        }
+
+        private async Task<string> GetLatestWslArtifactAsync(string pattern, string displayName)
+        {
+            string command = $"cd {WslSimulationProjectPath} || exit 2; ls -t {pattern} 2>/dev/null | head -n 1";
+            string latest = (await RunWslBashCommandAsync(command)).Trim();
+            if (string.IsNullOrWhiteSpace(latest))
+                throw new InvalidOperationException($"{displayName} 파일을 찾을 수 없습니다.");
+
+            return latest;
+        }
+
+        private async Task<string> GetWslModelsWindowsPathAsync()
+        {
+            string command = $"cd {WslSimulationProjectPath} && mkdir -p {BashQuote(WslModelDirectory)} && wslpath -w {BashQuote(WslModelDirectory)}";
+            return (await RunWslBashCommandAsync(command)).Trim();
+        }
+
+        private async Task<string> RunWslBashCommandAsync(string bashCommand)
+        {
+            ProcessStartInfo start = new ProcessStartInfo();
+            start.FileName = "wsl.exe";
+            start.Arguments = GetWslDistroArgument() + "bash -lc \"" + bashCommand.Replace("\"", "\\\"") + "\"";
+            start.UseShellExecute = false;
+            start.RedirectStandardOutput = true;
+            start.RedirectStandardError = true;
+            start.CreateNoWindow = true;
+
+            using Process process = Process.Start(start) ?? throw new InvalidOperationException("WSL command could not be started.");
+            string output = await process.StandardOutput.ReadToEndAsync();
+            string error = await process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
+
+            if (process.ExitCode != 0)
+                throw new InvalidOperationException(string.IsNullOrWhiteSpace(error) ? $"WSL command failed. ExitCode={process.ExitCode}" : error.Trim());
+
+            return output;
+        }
+
+        private async void btnSelectModelFile_Click(object? sender, EventArgs e)
+        {
+            await SelectArtifactFileAsync("학습 모델 선택", "H5 model (*.h5)|*.h5|All files (*.*)|*.*", path =>
+            {
+                _selectedModelFile = NormalizeSelectedArtifactPath(path);
+            });
+        }
+
+        private async void btnSelectPredictionCsv_Click(object? sender, EventArgs e)
+        {
+            await SelectArtifactFileAsync("예측 결과 선택", "CSV file (*.csv)|*.csv|All files (*.*)|*.*", path =>
+            {
+                _selectedPredictionResultsFile = NormalizeSelectedArtifactPath(path);
+            });
+        }
+
+        private async Task SelectArtifactFileAsync(string title, string filter, Action<string> setSelectedPath)
+        {
+            try
+            {
+                using OpenFileDialog dialog = new OpenFileDialog();
+                dialog.Title = title;
+                dialog.Filter = filter;
+                dialog.InitialDirectory = await GetWslModelsWindowsPathAsync();
+                dialog.CheckFileExists = true;
+                dialog.Multiselect = false;
+
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+                setSelectedPath(dialog.FileName);
+                UpdateSelectedArtifactTextBoxes();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("파일 선택 중 오류가 발생했습니다: " + ex.Message);
+            }
+        }
+
         private void SetTrainingButtonRunningState(bool isRunning)
         {
             if (btnTrain == null) return;
@@ -886,7 +1087,7 @@ namespace DataManager
             {
                 btnTrain.Enabled = true;
                 btnTrain.BackgroundImage = null;
-                btnTrain.Text = "Stop";
+                btnTrain.Text = "멈춤";
                 StyleButton(btnTrain, Color.FromArgb(248, 113, 113), Color.White, Color.FromArgb(248, 113, 113));
                 return;
             }
@@ -977,10 +1178,11 @@ namespace DataManager
 
                 string envName = "e2e_env";
                 string projectPath = WslSimulationProjectPath;
+                string outputModelFile = CreateTimestampedWslArtifactPath("mypilot", ".h5");
 
                 string installCmd = "pip install numpy==1.24.3 pandas==2.0.3 tensorflow==2.13.0 albumentations imgaug";
                 string importCmd = $"rm -rf ./data && mkdir -p ./data && cp {BashQuote(wslTrainingZipPath)} ./training_data.zip && python -m zipfile -e ./training_data.zip ./data && test -d ./data/images && ls ./data/*.catalog >/dev/null";
-                string trainCmd = "python train.py --tubs ./data --model ./models/mypilot.h5";
+                string trainCmd = $"python train.py --tubs ./data --model {BashQuote(outputModelFile)}";
 
                 string bashCmd = BuildWslCondaCommand(envName, $"cd {projectPath} && {importCmd} && {installCmd} && {trainCmd}");
 
@@ -1018,6 +1220,12 @@ namespace DataManager
                 else
                 {
                     AppendTrainingLog($"Training process finished. ExitCode={process.ExitCode}");
+                    if (process.ExitCode == 0)
+                    {
+                        _selectedModelFile = outputModelFile;
+                        UpdateSelectedArtifactTextBoxes();
+                        AppendTrainingLog($"Model saved: {outputModelFile}");
+                    }
                 }
             }
             catch (Exception ex) when (!_trainingStopRequested)
@@ -1055,8 +1263,11 @@ namespace DataManager
                 AppendTrainingLog("Test session started. Syncing paths.");
                 string envName = "e2e_env";
                 string projectPath = WslSimulationProjectPath;
-                string modelFile = WslModelFile;
-                string resultsFile = WslPredictionResultsFile;
+                string modelFile = await ResolveModelFileForPredictionAsync();
+                string resultsFile = CreateTimestampedWslArtifactPath("results", ".csv");
+                _selectedModelFile = modelFile;
+                _selectedPredictionResultsFile = resultsFile;
+                UpdateSelectedArtifactTextBoxes();
 
                 string appDir = Application.StartupPath;
                 string winPathsFile = Path.Combine(appDir, "win_paths.txt");
@@ -1172,7 +1383,7 @@ namespace DataManager
                 };
                 process.ErrorDataReceived += (_, args) =>
                 {
-                    if (!string.IsNullOrWhiteSpace(args.Data)) AppendTrainingLog("[Prediction error] " + args.Data);
+                    if (!string.IsNullOrWhiteSpace(args.Data)) AppendTrainingLog(args.Data);
                 };
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
@@ -1188,11 +1399,16 @@ namespace DataManager
 
                 string[] resultLines = await ReadWslPredictionResultsAsync(projectPath, resultsFile);
                 if (LoadPredictionResults(resultLines))
+                {
+                    _selectedPredictionResultsFile = resultsFile;
+                    UpdateSelectedArtifactTextBoxes();
                     AppendTrainingLog("Prediction finished. Check the charts and overlay.");
+                    AppendTrainingLog($"Prediction results saved: {resultsFile}");
+                }
             }
             catch (Exception ex) when (!_testStopRequested)
             {
-                MessageBox.Show("Test failed: " + ex.Message);
+                MessageBox.Show("테스트 실패: " + ex.Message);
             }
             catch
             {
@@ -1213,10 +1429,13 @@ namespace DataManager
 
             try
             {
-                string[] resultLines = await ReadWslPredictionResultsAsync(WslSimulationProjectPath, WslPredictionResultsFile);
+                string resultsFile = await ResolvePredictionResultsFileAsync();
+                _selectedPredictionResultsFile = resultsFile;
+                UpdateSelectedArtifactTextBoxes();
+                string[] resultLines = await ReadWslPredictionResultsAsync(WslSimulationProjectPath, resultsFile);
                 if (LoadPredictionResults(resultLines))
                 {
-                    AppendTrainingLog($"Loaded existing prediction results from {WslSimulationProjectPath}/{WslPredictionResultsFile}.");
+                    AppendTrainingLog($"Loaded existing prediction results from {WslSimulationProjectPath}/{resultsFile}.");
                 }
             }
             catch (Exception ex)
@@ -1255,6 +1474,13 @@ namespace DataManager
                 AppendTrainingLog($"Prediction result count differs from data count. results={lines.Length}, data={_allData.Count}");
             }
 
+            foreach (var data in _allData)
+            {
+                data.PredictedSteering = 0;
+                data.PredictedSpeed = 0;
+                data.HasPrediction = false;
+            }
+
             int count = Math.Min(lines.Length, _allData.Count);
             for (int i = 0; i < count; i++)
             {
@@ -1266,6 +1492,7 @@ namespace DataManager
                 {
                     _allData[i].PredictedSteering = angle;
                     _allData[i].PredictedSpeed = throttle * 100;
+                    _allData[i].HasPrediction = true;
                 }
             }
 
@@ -1568,7 +1795,7 @@ namespace DataManager
             if (!File.Exists(data.ImagePath)) return;
 
             using Image originalImage = LoadImageWithoutLock(data.ImagePath);
-            Bitmap frameBitmap = new Bitmap(originalImage);
+            Bitmap frameBitmap = CreateBrightnessAdjustedBitmap(originalImage, GetTestBrightnessFactor());
 
             if (_showTestOverlay)
             {
@@ -1576,6 +1803,35 @@ namespace DataManager
             }
 
             pbTestPreview.Image = frameBitmap;
+        }
+
+        private Bitmap CreateBrightnessAdjustedBitmap(Image sourceImage, float brightnessFactor)
+        {
+            Bitmap bitmap = new Bitmap(sourceImage.Width, sourceImage.Height);
+            using Graphics graphics = Graphics.FromImage(bitmap);
+
+            ColorMatrix colorMatrix = new ColorMatrix(new[]
+            {
+                new[] { brightnessFactor, 0f, 0f, 0f, 0f },
+                new[] { 0f, brightnessFactor, 0f, 0f, 0f },
+                new[] { 0f, 0f, brightnessFactor, 0f, 0f },
+                new[] { 0f, 0f, 0f, 1f, 0f },
+                new[] { 0f, 0f, 0f, 0f, 1f }
+            });
+
+            using ImageAttributes attributes = new ImageAttributes();
+            attributes.SetColorMatrix(colorMatrix);
+            graphics.DrawImage(
+                sourceImage,
+                new Rectangle(0, 0, sourceImage.Width, sourceImage.Height),
+                0,
+                0,
+                sourceImage.Width,
+                sourceImage.Height,
+                GraphicsUnit.Pixel,
+                attributes);
+
+            return bitmap;
         }
 
         private void DrawControlBars(Bitmap frameBitmap, DrivingData data)
@@ -1596,13 +1852,16 @@ namespace DataManager
                 Color.FromArgb(45, 212, 120),
                 maxLength);
 
-            DrawControlBar(
-                graphics,
-                origin,
-                data.PredictedSteering,
-                NormalizeThrottle(data.PredictedSpeed),
-                Color.FromArgb(59, 130, 246),
-                maxLength);
+            if (data.HasPrediction)
+            {
+                DrawControlBar(
+                    graphics,
+                    origin,
+                    data.PredictedSteering,
+                    NormalizeThrottle(data.PredictedSpeed),
+                    Color.FromArgb(59, 130, 246),
+                    maxLength);
+            }
         }
 
         private void DrawControlBar(Graphics graphics, PointF start, double angle, double throttle, Color color, float maxLength)
@@ -1726,7 +1985,7 @@ namespace DataManager
         private void UpdateCharts()
         {
             if (_allData.Count == 0) return;
-            int step = Math.Max(1, _allData.Count / 100);
+            int step = Math.Max(1, _allData.Count / (_showTestOverlay ? 500 : 100));
             int maxIdx = _allData.Count - 1;
 
             if (chtSteeringValue != null) chtSteeringValue.Series[0].Points.Clear();
@@ -1751,12 +2010,14 @@ namespace DataManager
                 if (chtTestSteeringValue != null)
                 {
                     chtTestSteeringValue.Series["Actual"].Points.AddXY(d.Index, d.Steering);
-                    chtTestSteeringValue.Series["Predict"].Points.AddXY(d.Index, d.PredictedSteering);
+                    if (_showTestOverlay && d.HasPrediction)
+                        chtTestSteeringValue.Series["Predict"].Points.AddXY(d.Index, d.PredictedSteering);
                 }
                 if (chtTestSpeedValue != null)
                 {
                     chtTestSpeedValue.Series["Actual"].Points.AddXY(d.Index, d.Speed);
-                    chtTestSpeedValue.Series["Predict"].Points.AddXY(d.Index, d.PredictedSpeed);
+                    if (_showTestOverlay && d.HasPrediction)
+                        chtTestSpeedValue.Series["Predict"].Points.AddXY(d.Index, d.PredictedSpeed);
                 }
             }
 
@@ -1765,6 +2026,7 @@ namespace DataManager
                 if (c == null) continue;
                 c.ChartAreas[0].AxisX.Minimum = 0; c.ChartAreas[0].AxisX.Maximum = maxIdx;
                 c.ChartAreas[0].AxisX.LabelStyle.Format = "0;0;0";
+                c.ChartAreas[0].RecalculateAxesScale();
                 c.Invalidate();
             }
         }
@@ -1842,28 +2104,55 @@ namespace DataManager
         {
             string speedText = $"x{tbPlaybackSpeed.Value / 100.0:0.##}";
             if (lblPlaybackSpeed != null) lblPlaybackSpeed.Text = speedText;
-            if (lblPlaybackSpeed_tab2 != null) lblPlaybackSpeed_tab2.Text = speedText;
         }
         private int GetPlaybackInterval() { return Math.Max(1, (int)(BasePlaybackIntervalMs / (tbPlaybackSpeed.Value / 100.0))); }
+
+        private void UpdateTestPlaybackSpeedLabel()
+        {
+            if (lblTestPlaybackSpeed != null) lblTestPlaybackSpeed.Text = $"배속 x{tbTestPlaybackSpeed.Value / 100.0:0.##}";
+        }
+
+        private int GetTestPlaybackInterval()
+        {
+            return Math.Max(1, (int)(BasePlaybackIntervalMs / (tbTestPlaybackSpeed.Value / 100.0)));
+        }
+
+        private float GetTestBrightnessFactor()
+        {
+            if (tbTestBrightness == null) return 1f;
+
+            return tbTestBrightness.Value <= 2
+                ? 0.4f + (tbTestBrightness.Value * 0.3f)
+                : 1f + ((tbTestBrightness.Value - 2) * 0.5f);
+        }
+
+        private void UpdateTestBrightnessLabel()
+        {
+            if (lblTestBrightness != null) lblTestBrightness.Text = $"밝기 x{GetTestBrightnessFactor():0.##}";
+        }
 
         private void tbPlaybackSpeed_Scroll(object sender, EventArgs e)
         {
             if (!EnsureDataLoaded()) return;
 
-            if (trackBar_tab2 != null) trackBar_tab2.Value = tbPlaybackSpeed.Value;
-
             UpdatePlaybackSpeedLabel();
             if (_playTimer.Enabled) _playTimer.Interval = GetPlaybackInterval();
         }
 
-        private void trackBar_tab2_Scroll(object sender, EventArgs e)
+        private void tbTestPlaybackSpeed_Scroll(object? sender, EventArgs e)
         {
             if (!EnsureDataLoaded()) return;
 
-            if (trackBar_tab2 != null) tbPlaybackSpeed.Value = trackBar_tab2.Value;
+            UpdateTestPlaybackSpeedLabel();
+            if (_playTimer.Enabled) _playTimer.Interval = GetTestPlaybackInterval();
+        }
 
-            UpdatePlaybackSpeedLabel();
-            if (_playTimer.Enabled) _playTimer.Interval = GetPlaybackInterval();
+        private void tbTestBrightness_Scroll(object sender, EventArgs e)
+        {
+            if (!EnsureDataLoaded()) return;
+
+            UpdateTestBrightnessLabel();
+            ShowFrame(_currentIndex);
         }
 
         private void btnSetRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; _isRangeSettingMode = true; }
@@ -1921,6 +2210,11 @@ namespace DataManager
         {
 
         }
+
+        private void lblTestPlaybackSpeed_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 
     public class DrivingData
@@ -1931,6 +2225,7 @@ namespace DataManager
         public double Speed { get; set; }
         public double PredictedSteering { get; set; }
         public double PredictedSpeed { get; set; }
+        public bool HasPrediction { get; set; }
         public string CatalogFilePath { get; set; } = "";
         public string CatalogImageName { get; set; } = "";
         public int CatalogLineNumber { get; set; } = -1;
