@@ -16,6 +16,7 @@ namespace DataManager
         private Label lblTestCurrentIndex;
         private Button btnStartTest;
         private Button btnShowCurrentPrediction;
+        private Button btnPredictCurrentFrame;
         private Button btnSelectModelFile;
         private TextBox txtSelectedModelFile;
         private Button btnSelectPredictionCsv;
@@ -129,6 +130,7 @@ namespace DataManager
             lblTestCurrentIndex = new Label();
             btnShowCurrentPrediction = new Button();
             btnStartTest = new Button();
+            btnPredictCurrentFrame = new Button();
             btnSelectModelFile = new Button();
             txtSelectedModelFile = new TextBox();
             btnSelectPredictionCsv = new Button();
@@ -905,6 +907,7 @@ namespace DataManager
             // 
             gbTrainingSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             gbTrainingSetup.BackColor = Color.FromArgb(39, 50, 72);
+            gbTrainingSetup.Controls.Add(btnPredictCurrentFrame);
             gbTrainingSetup.Controls.Add(txtTrainingLog);
             gbTrainingSetup.Controls.Add(txtTrainingSavePath);
             gbTrainingSetup.Controls.Add(btnSelectTrainingSave);
@@ -928,6 +931,23 @@ namespace DataManager
             gbTrainingSetup.TabStop = false;
             gbTrainingSetup.Text = "데이터 학습";
             gbTrainingSetup.Enter += gbTrainingSetup_Enter;
+            // 
+            // btnPredictCurrentFrame
+            // 
+            btnPredictCurrentFrame.BackColor = Color.FromArgb(59, 130, 246);
+            btnPredictCurrentFrame.FlatAppearance.BorderColor = Color.FromArgb(96, 165, 250);
+            btnPredictCurrentFrame.FlatStyle = FlatStyle.Flat;
+            btnPredictCurrentFrame.Font = new Font("Microsoft Sans Serif", 10.52F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnPredictCurrentFrame.ForeColor = Color.White;
+            btnPredictCurrentFrame.Location = new Point(474, 218);
+            btnPredictCurrentFrame.Margin = new Padding(7, 5, 7, 5);
+            btnPredictCurrentFrame.Name = "btnPredictCurrentFrame";
+            btnPredictCurrentFrame.Size = new Size(281, 76);
+            btnPredictCurrentFrame.TabIndex = 12;
+            btnPredictCurrentFrame.Text = "현재 밝기로\r\n전체 예측";
+            toolTip.SetToolTip(btnPredictCurrentFrame, "현재 밝기 슬라이더 값으로 전체 테스트 이미지를 예측하고 차트에 반영");
+            btnPredictCurrentFrame.UseVisualStyleBackColor = false;
+            btnPredictCurrentFrame.Click += btnPredictCurrentFrame_Click;
             // 
             // txtTrainingLog
             // 

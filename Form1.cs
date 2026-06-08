@@ -1041,6 +1041,31 @@ namespace DataManager
             return $"/mnt/{drive}/{subPath}";
         }
 
+        private string ConvertImagePathToWslPath(string imagePath)
+        {
+            string fullPath = Path.GetFullPath(imagePath);
+            string normalized = fullPath.Replace("\\", "/");
+
+            if (normalized.StartsWith("//wsl.localhost/", StringComparison.OrdinalIgnoreCase) ||
+                normalized.StartsWith("//wsl$/", StringComparison.OrdinalIgnoreCase))
+            {
+                string[] parts = normalized.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length > 2)
+                    return "/" + string.Join("/", parts.Skip(2));
+            }
+
+            string root = Path.GetPathRoot(fullPath) ?? "";
+            if (root.Length < 2 || root[1] != ':')
+                throw new InvalidOperationException($"Unsupported image path: {imagePath}");
+
+            string subPath = fullPath.Substring(root.Length).Replace("\\", "/").TrimStart('/');
+            if (subPath.StartsWith("home/", StringComparison.OrdinalIgnoreCase))
+                return "/" + subPath;
+
+            string drive = char.ToLowerInvariant(root[0]).ToString();
+            return $"/mnt/{drive}/{subPath}";
+        }
+
         private string BashQuote(string value)
         {
             return "'" + value.Replace("'", "'\"'\"'") + "'";
@@ -1203,6 +1228,7 @@ namespace DataManager
             if (btnStartTest == null) return;
 
             btnStartTest.Enabled = true;
+            if (btnPredictCurrentFrame != null) btnPredictCurrentFrame.Enabled = !isRunning;
             if (isRunning)
             {
                 btnStartTest.Text = "Stop";
@@ -1346,7 +1372,11 @@ namespace DataManager
                 string envName = "e2e_env";
                 string projectPath = WslSimulationProjectPath;
                 string modelFile = await ResolveModelFileForPredictionAsync();
-                string resultsFile = CreateTimestampedWslArtifactPath("results", ".csv");
+                float predictionBrightnessFactor = GetTestBrightnessFactor();
+                string resultsPrefix = IsDefaultTestBrightness(predictionBrightnessFactor)
+                    ? "results"
+                    : $"results_brightness_{GetBrightnessToken(predictionBrightnessFactor)}";
+                string resultsFile = CreateTimestampedWslArtifactPath(resultsPrefix, ".csv");
                 _selectedModelFile = modelFile;
                 _selectedPredictionResultsFile = resultsFile;
                 UpdateSelectedArtifactTextBoxes();
@@ -1354,14 +1384,12 @@ namespace DataManager
                 string appDir = Application.StartupPath;
                 string winPathsFile = Path.Combine(appDir, "win_paths.txt");
 
-                var linuxPaths = _allData.Select(d =>
-                {
-                    string drive = Path.GetPathRoot(d.ImagePath).Substring(0, 1).ToLower();
-                    string subPath = d.ImagePath.Substring(Path.GetPathRoot(d.ImagePath).Length).Replace("\\", "/");
-                    return $"/mnt/{drive}/{subPath}";
-                }).ToList();
+                var linuxPaths = _allData
+                    .Select(d => ConvertImagePathToWslPath(d.ImagePath))
+                    .ToList();
                 File.WriteAllLines(winPathsFile, linuxPaths);
                 AppendTrainingLog($"Prepared {linuxPaths.Count} test images.");
+                AppendTrainingLog($"Prediction input brightness: x{predictionBrightnessFactor:0.##}.");
 
                 if (_testStopRequested)
                 {
@@ -1403,9 +1431,12 @@ namespace DataManager
                     "import tensorflow as tf",
                     "import numpy as np",
                     "from PIL import Image",
+                    $"brightness_factor = {predictionBrightnessFactor.ToString(CultureInfo.InvariantCulture)}",
                     "def preprocess_image(image_path):",
                     "    image = Image.open(image_path).convert('RGB').resize((160, 120))",
                     "    image_array = np.asarray(image, dtype=np.float64) / 255.0",
+                    "    if brightness_factor != 1.0:",
+                    "        image_array = np.clip(image_array * brightness_factor, 0.0, 1.0)",
                     "    return image_array",
                     "def extract_predictions(pred, count):",
                     "    if isinstance(pred, (list, tuple)):",
@@ -1430,9 +1461,16 @@ namespace DataManager
                     "print(f'Predicting {total} frames...', flush=True)",
                     "batch_size = 1024",
                     "results = ['0,0'] * total",
+                    "predicted_count = 0",
+                    "missing_examples = []",
                     "for start in range(0, total, batch_size):",
                     "    end = min(start + batch_size, total)",
-                    "    indexed_paths = [(idx, paths[idx]) for idx in range(start, end) if os.path.exists(paths[idx])]",
+                    "    indexed_paths = []",
+                    "    for idx in range(start, end):",
+                    "        if os.path.exists(paths[idx]):",
+                    "            indexed_paths.append((idx, paths[idx]))",
+                    "        elif len(missing_examples) < 3:",
+                    "            missing_examples.append(paths[idx])",
                     "    missing_count = (end - start) - len(indexed_paths)",
                     "    if indexed_paths:",
                     "        batch_indexes = [item[0] for item in indexed_paths]",
@@ -1440,7 +1478,11 @@ namespace DataManager
                     "        predictions = predict_image_batch(model, batch_paths)",
                     "        for idx, (angle, throttle) in zip(batch_indexes, predictions):",
                     "            results[idx] = f'{angle},{throttle}'",
+                    "        predicted_count += len(predictions)",
                     "    print(f'[{end}/{total}] predicted batch; missing={missing_count}', flush=True)",
+                    "if total > 0 and predicted_count == 0:",
+                    "    raise RuntimeError('No images were predicted. First missing paths: ' + ' | '.join(missing_examples))",
+                    "print(f'Predicted frames: {predicted_count}/{total}', flush=True)",
                     $"with open({JsonSerializer.Serialize(resultsFile)}, 'w') as f:",
                     "    f.write('\\n'.join(results))",
                     $"print('Prediction results saved to {resultsFile}.', flush=True)"
@@ -1457,15 +1499,31 @@ namespace DataManager
                 start.RedirectStandardError = true;
                 start.CreateNoWindow = true;
 
+                object predictionLogLock = new object();
+                List<string> predictionLogTail = new List<string>();
+                void CapturePredictionLogLine(string line)
+                {
+                    lock (predictionLogLock)
+                    {
+                        predictionLogTail.Add(line);
+                        if (predictionLogTail.Count > 25)
+                            predictionLogTail.RemoveAt(0);
+                    }
+                }
+
                 using Process process = Process.Start(start) ?? throw new InvalidOperationException("Prediction process could not be started.");
                 _testProcess = process;
                 process.OutputDataReceived += (_, args) =>
                 {
-                    if (!string.IsNullOrWhiteSpace(args.Data)) AppendTrainingLog(args.Data);
+                    if (string.IsNullOrWhiteSpace(args.Data)) return;
+                    CapturePredictionLogLine(args.Data);
+                    AppendTrainingLog(args.Data);
                 };
                 process.ErrorDataReceived += (_, args) =>
                 {
-                    if (!string.IsNullOrWhiteSpace(args.Data)) AppendTrainingLog(args.Data);
+                    if (string.IsNullOrWhiteSpace(args.Data)) return;
+                    CapturePredictionLogLine(args.Data);
+                    AppendTrainingLog(args.Data);
                 };
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
@@ -1477,7 +1535,18 @@ namespace DataManager
                 }
 
                 if (process.ExitCode != 0)
-                    throw new InvalidOperationException($"prediction process failed. ExitCode={process.ExitCode}");
+                {
+                    string detail;
+                    lock (predictionLogLock)
+                    {
+                        detail = string.Join("\r\n", predictionLogTail);
+                    }
+
+                    throw new InvalidOperationException(
+                        string.IsNullOrWhiteSpace(detail)
+                            ? $"prediction process failed. ExitCode={process.ExitCode}"
+                            : $"prediction process failed. ExitCode={process.ExitCode}\r\n\r\n{detail}");
+                }
 
                 string[] resultLines = await ReadWslPredictionResultsAsync(projectPath, resultsFile);
                 if (LoadPredictionResults(resultLines))
@@ -1526,6 +1595,19 @@ namespace DataManager
             }
         }
 
+        private void btnPredictCurrentFrame_Click(object? sender, EventArgs e)
+        {
+            if (!EnsureDataLoaded()) return;
+            if (_isTestRunning)
+            {
+                AppendTrainingLog("Brightness prediction is already running.");
+                return;
+            }
+
+            AppendTrainingLog($"Starting full prediction with brightness x{GetTestBrightnessFactor():0.##}.");
+            btnStartTest_Click(sender ?? btnPredictCurrentFrame, e);
+        }
+
         private async Task<string[]> ReadWslPredictionResultsAsync(string projectPath, string resultsFile)
         {
             ProcessStartInfo start = new ProcessStartInfo();
@@ -1564,6 +1646,8 @@ namespace DataManager
             }
 
             int count = Math.Min(lines.Length, _allData.Count);
+            int parsedCount = 0;
+            int zeroPredictionCount = 0;
             for (int i = 0; i < count; i++)
             {
                 string[] vals = lines[i].Split(',');
@@ -1575,7 +1659,15 @@ namespace DataManager
                     _allData[i].PredictedSteering = angle;
                     _allData[i].PredictedSpeed = throttle * 100;
                     _allData[i].HasPrediction = true;
+                    parsedCount++;
+                    if (Math.Abs(angle) < 0.0000001 && Math.Abs(throttle) < 0.0000001)
+                        zeroPredictionCount++;
                 }
+            }
+
+            if (parsedCount > 0 && zeroPredictionCount == parsedCount)
+            {
+                AppendTrainingLog("Warning: all loaded prediction values are 0,0. Check the prediction log for missing image paths or model output issues.");
             }
 
             _showTestOverlay = true;
@@ -2318,6 +2410,16 @@ namespace DataManager
             if (tbTestBrightness == null) return 1f;
 
             return tbTestBrightness.Value / 100f;
+        }
+
+        private bool IsDefaultTestBrightness(float brightnessFactor)
+        {
+            return Math.Abs(brightnessFactor - 1f) < 0.001f;
+        }
+
+        private string GetBrightnessToken(float brightnessFactor)
+        {
+            return Math.Round(brightnessFactor * 100).ToString("000", CultureInfo.InvariantCulture);
         }
 
         private void UpdateTestBrightnessLabel()
