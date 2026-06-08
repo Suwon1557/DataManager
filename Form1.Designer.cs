@@ -26,6 +26,8 @@ namespace DataManager
         private System.Windows.Forms.DataVisualization.Charting.Chart chtTestSteeringValue;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtTestSpeedValue;
         private Button btnTrain;
+        private Button btnSelectTrainingSave;
+        private TextBox txtTrainingSavePath;
         private TextBox txtTrainingLog;
         private Label lblTrainingEpochCaption;
         private Label lblTrainingEpochValue;
@@ -45,6 +47,7 @@ namespace DataManager
         private Button btnSelectFolder;
         private TextBox txtFolderPath;
         private Button btnCheckDataIntegrity;
+        private Button btnLoadSavedFolder;
         private Label lblTitle;
         private Button btnReverse;
         private Button btnStop;
@@ -57,6 +60,7 @@ namespace DataManager
         private Button btnCancelDelete;
         private Button btnDelete;
         private Button btnFilter;
+        private Button btnSaveCatalogState;
         private Panel pnlImageRangeMarker;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtSteeringValue;
         private System.Windows.Forms.DataVisualization.Charting.Chart chtSpeedValue;
@@ -85,9 +89,9 @@ namespace DataManager
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             tcMain = new ThemedTabControl();
             tpDataManager = new TabPage();
             gbDataContent = new GroupBox();
@@ -98,6 +102,7 @@ namespace DataManager
             btnCancelDelete = new Button();
             btnDelete = new Button();
             btnFilter = new Button();
+            btnSaveCatalogState = new Button();
             lblPlaybackSpeed = new Label();
             tbPlaybackSpeed = new TrackBar();
             btnReverse = new Button();
@@ -110,6 +115,7 @@ namespace DataManager
             pbDataPreview = new PictureBox();
             gbDataLoad = new GroupBox();
             btnCheckDataIntegrity = new Button();
+            btnLoadSavedFolder = new Button();
             txtFolderPath = new TextBox();
             btnSelectFolder = new Button();
             tpTrainingTest = new TabPage();
@@ -132,6 +138,8 @@ namespace DataManager
             pbTestPreview = new PictureBox();
             gbTrainingSetup = new GroupBox();
             txtTrainingLog = new TextBox();
+            txtTrainingSavePath = new TextBox();
+            btnSelectTrainingSave = new Button();
             lblTrainingStatusValue = new Label();
             lblTrainingStatusCaption = new Label();
             lblTrainingValLossValue = new Label();
@@ -200,6 +208,7 @@ namespace DataManager
             gbDataContent.Controls.Add(btnCancelDelete);
             gbDataContent.Controls.Add(btnDelete);
             gbDataContent.Controls.Add(btnFilter);
+            gbDataContent.Controls.Add(btnSaveCatalogState);
             gbDataContent.Controls.Add(lblPlaybackSpeed);
             gbDataContent.Controls.Add(tbPlaybackSpeed);
             gbDataContent.Controls.Add(btnReverse);
@@ -331,6 +340,24 @@ namespace DataManager
             btnFilter.UseVisualStyleBackColor = false;
             btnFilter.Click += btnFilter_Click_1;
             // 
+            // btnSaveCatalogState
+            // 
+            btnSaveCatalogState.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnSaveCatalogState.BackColor = Color.FromArgb(49, 62, 88);
+            btnSaveCatalogState.FlatAppearance.BorderColor = Color.FromArgb(245, 176, 65);
+            btnSaveCatalogState.FlatStyle = FlatStyle.Flat;
+            btnSaveCatalogState.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnSaveCatalogState.ForeColor = Color.FromArgb(238, 243, 249);
+            btnSaveCatalogState.Location = new Point(1336, 323);
+            btnSaveCatalogState.Margin = new Padding(7, 5, 7, 5);
+            btnSaveCatalogState.Name = "btnSaveCatalogState";
+            btnSaveCatalogState.Size = new Size(428, 32);
+            btnSaveCatalogState.TabIndex = 15;
+            btnSaveCatalogState.Text = "현재 데이터 저장";
+            toolTip.SetToolTip(btnSaveCatalogState, "현재 카탈로그 상태를 Save 폴더에 저장");
+            btnSaveCatalogState.UseVisualStyleBackColor = false;
+            btnSaveCatalogState.Click += btnSaveCatalogState_Click;
+            // 
             // lblPlaybackSpeed
             // 
             lblPlaybackSpeed.AutoSize = true;
@@ -416,29 +443,29 @@ namespace DataManager
             dgvDataInfo.AllowUserToDeleteRows = false;
             dgvDataInfo.AllowUserToResizeColumns = false;
             dgvDataInfo.AllowUserToResizeRows = false;
-            dataGridViewCellStyle4.BackColor = Color.FromArgb(28, 36, 54);
-            dgvDataInfo.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(28, 36, 54);
+            dgvDataInfo.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             dgvDataInfo.BackgroundColor = Color.FromArgb(22, 30, 46);
             dgvDataInfo.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle5.BackColor = Color.FromArgb(49, 62, 88);
-            dataGridViewCellStyle5.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle5.ForeColor = Color.FromArgb(245, 176, 65);
-            dataGridViewCellStyle5.SelectionBackColor = Color.FromArgb(49, 62, 88);
-            dataGridViewCellStyle5.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
-            dgvDataInfo.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = Color.FromArgb(49, 62, 88);
+            dataGridViewCellStyle2.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle2.ForeColor = Color.FromArgb(245, 176, 65);
+            dataGridViewCellStyle2.SelectionBackColor = Color.FromArgb(49, 62, 88);
+            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
+            dgvDataInfo.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             dgvDataInfo.ColumnHeadersHeight = 42;
             dgvDataInfo.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvDataInfo.Columns.AddRange(new DataGridViewColumn[] { colDataName, colDataValue });
-            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = Color.FromArgb(22, 30, 46);
-            dataGridViewCellStyle6.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            dataGridViewCellStyle6.ForeColor = Color.FromArgb(245, 176, 65);
-            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(49, 62, 88);
-            dataGridViewCellStyle6.SelectionForeColor = Color.FromArgb(245, 176, 65);
-            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
-            dgvDataInfo.DefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.FromArgb(22, 30, 46);
+            dataGridViewCellStyle3.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            dataGridViewCellStyle3.ForeColor = Color.FromArgb(245, 176, 65);
+            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(49, 62, 88);
+            dataGridViewCellStyle3.SelectionForeColor = Color.FromArgb(245, 176, 65);
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
+            dgvDataInfo.DefaultCellStyle = dataGridViewCellStyle3;
             dgvDataInfo.EnableHeadersVisualStyles = false;
             dgvDataInfo.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
             dgvDataInfo.GridColor = Color.FromArgb(103, 119, 148);
@@ -514,6 +541,7 @@ namespace DataManager
             gbDataLoad.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             gbDataLoad.BackColor = Color.FromArgb(39, 50, 72);
             gbDataLoad.Controls.Add(btnCheckDataIntegrity);
+            gbDataLoad.Controls.Add(btnLoadSavedFolder);
             gbDataLoad.Controls.Add(txtFolderPath);
             gbDataLoad.Controls.Add(btnSelectFolder);
             gbDataLoad.Font = new Font("맑은 고딕", 9.35F, FontStyle.Bold, GraphicsUnit.Point, 129);
@@ -545,6 +573,23 @@ namespace DataManager
             btnCheckDataIntegrity.UseVisualStyleBackColor = false;
             btnCheckDataIntegrity.Click += btnCheckDataIntegrity_Click;
             // 
+            // btnLoadSavedFolder
+            // 
+            btnLoadSavedFolder.BackColor = Color.FromArgb(49, 62, 88);
+            btnLoadSavedFolder.FlatAppearance.BorderColor = Color.FromArgb(245, 176, 65);
+            btnLoadSavedFolder.FlatStyle = FlatStyle.Flat;
+            btnLoadSavedFolder.Font = new Font("맑은 고딕", 11F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnLoadSavedFolder.ForeColor = Color.FromArgb(238, 243, 249);
+            btnLoadSavedFolder.Location = new Point(246, 41);
+            btnLoadSavedFolder.Margin = new Padding(7, 5, 7, 5);
+            btnLoadSavedFolder.Name = "btnLoadSavedFolder";
+            btnLoadSavedFolder.Size = new Size(214, 45);
+            btnLoadSavedFolder.TabIndex = 3;
+            btnLoadSavedFolder.Text = "저장본 불러오기";
+            toolTip.SetToolTip(btnLoadSavedFolder, "Save 폴더 아래 저장본 불러오기");
+            btnLoadSavedFolder.UseVisualStyleBackColor = false;
+            btnLoadSavedFolder.Click += btnLoadSavedFolder_Click;
+            // 
             // txtFolderPath
             // 
             txtFolderPath.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
@@ -552,11 +597,11 @@ namespace DataManager
             txtFolderPath.BorderStyle = BorderStyle.FixedSingle;
             txtFolderPath.Font = new Font("Constantia", 20.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
             txtFolderPath.ForeColor = Color.FromArgb(238, 243, 249);
-            txtFolderPath.Location = new Point(246, 45);
+            txtFolderPath.Location = new Point(474, 45);
             txtFolderPath.Margin = new Padding(7, 5, 7, 5);
             txtFolderPath.Name = "txtFolderPath";
             txtFolderPath.ReadOnly = true;
-            txtFolderPath.Size = new Size(1211, 40);
+            txtFolderPath.Size = new Size(983, 40);
             txtFolderPath.TabIndex = 1;
             txtFolderPath.Text = "(폴더경로)";
             txtFolderPath.TextChanged += txtFolderPath_TextChanged;
@@ -861,6 +906,8 @@ namespace DataManager
             gbTrainingSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             gbTrainingSetup.BackColor = Color.FromArgb(39, 50, 72);
             gbTrainingSetup.Controls.Add(txtTrainingLog);
+            gbTrainingSetup.Controls.Add(txtTrainingSavePath);
+            gbTrainingSetup.Controls.Add(btnSelectTrainingSave);
             gbTrainingSetup.Controls.Add(lblTrainingStatusValue);
             gbTrainingSetup.Controls.Add(lblTrainingStatusCaption);
             gbTrainingSetup.Controls.Add(lblTrainingValLossValue);
@@ -898,83 +945,114 @@ namespace DataManager
             txtTrainingLog.Size = new Size(1083, 286);
             txtTrainingLog.TabIndex = 1;
             // 
+            // txtTrainingSavePath
+            // 
+            txtTrainingSavePath.BackColor = Color.FromArgb(12, 18, 30);
+            txtTrainingSavePath.BorderStyle = BorderStyle.FixedSingle;
+            txtTrainingSavePath.Font = new Font("맑은 고딕", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            txtTrainingSavePath.ForeColor = Color.FromArgb(238, 243, 249);
+            txtTrainingSavePath.Location = new Point(250, 135);
+            txtTrainingSavePath.Margin = new Padding(7, 5, 7, 5);
+            txtTrainingSavePath.Name = "txtTrainingSavePath";
+            txtTrainingSavePath.ReadOnly = true;
+            txtTrainingSavePath.Size = new Size(505, 35);
+            txtTrainingSavePath.TabIndex = 2;
+            txtTrainingSavePath.Text = "(학습용 Save 경로)";
+            // 
+            // btnSelectTrainingSave
+            // 
+            btnSelectTrainingSave.BackColor = Color.FromArgb(49, 62, 88);
+            btnSelectTrainingSave.FlatAppearance.BorderColor = Color.FromArgb(245, 176, 65);
+            btnSelectTrainingSave.FlatStyle = FlatStyle.Flat;
+            btnSelectTrainingSave.Font = new Font("맑은 고딕", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnSelectTrainingSave.ForeColor = Color.FromArgb(238, 243, 249);
+            btnSelectTrainingSave.Location = new Point(18, 135);
+            btnSelectTrainingSave.Margin = new Padding(7, 5, 7, 5);
+            btnSelectTrainingSave.Name = "btnSelectTrainingSave";
+            btnSelectTrainingSave.Size = new Size(214, 48);
+            btnSelectTrainingSave.TabIndex = 3;
+            btnSelectTrainingSave.Text = "저장된 폴더 선택";
+            toolTip.SetToolTip(btnSelectTrainingSave, "학습에 사용할 Save 폴더 선택");
+            btnSelectTrainingSave.UseVisualStyleBackColor = false;
+            btnSelectTrainingSave.Click += btnSelectTrainingSave_Click;
+            // 
             // lblTrainingStatusValue
             // 
-            lblTrainingStatusValue.Font = new Font("맑은 고딕", 13F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingStatusValue.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingStatusValue.ForeColor = Color.FromArgb(45, 212, 191);
-            lblTrainingStatusValue.Location = new Point(515, 214);
+            lblTrainingStatusValue.Location = new Point(396, 262);
             lblTrainingStatusValue.Name = "lblTrainingStatusValue";
-            lblTrainingStatusValue.Size = new Size(235, 60);
+            lblTrainingStatusValue.Size = new Size(53, 32);
             lblTrainingStatusValue.TabIndex = 11;
             lblTrainingStatusValue.Text = "-";
             // 
             // lblTrainingStatusCaption
             // 
-            lblTrainingStatusCaption.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingStatusCaption.Font = new Font("맑은 고딕", 16F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingStatusCaption.ForeColor = Color.FromArgb(245, 176, 65);
-            lblTrainingStatusCaption.Location = new Point(515, 176);
+            lblTrainingStatusCaption.Location = new Point(396, 223);
             lblTrainingStatusCaption.Name = "lblTrainingStatusCaption";
-            lblTrainingStatusCaption.Size = new Size(235, 29);
+            lblTrainingStatusCaption.Size = new Size(489, 32);
             lblTrainingStatusCaption.TabIndex = 10;
             lblTrainingStatusCaption.Text = "상태";
             // 
             // lblTrainingValLossValue
             // 
-            lblTrainingValLossValue.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingValLossValue.Font = new Font("맑은 고딕", 22F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingValLossValue.ForeColor = Color.FromArgb(238, 243, 249);
-            lblTrainingValLossValue.Location = new Point(275, 214);
+            lblTrainingValLossValue.Location = new Point(258, 255);
             lblTrainingValLossValue.Name = "lblTrainingValLossValue";
-            lblTrainingValLossValue.Size = new Size(210, 48);
+            lblTrainingValLossValue.Size = new Size(73, 48);
             lblTrainingValLossValue.TabIndex = 9;
             lblTrainingValLossValue.Text = "-";
             // 
             // lblTrainingValLossCaption
             // 
-            lblTrainingValLossCaption.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingValLossCaption.Font = new Font("맑은 고딕", 16F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingValLossCaption.ForeColor = Color.FromArgb(245, 176, 65);
-            lblTrainingValLossCaption.Location = new Point(275, 176);
+            lblTrainingValLossCaption.Location = new Point(250, 223);
             lblTrainingValLossCaption.Name = "lblTrainingValLossCaption";
-            lblTrainingValLossCaption.Size = new Size(210, 29);
+            lblTrainingValLossCaption.Size = new Size(117, 32);
             lblTrainingValLossCaption.TabIndex = 8;
             lblTrainingValLossCaption.Text = "검증 손실";
             // 
             // lblTrainingLossValue
             // 
-            lblTrainingLossValue.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingLossValue.Font = new Font("맑은 고딕", 22F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingLossValue.ForeColor = Color.FromArgb(238, 243, 249);
-            lblTrainingLossValue.Location = new Point(515, 86);
+            lblTrainingLossValue.Location = new Point(151, 255);
             lblTrainingLossValue.Name = "lblTrainingLossValue";
-            lblTrainingLossValue.Size = new Size(235, 48);
+            lblTrainingLossValue.Size = new Size(81, 48);
             lblTrainingLossValue.TabIndex = 7;
             lblTrainingLossValue.Text = "-";
             // 
             // lblTrainingLossCaption
             // 
-            lblTrainingLossCaption.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingLossCaption.Font = new Font("맑은 고딕", 16F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingLossCaption.ForeColor = Color.FromArgb(245, 176, 65);
-            lblTrainingLossCaption.Location = new Point(515, 48);
+            lblTrainingLossCaption.Location = new Point(151, 223);
             lblTrainingLossCaption.Name = "lblTrainingLossCaption";
-            lblTrainingLossCaption.Size = new Size(235, 29);
+            lblTrainingLossCaption.Size = new Size(81, 43);
             lblTrainingLossCaption.TabIndex = 6;
             lblTrainingLossCaption.Text = "손실";
             // 
             // lblTrainingEpochValue
             // 
-            lblTrainingEpochValue.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingEpochValue.Font = new Font("맑은 고딕", 22F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingEpochValue.ForeColor = Color.FromArgb(238, 243, 249);
-            lblTrainingEpochValue.Location = new Point(275, 86);
+            lblTrainingEpochValue.Location = new Point(33, 255);
             lblTrainingEpochValue.Name = "lblTrainingEpochValue";
-            lblTrainingEpochValue.Size = new Size(210, 48);
+            lblTrainingEpochValue.Size = new Size(89, 48);
             lblTrainingEpochValue.TabIndex = 3;
             lblTrainingEpochValue.Text = "- / -";
             // 
             // lblTrainingEpochCaption
             // 
-            lblTrainingEpochCaption.Font = new Font("맑은 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            lblTrainingEpochCaption.Font = new Font("맑은 고딕", 16F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTrainingEpochCaption.ForeColor = Color.FromArgb(245, 176, 65);
-            lblTrainingEpochCaption.Location = new Point(275, 48);
+            lblTrainingEpochCaption.Location = new Point(33, 223);
             lblTrainingEpochCaption.Name = "lblTrainingEpochCaption";
-            lblTrainingEpochCaption.Size = new Size(210, 29);
+            lblTrainingEpochCaption.Size = new Size(70, 43);
             lblTrainingEpochCaption.TabIndex = 2;
             lblTrainingEpochCaption.Text = "회차";
             // 
