@@ -42,7 +42,13 @@ namespace DataManager
         private readonly Color _folderPathWarningColor = Color.FromArgb(248, 113, 113);
         private readonly List<Panel> _imageRangeMarkers = new List<Panel>();
         private System.Windows.Forms.Timer _playTimer = new System.Windows.Forms.Timer();
+        private System.Windows.Forms.Timer _testPlayTimer = new System.Windows.Forms.Timer();
+        private int _testCurrentIndex = -1;
+        private bool _isTestReversed = false;
         private const int BasePlaybackIntervalMs = 50;
+        private const int TestBrightnessMin = 40;
+        private const int TestBrightnessMax = 200;
+        private const int TestBrightnessDefault = 100;
         private const string UiFontFamily = "Malgun Gothic";
         private const string WslSimulationProjectPath = "~/mysim";
         private const string WslModelDirectory = "models";
@@ -112,9 +118,11 @@ namespace DataManager
             }
             if (tbTestBrightness != null)
             {
-                tbTestBrightness.Minimum = 0;
-                tbTestBrightness.Maximum = 4;
-                tbTestBrightness.Value = 2;
+                tbTestBrightness.Minimum = TestBrightnessMin;
+                tbTestBrightness.Maximum = TestBrightnessMax;
+                tbTestBrightness.SmallChange = 1;
+                tbTestBrightness.LargeChange = 10;
+                tbTestBrightness.Value = TestBrightnessDefault;
             }
 
             InitializeDataInfoGrid();
@@ -128,6 +136,7 @@ namespace DataManager
             lvDataItems.HideSelection = false;
 
             _playTimer.Tick += PlayTimer_Tick;
+            _testPlayTimer.Tick += TestPlayTimer_Tick;
             this.Shown += Form1_Shown;
             this.Resize += Form1_Resize;
             this.FormClosed += Form1_FormClosed;
@@ -249,6 +258,10 @@ namespace DataManager
 
         private void Form1_FormClosed(object? sender, FormClosedEventArgs e)
         {
+            _playTimer.Stop();
+            _testPlayTimer.Stop();
+            _playTimer.Dispose();
+            _testPlayTimer.Dispose();
             ShutdownWslForApp();
         }
 
@@ -397,7 +410,7 @@ namespace DataManager
                 return;
             }
 
-            int index = displayIndex ?? Math.Max(0, Math.Min(tbTestImageNavigator?.Value ?? _currentIndex, _allData.Count - 1));
+            int index = displayIndex ?? Math.Max(0, Math.Min(_testCurrentIndex, _allData.Count - 1));
             lblTestCurrentIndex.Text = $"\uD604\uC7AC \uC778\uB371\uC2A4\r\n{index} / {_allData.Count - 1}";
         }
 
@@ -537,6 +550,7 @@ namespace DataManager
             }
 
             _currentIndex = 0;
+            _testCurrentIndex = 0;
             _showTestOverlay = false;
             tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1);
             if (tbTestImageNavigator != null) tbTestImageNavigator.Maximum = Math.Max(0, _allData.Count - 1);
@@ -663,8 +677,6 @@ namespace DataManager
             dgvDataInfo.Rows[2].Cells[1].Value = data.Steering.ToString("F2");
             dgvDataInfo.Rows[3].Cells[1].Value = data.Speed.ToString("F0");
             tbImageNavigator.Value = _currentIndex;
-            UpdateTestIndexLabel();
-            ShowFrame(_currentIndex);
         }
 
         private bool EnsureDataLoaded()
@@ -677,6 +689,7 @@ namespace DataManager
         private void ShowNoDataMessage()
         {
             _playTimer.Stop();
+            _testPlayTimer.Stop();
             txtFolderPath.ForeColor = _folderPathWarningColor;
             txtFolderPath.Text = "\uB370\uC774\uD130\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4. \uB370\uC774\uD130\uB97C \uAC00\uC838\uC624\uC138\uC694";
         }
@@ -688,12 +701,12 @@ namespace DataManager
 
             if (tbTestImageNavigator != null)
             {
-                _currentIndex = Math.Max(0, Math.Min(tbTestImageNavigator.Value, _allData.Count - 1));
+                _testCurrentIndex = Math.Max(0, Math.Min(tbTestImageNavigator.Value, _allData.Count - 1));
             }
 
-            ShowFrame(_currentIndex);
-            _playTimer.Interval = GetTestPlaybackInterval();
-            _playTimer.Start();
+            ShowFrame(_testCurrentIndex);
+            _testPlayTimer.Interval = GetTestPlaybackInterval();
+            _testPlayTimer.Start();
         }
 
         private void PlayTimer_Tick(object? sender, EventArgs e)
@@ -703,13 +716,20 @@ namespace DataManager
             UpdateDisplay();
         }
 
+        private void TestPlayTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_isTestReversed) { if (_testCurrentIndex > 0) _testCurrentIndex--; else _testPlayTimer.Stop(); }
+            else { if (_testCurrentIndex < _allData.Count - 1) _testCurrentIndex++; else _testPlayTimer.Stop(); }
+            ShowFrame(_testCurrentIndex);
+        }
+
         private void btnPlay_Click_1(object sender, EventArgs e) { _isReversed = false; StartPlayback(); }
         private void btnReverse_Click(object sender, EventArgs e) { _isReversed = true; StartPlayback(); }
         private void btnStop_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; _playTimer.Stop(); }
 
-        private void btnTestPlay_Click(object? sender, EventArgs e) { _isReversed = false; StartTestPlayback(); }
-        private void btnTestReverse_Click(object? sender, EventArgs e) { _isReversed = true; StartTestPlayback(); }
-        private void btnTestStop_Click(object? sender, EventArgs e) { if (!EnsureDataLoaded()) return; _playTimer.Stop(); }
+        private void btnTestPlay_Click(object? sender, EventArgs e) { _isTestReversed = false; StartTestPlayback(); }
+        private void btnTestReverse_Click(object? sender, EventArgs e) { _isTestReversed = true; StartTestPlayback(); }
+        private void btnTestStop_Click(object? sender, EventArgs e) { if (!EnsureDataLoaded()) return; _testPlayTimer.Stop(); }
 
         #endregion
 
@@ -1505,8 +1525,8 @@ namespace DataManager
         private void tbTestImageNavigator_Scroll_1(object sender, EventArgs e)
         {
             if (!EnsureDataLoaded() || tbTestImageNavigator == null || pbTestPreview == null) return;
-            _currentIndex = Math.Max(0, Math.Min(tbTestImageNavigator.Value, _allData.Count - 1));
-            ShowFrame(_currentIndex);
+            _testCurrentIndex = Math.Max(0, Math.Min(tbTestImageNavigator.Value, _allData.Count - 1));
+            ShowFrame(_testCurrentIndex);
         }
 
         #endregion
@@ -1783,6 +1803,7 @@ namespace DataManager
             if (pbTestPreview == null || _allData.Count == 0) return;
 
             int frameIndex = Math.Max(0, Math.Min(index, _allData.Count - 1));
+            _testCurrentIndex = frameIndex;
             DrivingData data = _allData[frameIndex];
             UpdateTestIndexLabel(frameIndex);
 
@@ -1957,7 +1978,7 @@ namespace DataManager
             }
         }
 
-        private void RefreshUI() { _currentIndex = Math.Max(0, Math.Min(_currentIndex, _allData.Count - 1)); tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); if (tbTestImageNavigator != null) tbTestImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); RefreshDataListView(); UpdateDisplay(); UpdateCharts(); }
+        private void RefreshUI() { _currentIndex = Math.Max(0, Math.Min(_currentIndex, _allData.Count - 1)); _testCurrentIndex = Math.Max(0, Math.Min(_testCurrentIndex, _allData.Count - 1)); tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); if (tbTestImageNavigator != null) tbTestImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); RefreshDataListView(); UpdateDisplay(); ShowFrame(_testCurrentIndex); UpdateCharts(); }
 
         private void AddMarker()
         {
@@ -2121,9 +2142,7 @@ namespace DataManager
         {
             if (tbTestBrightness == null) return 1f;
 
-            return tbTestBrightness.Value <= 2
-                ? 0.4f + (tbTestBrightness.Value * 0.3f)
-                : 1f + ((tbTestBrightness.Value - 2) * 0.5f);
+            return tbTestBrightness.Value / 100f;
         }
 
         private void UpdateTestBrightnessLabel()
@@ -2144,7 +2163,7 @@ namespace DataManager
             if (!EnsureDataLoaded()) return;
 
             UpdateTestPlaybackSpeedLabel();
-            if (_playTimer.Enabled) _playTimer.Interval = GetTestPlaybackInterval();
+            if (_testPlayTimer.Enabled) _testPlayTimer.Interval = GetTestPlaybackInterval();
         }
 
         private void tbTestBrightness_Scroll(object sender, EventArgs e)
@@ -2152,7 +2171,7 @@ namespace DataManager
             if (!EnsureDataLoaded()) return;
 
             UpdateTestBrightnessLabel();
-            ShowFrame(_currentIndex);
+            ShowFrame(_testCurrentIndex);
         }
 
         private void btnSetRange_Click(object sender, EventArgs e) { if (!EnsureDataLoaded()) return; _isRangeSettingMode = true; }
