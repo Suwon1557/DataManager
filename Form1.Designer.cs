@@ -982,7 +982,7 @@ namespace DataManager
             lblTrainingStatusValue.ForeColor = Color.FromArgb(45, 212, 191);
             lblTrainingStatusValue.Location = new Point(396, 262);
             lblTrainingStatusValue.Name = "lblTrainingStatusValue";
-            lblTrainingStatusValue.Size = new Size(53, 32);
+            lblTrainingStatusValue.Size = new Size(359, 32);
             lblTrainingStatusValue.TabIndex = 11;
             lblTrainingStatusValue.Text = "-";
             // 
