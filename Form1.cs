@@ -464,6 +464,8 @@ namespace DataManager
             ca.AxisX.MajorTickMark.LineColor = Color.FromArgb(103, 119, 148);
             ca.AxisY.MajorTickMark.LineColor = Color.FromArgb(103, 119, 148);
 
+            chart.FormatNumber -= Chart_FormatNumber;
+            chart.FormatNumber += Chart_FormatNumber;
             chart.BackColor = Color.FromArgb(22, 30, 46);
             chart.BorderlineColor = Color.FromArgb(103, 119, 148);
             chart.BorderlineDashStyle = ChartDashStyle.Solid;
@@ -504,6 +506,14 @@ namespace DataManager
 
             chart.Visible = true;
             chart.BringToFront();
+        }
+
+        private void Chart_FormatNumber(object? sender, FormatNumberEventArgs e)
+        {
+            if (Math.Abs(e.Value) < 0.0000001 || e.LocalizedValue == "-0")
+            {
+                e.LocalizedValue = "0";
+            }
         }
 
         private static string GetKoreanChartSeriesName(string seriesName)
