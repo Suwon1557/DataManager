@@ -354,7 +354,7 @@ namespace DataManager
             btnSaveCatalogState.Size = new Size(428, 32);
             btnSaveCatalogState.TabIndex = 15;
             btnSaveCatalogState.Text = "현재 데이터 저장";
-            toolTip.SetToolTip(btnSaveCatalogState, "현재 카탈로그 상태를 Save 폴더에 저장");
+            toolTip.SetToolTip(btnSaveCatalogState, "현재 카탈로그 상태를 저장본 폴더에 저장");
             btnSaveCatalogState.UseVisualStyleBackColor = false;
             btnSaveCatalogState.Click += btnSaveCatalogState_Click;
             // 
@@ -586,7 +586,7 @@ namespace DataManager
             btnLoadSavedFolder.Size = new Size(214, 45);
             btnLoadSavedFolder.TabIndex = 3;
             btnLoadSavedFolder.Text = "저장본 불러오기";
-            toolTip.SetToolTip(btnLoadSavedFolder, "Save 폴더 아래 저장본 불러오기");
+            toolTip.SetToolTip(btnLoadSavedFolder, "저장본 폴더 아래 저장본 불러오기");
             btnLoadSavedFolder.UseVisualStyleBackColor = false;
             btnLoadSavedFolder.Click += btnLoadSavedFolder_Click;
             // 
@@ -957,7 +957,7 @@ namespace DataManager
             txtTrainingSavePath.ReadOnly = true;
             txtTrainingSavePath.Size = new Size(505, 35);
             txtTrainingSavePath.TabIndex = 2;
-            txtTrainingSavePath.Text = "(학습용 Save 경로)";
+            txtTrainingSavePath.Text = "(학습용 저장본 경로)";
             // 
             // btnSelectTrainingSave
             // 
@@ -972,7 +972,7 @@ namespace DataManager
             btnSelectTrainingSave.Size = new Size(214, 48);
             btnSelectTrainingSave.TabIndex = 3;
             btnSelectTrainingSave.Text = "저장된 폴더 선택";
-            toolTip.SetToolTip(btnSelectTrainingSave, "학습에 사용할 Save 폴더 선택");
+            toolTip.SetToolTip(btnSelectTrainingSave, "학습에 사용할 저장본 폴더 선택");
             btnSelectTrainingSave.UseVisualStyleBackColor = false;
             btnSelectTrainingSave.Click += btnSelectTrainingSave_Click;
             // 

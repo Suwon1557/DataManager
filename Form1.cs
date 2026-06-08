@@ -526,7 +526,7 @@ namespace DataManager
         {
             using FolderBrowserDialog fbd = new FolderBrowserDialog
             {
-                Description = "Save 폴더 안의 저장 시각 폴더를 선택하세요."
+                Description = "저장본 폴더 안의 저장 시각 폴더를 선택하세요."
             };
 
             if (fbd.ShowDialog() != DialogResult.OK) return;
@@ -538,7 +538,7 @@ namespace DataManager
         {
             using FolderBrowserDialog fbd = new FolderBrowserDialog
             {
-                Description = "학습에 사용할 Save 폴더 안의 저장 시각 폴더를 선택하세요."
+                Description = "학습에 사용할 저장본 폴더 안의 저장 시각 폴더를 선택하세요."
             };
 
             if (fbd.ShowDialog() != DialogResult.OK) return;
@@ -572,6 +572,8 @@ namespace DataManager
                 ShowNoDataMessage();
                 return;
             }
+
+            ReindexDataItems();
 
             _currentIndex = 0;
             _testCurrentIndex = 0;
@@ -985,7 +987,8 @@ namespace DataManager
             if (string.IsNullOrWhiteSpace(catalogPath) || !Directory.Exists(catalogPath))
                 throw new InvalidOperationException("The selected data folder could not be found.");
 
-            if (!Directory.GetFiles(catalogPath, "*.catalog").Any())
+            string[] allCatalogFiles = Directory.GetFiles(catalogPath, "*.catalog");
+            if (!allCatalogFiles.Any())
                 throw new InvalidOperationException("The selected data folder does not contain any catalog files.");
 
             string dataRootPath = ResolveDataRootPath(catalogPath);
@@ -993,13 +996,20 @@ namespace DataManager
             if (!Directory.Exists(imagesPath))
                 throw new InvalidOperationException("The selected data folder does not contain an images folder.");
 
+            string[] trainingCatalogFiles = allCatalogFiles
+                .Where(path => new FileInfo(path).Length > 0)
+                .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            if (!trainingCatalogFiles.Any())
+                throw new InvalidOperationException("The selected data folder does not contain any non-empty catalog files.");
+
             string zipPath = Path.Combine(Path.GetTempPath(), $"datamanager_training_data_{DateTime.Now:yyyyMMddHHmmss}.zip");
             if (File.Exists(zipPath)) File.Delete(zipPath);
 
             using ZipArchive archive = ZipFile.Open(zipPath, ZipArchiveMode.Create);
-            AddTrainingMetadataFiles(catalogPath, dataRootPath, archive);
+            AddTrainingMetadataFiles(catalogPath, dataRootPath, trainingCatalogFiles, archive);
 
-            foreach (string catalogFile in Directory.GetFiles(catalogPath, "*.catalog"))
+            foreach (string catalogFile in trainingCatalogFiles)
             {
                 archive.CreateEntryFromFile(catalogFile, Path.GetFileName(catalogFile), CompressionLevel.Fastest);
 
@@ -1630,6 +1640,7 @@ namespace DataManager
             int insertIndex = Math.Max(0, Math.Min(action.RestoreIndex, _allData.Count));
             _allData.InsertRange(insertIndex, action.Items);
             _currentIndex = insertIndex;
+            ReindexDataItems();
             RefreshUI();
         }
 
@@ -1676,6 +1687,7 @@ namespace DataManager
 
             _deleteUndoStack.Push(action);
             _currentIndex = Math.Max(0, Math.Min(restoreIndex, _allData.Count - 1));
+            ReindexDataItems();
             RefreshUI();
         }
 
@@ -1744,8 +1756,16 @@ namespace DataManager
             if (txtTrainingSavePath == null) return;
 
             txtTrainingSavePath.Text = string.IsNullOrWhiteSpace(_selectedTrainingSavePath)
-                ? "(학습용 Save 경로)"
+                ? "(학습용 저장본 경로)"
                 : _selectedTrainingSavePath;
+        }
+
+        private void ReindexDataItems()
+        {
+            for (int i = 0; i < _allData.Count; i++)
+            {
+                _allData[i].Index = i;
+            }
         }
 
         private void WriteSavedCatalogFiles(string saveDir)
@@ -1836,17 +1856,80 @@ namespace DataManager
             }
         }
 
-        private void AddTrainingMetadataFiles(string catalogPath, string dataRootPath, ZipArchive archive)
+        private void AddTrainingMetadataFiles(string catalogPath, string dataRootPath, string[] trainingCatalogFiles, ZipArchive archive)
         {
-            foreach (string fileName in new[] { "manifest.json", "metadata.json" })
-            {
-                string preferredPath = Path.Combine(catalogPath, fileName);
-                string fallbackPath = Path.Combine(dataRootPath, fileName);
-                string sourcePath = File.Exists(preferredPath) ? preferredPath : fallbackPath;
+            string metadataPath = Path.Combine(catalogPath, "metadata.json");
+            if (!File.Exists(metadataPath))
+                metadataPath = Path.Combine(dataRootPath, "metadata.json");
+            if (File.Exists(metadataPath))
+                archive.CreateEntryFromFile(metadataPath, "metadata.json", CompressionLevel.Fastest);
 
-                if (!File.Exists(sourcePath)) continue;
-                archive.CreateEntryFromFile(sourcePath, fileName, CompressionLevel.Fastest);
+            string manifestPath = Path.Combine(catalogPath, "manifest.json");
+            if (!File.Exists(manifestPath))
+                manifestPath = Path.Combine(dataRootPath, "manifest.json");
+            if (File.Exists(manifestPath))
+            {
+                string manifestText = BuildTrainingManifestText(manifestPath, trainingCatalogFiles);
+                ZipArchiveEntry entry = archive.CreateEntry("manifest.json", CompressionLevel.Fastest);
+                using StreamWriter writer = new StreamWriter(entry.Open());
+                writer.Write(manifestText);
             }
+        }
+
+        private string BuildTrainingManifestText(string sourceManifestPath, string[] trainingCatalogFiles)
+        {
+            string[] lines = File.ReadAllLines(sourceManifestPath);
+            if (lines.Length < 5) return string.Join(Environment.NewLine, lines);
+
+            using JsonDocument pathDoc = JsonDocument.Parse(lines[4]);
+            JsonElement root = pathDoc.RootElement;
+            int maxLen = root.TryGetProperty("max_len", out var maxLenElement)
+                ? maxLenElement.GetInt32()
+                : 1000;
+            int currentIndex = CalculateTrainingCurrentIndex(trainingCatalogFiles);
+
+            var manifestTail = new
+            {
+                paths = trainingCatalogFiles.Select(Path.GetFileName).ToArray(),
+                current_index = currentIndex,
+                max_len = maxLen,
+                deleted_indexes = Array.Empty<int>()
+            };
+
+            lines[4] = JsonSerializer.Serialize(manifestTail);
+            return string.Join(Environment.NewLine, lines);
+        }
+
+        private int CalculateTrainingCurrentIndex(string[] trainingCatalogFiles)
+        {
+            int total = 0;
+
+            foreach (string catalogFile in trainingCatalogFiles)
+            {
+                string manifestPath = catalogFile + "_manifest";
+                if (!File.Exists(manifestPath))
+                {
+                    total += File.ReadLines(catalogFile).Count();
+                    continue;
+                }
+
+                try
+                {
+                    using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(manifestPath));
+                    if (doc.RootElement.TryGetProperty("line_lengths", out var lineLengths))
+                    {
+                        total += lineLengths.GetArrayLength();
+                        continue;
+                    }
+                }
+                catch
+                {
+                }
+
+                total += File.ReadLines(catalogFile).Count();
+            }
+
+            return total;
         }
 
         private string GetUniquePath(string path)
