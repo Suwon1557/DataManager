@@ -27,6 +27,7 @@ namespace DataManager
         private bool _isRangeSettingMode = false;
         private int _listViewDragAnchorIndex = -1;
         private string _selectedDataFolderPath = "";
+        private string _selectedTrainingSavePath = "";
         private bool _showTestOverlay = false;
         private bool _isTestRunning = false;
         private Process? _testProcess;
@@ -59,13 +60,6 @@ namespace DataManager
         {
             public List<DrivingData> Items { get; set; } = new List<DrivingData>();
             public int RestoreIndex { get; set; }
-            public List<CatalogBackupInfo> CatalogBackups { get; set; } = new List<CatalogBackupInfo>();
-        }
-
-        private class CatalogBackupInfo
-        {
-            public string OriginalPath { get; set; } = "";
-            public string BackupPath { get; set; } = "";
         }
 
         [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
@@ -290,6 +284,7 @@ namespace DataManager
             gbDataContent.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             txtFolderPath.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             btnCheckDataIntegrity.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnSaveCatalogState.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 
             pbDataPreview.Anchor = AnchorStyles.Top | AnchorStyles.Left;
             dgvDataInfo.Anchor = AnchorStyles.Top | AnchorStyles.Left;
@@ -301,6 +296,7 @@ namespace DataManager
             gbTrainingSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             gbModelTest.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            txtTrainingSavePath.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             tbTestImageNavigator.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             ApplyResponsiveLayout();
         }
@@ -526,19 +522,47 @@ namespace DataManager
                 if (fbd.ShowDialog() == DialogResult.OK) { txtFolderPath.Text = fbd.SelectedPath; LoadData(fbd.SelectedPath); }
         }
 
+        private void btnLoadSavedFolder_Click(object sender, EventArgs e)
+        {
+            using FolderBrowserDialog fbd = new FolderBrowserDialog
+            {
+                Description = "Save 폴더 안의 저장 시각 폴더를 선택하세요."
+            };
+
+            if (fbd.ShowDialog() != DialogResult.OK) return;
+            txtFolderPath.Text = fbd.SelectedPath;
+            LoadData(fbd.SelectedPath);
+        }
+
+        private void btnSelectTrainingSave_Click(object sender, EventArgs e)
+        {
+            using FolderBrowserDialog fbd = new FolderBrowserDialog
+            {
+                Description = "학습에 사용할 Save 폴더 안의 저장 시각 폴더를 선택하세요."
+            };
+
+            if (fbd.ShowDialog() != DialogResult.OK) return;
+
+            _selectedTrainingSavePath = fbd.SelectedPath;
+            UpdateTrainingSavePathTextBox();
+        }
+
         private void LoadData(string path)
         {
             _selectedDataFolderPath = path;
             _allData.Clear();
+            _deleteUndoStack.Clear();
+            ClearMarkers();
             lvDataItems.Items.Clear();
             ReleasePreviewImages();
             txtFolderPath.ForeColor = _folderPathTextColor;
 
             var catalogFiles = Directory.GetFiles(path, "*.catalog");
+            string imageBasePath = ResolveImageBasePath(path);
 
             if (catalogFiles.Length > 0)
             {
-                ParseCatalogData(path, catalogFiles);
+                ParseCatalogData(imageBasePath, catalogFiles);
             }
 
             RefreshDataListView(false);
@@ -561,6 +585,12 @@ namespace DataManager
             if (pbTestPreview != null && _allData.Count > 0)
             {
                 ShowFrame(0);
+            }
+
+            if (IsSaveSnapshotPath(path))
+            {
+                _selectedTrainingSavePath = path;
+                UpdateTrainingSavePathTextBox();
             }
         }
 
@@ -590,6 +620,7 @@ namespace DataManager
                                 ImagePath = Path.Combine(basePath, "images", imgName),
                                 Steering = angle,
                                 Speed = throttle * 100,
+                                CatalogRawLine = line,
                                 CatalogFilePath = catFile,
                                 CatalogImageName = imgName,
                                 CatalogLineNumber = lineIndex
@@ -950,20 +981,41 @@ namespace DataManager
 
         private string CreateTrainingDataZip()
         {
-            if (string.IsNullOrWhiteSpace(_selectedDataFolderPath) || !Directory.Exists(_selectedDataFolderPath))
+            string catalogPath = GetTrainingCatalogDirectory();
+            if (string.IsNullOrWhiteSpace(catalogPath) || !Directory.Exists(catalogPath))
                 throw new InvalidOperationException("The selected data folder could not be found.");
 
-            if (!Directory.GetFiles(_selectedDataFolderPath, "*.catalog").Any())
+            if (!Directory.GetFiles(catalogPath, "*.catalog").Any())
                 throw new InvalidOperationException("The selected data folder does not contain any catalog files.");
 
-            string imagesPath = Path.Combine(_selectedDataFolderPath, "images");
+            string dataRootPath = ResolveDataRootPath(catalogPath);
+            string imagesPath = Path.Combine(dataRootPath, "images");
             if (!Directory.Exists(imagesPath))
                 throw new InvalidOperationException("The selected data folder does not contain an images folder.");
 
             string zipPath = Path.Combine(Path.GetTempPath(), $"datamanager_training_data_{DateTime.Now:yyyyMMddHHmmss}.zip");
             if (File.Exists(zipPath)) File.Delete(zipPath);
 
-            ZipFile.CreateFromDirectory(_selectedDataFolderPath, zipPath, CompressionLevel.Fastest, false);
+            using ZipArchive archive = ZipFile.Open(zipPath, ZipArchiveMode.Create);
+            AddTrainingMetadataFiles(catalogPath, dataRootPath, archive);
+
+            foreach (string catalogFile in Directory.GetFiles(catalogPath, "*.catalog"))
+            {
+                archive.CreateEntryFromFile(catalogFile, Path.GetFileName(catalogFile), CompressionLevel.Fastest);
+
+                string manifestPath = catalogFile + "_manifest";
+                if (File.Exists(manifestPath))
+                {
+                    archive.CreateEntryFromFile(manifestPath, Path.GetFileName(manifestPath), CompressionLevel.Fastest);
+                }
+            }
+
+            foreach (string imageFile in Directory.GetFiles(imagesPath, "*", SearchOption.AllDirectories))
+            {
+                string relativeImagePath = Path.GetRelativePath(imagesPath, imageFile).Replace("\\", "/");
+                archive.CreateEntryFromFile(imageFile, $"images/{relativeImagePath}", CompressionLevel.Fastest);
+            }
+
             return zipPath;
         }
 
@@ -1575,18 +1627,35 @@ namespace DataManager
             if (_deleteUndoStack.Count == 0) return;
 
             DeleteAction action = _deleteUndoStack.Pop();
+            int insertIndex = Math.Max(0, Math.Min(action.RestoreIndex, _allData.Count));
+            _allData.InsertRange(insertIndex, action.Items);
+            _currentIndex = insertIndex;
+            RefreshUI();
+        }
+
+        private void btnSaveCatalogState_Click(object sender, EventArgs e)
+        {
+            if (!EnsureDataLoaded()) return;
+
             try
             {
-                RestoreCatalogFiles(action);
+                string sourceCatalogDir = GetSelectedCatalogDirectory();
+                string saveDir = CreateCatalogSaveDirectory(sourceCatalogDir);
+                WriteSavedCatalogFiles(saveDir);
 
-                int insertIndex = Math.Max(0, Math.Min(action.RestoreIndex, _allData.Count));
-                _allData.InsertRange(insertIndex, action.Items);
-                _currentIndex = insertIndex;
-                RefreshUI();
+                MessageBox.Show(
+                    "현재 데이터 저장됨",
+                    "저장 완료",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error while restoring item: " + ex.Message);
+                MessageBox.Show(
+                    "카탈로그 저장 중 오류가 발생했어: " + ex.Message,
+                    "저장 실패",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -1602,92 +1671,135 @@ namespace DataManager
                 RestoreIndex = restoreIndex
             };
 
-            try
-            {
-                string backupDir = CreateCatalogBackupDirectory();
+            foreach (var item in items)
+                _allData.Remove(item);
 
-                RemoveCatalogLines(action, items, backupDir);
-
-                foreach (var item in items)
-                    _allData.Remove(item);
-
-                _deleteUndoStack.Push(action);
-                _currentIndex = Math.Max(0, Math.Min(restoreIndex, _allData.Count - 1));
-                RefreshUI();
-            }
-            catch (Exception ex)
-            {
-                RestoreCatalogFiles(action);
-                MessageBox.Show("Error while deleting item: " + ex.Message);
-            }
+            _deleteUndoStack.Push(action);
+            _currentIndex = Math.Max(0, Math.Min(restoreIndex, _allData.Count - 1));
+            RefreshUI();
         }
 
-        private void RemoveCatalogLines(DeleteAction action, List<DrivingData> items, string backupDir)
+        private string GetSelectedCatalogDirectory()
         {
-            var catalogItems = items
-                .Where(x => !string.IsNullOrWhiteSpace(x.CatalogFilePath) && x.CatalogLineNumber >= 0)
+            if (string.IsNullOrWhiteSpace(_selectedDataFolderPath) || !Directory.Exists(_selectedDataFolderPath))
+                throw new InvalidOperationException("선택된 카탈로그 폴더를 찾을 수 없어.");
+
+            return _selectedDataFolderPath;
+        }
+
+        private string CreateCatalogSaveDirectory(string sourceCatalogDir)
+        {
+            string saveRoot = Path.Combine(ResolveDataRootPath(sourceCatalogDir), "Save");
+            Directory.CreateDirectory(saveRoot);
+
+            string saveDir = Path.Combine(saveRoot, DateTime.Now.ToString("yyyyMMdd_HHmmss_fff"));
+            Directory.CreateDirectory(saveDir);
+            return saveDir;
+        }
+
+        private string ResolveImageBasePath(string selectedCatalogPath)
+        {
+            string directImagesPath = Path.Combine(selectedCatalogPath, "images");
+            if (Directory.Exists(directImagesPath)) return selectedCatalogPath;
+
+            return ResolveDataRootPath(selectedCatalogPath);
+        }
+
+        private string ResolveDataRootPath(string selectedCatalogPath)
+        {
+            DirectoryInfo? currentDir = new DirectoryInfo(selectedCatalogPath);
+            if (currentDir.Parent != null &&
+                currentDir.Parent.Parent != null &&
+                currentDir.Parent.Name.Equals("Save", StringComparison.OrdinalIgnoreCase))
+            {
+                string originalRootPath = currentDir.Parent.Parent.FullName;
+                if (Directory.Exists(originalRootPath))
+                    return originalRootPath;
+            }
+
+            return selectedCatalogPath;
+        }
+
+        private bool IsSaveSnapshotPath(string selectedCatalogPath)
+        {
+            DirectoryInfo? currentDir = new DirectoryInfo(selectedCatalogPath);
+            return currentDir.Parent != null &&
+                currentDir.Parent.Parent != null &&
+                currentDir.Parent.Name.Equals("Save", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private string GetTrainingCatalogDirectory()
+        {
+            if (!string.IsNullOrWhiteSpace(_selectedTrainingSavePath) && Directory.Exists(_selectedTrainingSavePath))
+                return _selectedTrainingSavePath;
+
+            if (!string.IsNullOrWhiteSpace(_selectedDataFolderPath) && Directory.Exists(_selectedDataFolderPath))
+                return _selectedDataFolderPath;
+
+            throw new InvalidOperationException("학습에 사용할 데이터 폴더가 선택되지 않았어.");
+        }
+
+        private void UpdateTrainingSavePathTextBox()
+        {
+            if (txtTrainingSavePath == null) return;
+
+            txtTrainingSavePath.Text = string.IsNullOrWhiteSpace(_selectedTrainingSavePath)
+                ? "(학습용 Save 경로)"
+                : _selectedTrainingSavePath;
+        }
+
+        private void WriteSavedCatalogFiles(string saveDir)
+        {
+            string sourceCatalogDir = GetSelectedCatalogDirectory();
+            CopyTubMetadataFiles(sourceCatalogDir, saveDir);
+
+            var remainingItemsByCatalog = _allData
+                .Where(x => !string.IsNullOrWhiteSpace(x.CatalogFilePath))
                 .GroupBy(x => x.CatalogFilePath)
-                .ToList();
+                .ToDictionary(g => g.Key, g => g.OrderBy(x => x.CatalogLineNumber).ToList(), StringComparer.OrdinalIgnoreCase);
 
-            foreach (var group in catalogItems)
+            string[] sourceCatalogPaths = Directory
+                .GetFiles(sourceCatalogDir, "*.catalog")
+                .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            foreach (string sourceCatalogPath in sourceCatalogPaths)
             {
-                string catalogPath = group.Key;
-                if (!File.Exists(catalogPath)) continue;
+                string targetCatalogPath = Path.Combine(saveDir, Path.GetFileName(sourceCatalogPath));
+                string[] catalogLines = remainingItemsByCatalog.TryGetValue(sourceCatalogPath, out var items)
+                    ? items.Select(x => x.CatalogRawLine).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray()
+                    : Array.Empty<string>();
 
-                BackupCatalogFile(action, catalogPath, backupDir);
-
-                var imageNamesToRemove = group
-                    .Select(x => x.CatalogImageName)
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
-                var lineNumbersToRemove = group
-                    .Select(x => x.CatalogLineNumber)
-                    .ToHashSet();
-
-                string[] lines = File.ReadAllLines(catalogPath);
-                var keptLines = lines
-                    .Where((line, index) => !ShouldRemoveCatalogLine(line, index, imageNamesToRemove, lineNumbersToRemove))
-                    .ToArray();
-
-                File.WriteAllLines(catalogPath, keptLines);
-                UpdateCatalogManifest(action, catalogPath, keptLines, backupDir);
+                File.WriteAllLines(targetCatalogPath, catalogLines);
+                WriteCatalogManifestFile(sourceCatalogPath, targetCatalogPath, catalogLines);
             }
         }
 
-        private void BackupCatalogFile(DeleteAction action, string originalPath, string backupDir)
+        private void WriteCatalogManifestFile(string sourceCatalogPath, string targetCatalogPath, string[] catalogLines)
         {
-            if (!File.Exists(originalPath)) return;
-            if (action.CatalogBackups.Any(x => x.OriginalPath.Equals(originalPath, StringComparison.OrdinalIgnoreCase))) return;
-
-            string backupPath = GetUniquePath(Path.Combine(backupDir, Path.GetFileName(originalPath) + ".bak"));
-            File.Copy(originalPath, backupPath);
-            action.CatalogBackups.Add(new CatalogBackupInfo
-            {
-                OriginalPath = originalPath,
-                BackupPath = backupPath
-            });
-        }
-
-        private void UpdateCatalogManifest(DeleteAction action, string catalogPath, string[] catalogLines, string backupDir)
-        {
-            string catalogManifestPath = catalogPath + "_manifest";
-            if (!File.Exists(catalogManifestPath)) return;
-
-            BackupCatalogFile(action, catalogManifestPath, backupDir);
+            string sourceManifestPath = sourceCatalogPath + "_manifest";
+            string targetManifestPath = targetCatalogPath + "_manifest";
 
             try
             {
-                using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(catalogManifestPath));
-                var root = doc.RootElement;
-                double createdAt = root.TryGetProperty("created_at", out var createdAtElement)
-                    ? createdAtElement.GetDouble()
-                    : 0;
-                string path = root.TryGetProperty("path", out var pathElement)
-                    ? pathElement.GetString() ?? Path.GetFileName(catalogManifestPath)
-                    : Path.GetFileName(catalogManifestPath);
-                int startIndex = root.TryGetProperty("start_index", out var startIndexElement)
-                    ? startIndexElement.GetInt32()
-                    : 0;
+                double createdAt = 0;
+                string path = Path.GetFileName(targetManifestPath);
+                int startIndex = 0;
+
+                if (File.Exists(sourceManifestPath))
+                {
+                    using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(sourceManifestPath));
+                    var root = doc.RootElement;
+                    createdAt = root.TryGetProperty("created_at", out var createdAtElement)
+                        ? createdAtElement.GetDouble()
+                        : 0;
+                    path = root.TryGetProperty("path", out var pathElement)
+                        ? pathElement.GetString() ?? path
+                        : path;
+                    startIndex = root.TryGetProperty("start_index", out var startIndexElement)
+                        ? startIndexElement.GetInt32()
+                        : 0;
+                }
 
                 var manifest = new
                 {
@@ -1697,64 +1809,44 @@ namespace DataManager
                     start_index = startIndex
                 };
 
-                File.WriteAllText(catalogManifestPath, JsonSerializer.Serialize(manifest));
+                File.WriteAllText(targetManifestPath, JsonSerializer.Serialize(manifest));
             }
             catch
             {
-                File.WriteAllText(catalogManifestPath, JsonSerializer.Serialize(new
+                File.WriteAllText(targetManifestPath, JsonSerializer.Serialize(new
                 {
                     line_lengths = catalogLines.Select(line => line.Length).ToArray(),
-                    path = Path.GetFileName(catalogManifestPath),
+                    path = Path.GetFileName(targetManifestPath),
                     start_index = 0
                 }));
             }
         }
 
-        private bool ShouldRemoveCatalogLine(string line, int index, HashSet<string> imageNamesToRemove, HashSet<int> lineNumbersToRemove)
+        private void CopyTubMetadataFiles(string sourceCatalogDir, string targetDir)
         {
-            if (imageNamesToRemove.Count == 0) return lineNumbersToRemove.Contains(index);
+            string dataRootPath = ResolveDataRootPath(sourceCatalogDir);
 
-            try
+            foreach (string fileName in new[] { "manifest.json", "metadata.json" })
             {
-                using JsonDocument doc = JsonDocument.Parse(line);
-                string? imgName = doc.RootElement.GetProperty("cam/image_array").GetString();
-                return imgName != null && imageNamesToRemove.Contains(imgName);
-            }
-            catch
-            {
-                return false;
+                string sourcePath = Path.Combine(dataRootPath, fileName);
+                if (!File.Exists(sourcePath)) continue;
+
+                string targetPath = Path.Combine(targetDir, fileName);
+                File.Copy(sourcePath, targetPath, true);
             }
         }
 
-        private void RestoreCatalogFiles(DeleteAction action)
+        private void AddTrainingMetadataFiles(string catalogPath, string dataRootPath, ZipArchive archive)
         {
-            foreach (var backup in action.CatalogBackups)
+            foreach (string fileName in new[] { "manifest.json", "metadata.json" })
             {
-                try
-                {
-                    if (!File.Exists(backup.BackupPath)) continue;
-                    string? dir = Path.GetDirectoryName(backup.OriginalPath);
-                    if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-                    File.Copy(backup.BackupPath, backup.OriginalPath, true);
-                }
-                catch { }
+                string preferredPath = Path.Combine(catalogPath, fileName);
+                string fallbackPath = Path.Combine(dataRootPath, fileName);
+                string sourcePath = File.Exists(preferredPath) ? preferredPath : fallbackPath;
+
+                if (!File.Exists(sourcePath)) continue;
+                archive.CreateEntryFromFile(sourcePath, fileName, CompressionLevel.Fastest);
             }
-        }
-
-        private string CreateCatalogBackupDirectory()
-        {
-            string basePath = Directory.Exists(txtFolderPath.Text) ? txtFolderPath.Text : Application.StartupPath;
-            string backupRoot = Path.Combine(basePath, ".datamanager_catalog_backups");
-            string backupDir = Path.Combine(backupRoot, DateTime.Now.ToString("yyyyMMdd_HHmmss_fff"));
-            Directory.CreateDirectory(backupDir);
-
-            try
-            {
-                File.SetAttributes(backupRoot, File.GetAttributes(backupRoot) | FileAttributes.Hidden);
-            }
-            catch { }
-
-            return backupDir;
         }
 
         private string GetUniquePath(string path)
@@ -2245,6 +2337,7 @@ namespace DataManager
         public double PredictedSteering { get; set; }
         public double PredictedSpeed { get; set; }
         public bool HasPrediction { get; set; }
+        public string CatalogRawLine { get; set; } = "";
         public string CatalogFilePath { get; set; } = "";
         public string CatalogImageName { get; set; } = "";
         public int CatalogLineNumber { get; set; } = -1;
