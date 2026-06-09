@@ -59,5 +59,26 @@ namespace DataManager.Properties {
                 resourceCulture = value;
             }
         }
+
+        internal static global::System.Drawing.Bitmap icon_play_theme {
+            get {
+                object obj = ResourceManager.GetObject("icon_play_theme", resourceCulture);
+                return ((global::System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        internal static global::System.Drawing.Bitmap icon_reverse_theme {
+            get {
+                object obj = ResourceManager.GetObject("icon_reverse_theme", resourceCulture);
+                return ((global::System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        internal static global::System.Drawing.Bitmap icon_stop_theme {
+            get {
+                object obj = ResourceManager.GetObject("icon_stop_theme", resourceCulture);
+                return ((global::System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }
