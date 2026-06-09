@@ -378,8 +378,12 @@ namespace DataManager
             int chartTop = pbTestPreview.Top;
             int chartBottom = tbTestImageNavigator.Top - 12;
             int availableWidth = Math.Max(100, gbModelTest.ClientSize.Width - chartLeft - 12);
-            int chartWidth = Math.Max(100, (int)Math.Round((availableWidth / 2.0) * 0.8));
-            int rightAlignedLeft = Math.Max(chartLeft, gbModelTest.ClientSize.Width - chartWidth - 12);
+            int labelRight = Math.Max(lblTestBrightness?.Right ?? 0, lblTestPlaybackSpeed?.Right ?? 0);
+            int safeChartLeft = Math.Max(chartLeft, labelRight + 24);
+            int maxSafeChartWidth = Math.Max(100, gbModelTest.ClientSize.Width - safeChartLeft - 12);
+            int desiredChartWidth = Math.Max(100, (int)Math.Round((availableWidth / 2.0) * 0.9));
+            int chartWidth = Math.Min(desiredChartWidth, maxSafeChartWidth);
+            int rightAlignedLeft = Math.Max(safeChartLeft, gbModelTest.ClientSize.Width - chartWidth - 12);
             layout.Bounds = new Rectangle(rightAlignedLeft, chartTop, chartWidth, Math.Max(80, chartBottom - chartTop));
             layout.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
 
