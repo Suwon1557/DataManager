@@ -21,6 +21,7 @@ namespace DataManager
     public partial class Form1 : Form
     {
         private List<DrivingData> _allData = new List<DrivingData>();
+        private List<DrivingData> _trainingData = new List<DrivingData>();
         private readonly Stack<DeleteAction> _deleteUndoStack = new Stack<DeleteAction>();
         private int _currentIndex = -1;
         private bool _isReversed = false;
@@ -405,14 +406,14 @@ namespace DataManager
         {
             if (lblTestCurrentIndex == null) return;
 
-            if (_allData.Count == 0)
+            if (_trainingData.Count == 0)
             {
                 lblTestCurrentIndex.Text = "\uD604\uC7AC \uC778\uB371\uC2A4\r\n- / -";
                 return;
             }
 
-            int index = displayIndex ?? Math.Max(0, Math.Min(_testCurrentIndex, _allData.Count - 1));
-            lblTestCurrentIndex.Text = $"\uD604\uC7AC \uC778\uB371\uC2A4\r\n{index} / {_allData.Count - 1}";
+            int index = displayIndex ?? Math.Max(0, Math.Min(_testCurrentIndex, _trainingData.Count - 1));
+            lblTestCurrentIndex.Text = $"\uD604\uC7AC \uC778\uB371\uC2A4\r\n{index} / {_trainingData.Count - 1}";
         }
 
         private TableLayoutPanel GetOrCreateChartLayout(Control parent, string name, int columnCount, int rowCount)
@@ -559,7 +560,7 @@ namespace DataManager
             if (fbd.ShowDialog() != DialogResult.OK) return;
 
             _selectedTrainingSavePath = fbd.SelectedPath;
-            UpdateTrainingSavePathTextBox();
+            LoadTrainingData(fbd.SelectedPath);
         }
 
         private void LoadData(string path)
@@ -569,7 +570,7 @@ namespace DataManager
             _deleteUndoStack.Clear();
             ClearMarkers();
             lvDataItems.Items.Clear();
-            ReleasePreviewImages();
+            ReleaseDataPreviewImage();
             txtFolderPath.ForeColor = _folderPathTextColor;
 
             var catalogFiles = Directory.GetFiles(path, "*.catalog");
@@ -577,7 +578,7 @@ namespace DataManager
 
             if (catalogFiles.Length > 0)
             {
-                ParseCatalogData(imageBasePath, catalogFiles);
+                ParseCatalogData(_allData, imageBasePath, catalogFiles);
             }
 
             RefreshDataListView(false);
@@ -591,27 +592,46 @@ namespace DataManager
             ReindexDataItems();
 
             _currentIndex = 0;
-            _testCurrentIndex = 0;
-            _showTestOverlay = false;
             tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1);
-            if (tbTestImageNavigator != null) tbTestImageNavigator.Maximum = Math.Max(0, _allData.Count - 1);
 
             UpdateDisplay();
             UpdateCharts();
-
-            if (pbTestPreview != null && _allData.Count > 0)
-            {
-                ShowFrame(0);
-            }
-
-            if (IsSaveSnapshotPath(path))
-            {
-                _selectedTrainingSavePath = path;
-                UpdateTrainingSavePathTextBox();
-            }
         }
 
-        private void ParseCatalogData(string basePath, string[] catalogFiles)
+        private void LoadTrainingData(string path)
+        {
+            _selectedTrainingSavePath = path;
+            _trainingData.Clear();
+            ReleaseTestPreviewImage();
+            _testPlayTimer.Stop();
+            _testCurrentIndex = -1;
+            _showTestOverlay = false;
+            UpdateTrainingSavePathTextBox();
+
+            var catalogFiles = Directory.GetFiles(path, "*.catalog");
+            string imageBasePath = ResolveImageBasePath(path);
+
+            if (catalogFiles.Length > 0)
+            {
+                ParseCatalogData(_trainingData, imageBasePath, catalogFiles);
+            }
+
+            if (_trainingData.Count == 0)
+            {
+                ShowNoTrainingDataMessage();
+                return;
+            }
+
+            ReindexTrainingDataItems();
+
+            _testCurrentIndex = 0;
+            if (tbTestImageNavigator != null) tbTestImageNavigator.Maximum = Math.Max(0, _trainingData.Count - 1);
+
+            UpdateCharts();
+            ShowFrame(0);
+        }
+
+        private void ParseCatalogData(List<DrivingData> targetData, string basePath, string[] catalogFiles)
         {
             int globalIdx = 0;
             Array.Sort(catalogFiles, StrCmpLogicalW);
@@ -631,7 +651,7 @@ namespace DataManager
                             double angle = root.GetProperty("user/angle").GetDouble();
                             double throttle = root.GetProperty("user/throttle").GetDouble();
 
-                            _allData.Add(new DrivingData
+                            targetData.Add(new DrivingData
                             {
                                 Index = globalIdx++,
                                 ImagePath = Path.Combine(basePath, "images", imgName),
@@ -734,22 +754,35 @@ namespace DataManager
             return false;
         }
 
+        private bool EnsureTrainingDataLoaded()
+        {
+            if (_trainingData.Count > 0) return true;
+            ShowNoTrainingDataMessage();
+            return false;
+        }
+
         private void ShowNoDataMessage()
         {
             _playTimer.Stop();
-            _testPlayTimer.Stop();
             txtFolderPath.ForeColor = _folderPathWarningColor;
             txtFolderPath.Text = "\uB370\uC774\uD130\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4. \uB370\uC774\uD130\uB97C \uAC00\uC838\uC624\uC138\uC694";
+        }
+
+        private void ShowNoTrainingDataMessage()
+        {
+            _testPlayTimer.Stop();
+            ReleaseTestPreviewImage();
+            UpdateTestIndexLabel();
         }
 
         private void StartPlayback() { if (!EnsureDataLoaded()) return; _playTimer.Interval = GetPlaybackInterval(); _playTimer.Start(); }
         private void StartTestPlayback()
         {
-            if (!EnsureDataLoaded()) return;
+            if (!EnsureTrainingDataLoaded()) return;
 
             if (tbTestImageNavigator != null)
             {
-                _testCurrentIndex = Math.Max(0, Math.Min(tbTestImageNavigator.Value, _allData.Count - 1));
+                _testCurrentIndex = Math.Max(0, Math.Min(tbTestImageNavigator.Value, _trainingData.Count - 1));
             }
 
             ShowFrame(_testCurrentIndex);
@@ -767,7 +800,7 @@ namespace DataManager
         private void TestPlayTimer_Tick(object? sender, EventArgs e)
         {
             if (_isTestReversed) { if (_testCurrentIndex > 0) _testCurrentIndex--; else _testPlayTimer.Stop(); }
-            else { if (_testCurrentIndex < _allData.Count - 1) _testCurrentIndex++; else _testPlayTimer.Stop(); }
+            else { if (_testCurrentIndex < _trainingData.Count - 1) _testCurrentIndex++; else _testPlayTimer.Stop(); }
             ShowFrame(_testCurrentIndex);
         }
 
@@ -777,7 +810,7 @@ namespace DataManager
 
         private void btnTestPlay_Click(object? sender, EventArgs e) { _isTestReversed = false; StartTestPlayback(); }
         private void btnTestReverse_Click(object? sender, EventArgs e) { _isTestReversed = true; StartTestPlayback(); }
-        private void btnTestStop_Click(object? sender, EventArgs e) { if (!EnsureDataLoaded()) return; _testPlayTimer.Stop(); }
+        private void btnTestStop_Click(object? sender, EventArgs e) { if (!EnsureTrainingDataLoaded()) return; _testPlayTimer.Stop(); }
 
         #endregion
 
@@ -1302,7 +1335,7 @@ namespace DataManager
                 return;
             }
 
-            if (!EnsureDataLoaded()) return;
+            if (!EnsureTrainingDataLoaded()) return;
 
             try
             {
@@ -1397,7 +1430,7 @@ namespace DataManager
                 return;
             }
 
-            if (!EnsureDataLoaded()) return;
+            if (!EnsureTrainingDataLoaded()) return;
 
             try
             {
@@ -1421,7 +1454,7 @@ namespace DataManager
                 string appDir = Application.StartupPath;
                 string winPathsFile = Path.Combine(appDir, "win_paths.txt");
 
-                var linuxPaths = _allData
+                var linuxPaths = _trainingData
                     .Select(d => ConvertImagePathToWslPath(d.ImagePath))
                     .ToList();
                 File.WriteAllLines(winPathsFile, linuxPaths);
@@ -1614,7 +1647,7 @@ namespace DataManager
 
         private async void btnShowCurrentPrediction_Click(object sender, EventArgs e)
         {
-            if (!EnsureDataLoaded()) return;
+            if (!EnsureTrainingDataLoaded()) return;
 
             try
             {
@@ -1635,7 +1668,7 @@ namespace DataManager
 
         private void btnPredictCurrentFrame_Click(object? sender, EventArgs e)
         {
-            if (!EnsureDataLoaded()) return;
+            if (!EnsureTrainingDataLoaded()) return;
             if (_isTestRunning)
             {
                 StopTestProcess();
@@ -1672,19 +1705,19 @@ namespace DataManager
 
         private bool LoadPredictionResults(string[] lines)
         {
-            if (lines.Length != _allData.Count)
+            if (lines.Length != _trainingData.Count)
             {
-                AppendTrainingLog($"Prediction result count differs from data count. results={lines.Length}, data={_allData.Count}");
+                AppendTrainingLog($"Prediction result count differs from data count. results={lines.Length}, data={_trainingData.Count}");
             }
 
-            foreach (var data in _allData)
+            foreach (var data in _trainingData)
             {
                 data.PredictedSteering = 0;
                 data.PredictedSpeed = 0;
                 data.HasPrediction = false;
             }
 
-            int count = Math.Min(lines.Length, _allData.Count);
+            int count = Math.Min(lines.Length, _trainingData.Count);
             int parsedCount = 0;
             int zeroPredictionCount = 0;
             for (int i = 0; i < count; i++)
@@ -1695,9 +1728,9 @@ namespace DataManager
                 if (double.TryParse(vals[0], NumberStyles.Float, CultureInfo.InvariantCulture, out double angle) &&
                     double.TryParse(vals[1], NumberStyles.Float, CultureInfo.InvariantCulture, out double throttle))
                 {
-                    _allData[i].PredictedSteering = angle;
-                    _allData[i].PredictedSpeed = throttle * 100;
-                    _allData[i].HasPrediction = true;
+                    _trainingData[i].PredictedSteering = angle;
+                    _trainingData[i].PredictedSpeed = throttle * 100;
+                    _trainingData[i].HasPrediction = true;
                     parsedCount++;
                     if (Math.Abs(angle) < 0.0000001 && Math.Abs(throttle) < 0.0000001)
                         zeroPredictionCount++;
@@ -1711,14 +1744,14 @@ namespace DataManager
 
             _showTestOverlay = true;
             UpdateCharts();
-            ShowFrame(Math.Max(0, Math.Min(tbTestImageNavigator?.Value ?? 0, _allData.Count - 1)));
+            ShowFrame(Math.Max(0, Math.Min(tbTestImageNavigator?.Value ?? 0, _trainingData.Count - 1)));
             return true;
         }
 
         private void tbTestImageNavigator_Scroll_1(object sender, EventArgs e)
         {
-            if (!EnsureDataLoaded() || tbTestImageNavigator == null || pbTestPreview == null) return;
-            _testCurrentIndex = Math.Max(0, Math.Min(tbTestImageNavigator.Value, _allData.Count - 1));
+            if (!EnsureTrainingDataLoaded() || tbTestImageNavigator == null || pbTestPreview == null) return;
+            _testCurrentIndex = Math.Max(0, Math.Min(tbTestImageNavigator.Value, _trainingData.Count - 1));
             ShowFrame(_testCurrentIndex);
         }
 
@@ -1805,7 +1838,7 @@ namespace DataManager
         {
             if (items.Count == 0) return;
 
-            ReleasePreviewImages();
+            ReleaseDataPreviewImage();
 
             DeleteAction action = new DeleteAction
             {
@@ -1896,6 +1929,14 @@ namespace DataManager
             for (int i = 0; i < _allData.Count; i++)
             {
                 _allData[i].Index = i;
+            }
+        }
+
+        private void ReindexTrainingDataItems()
+        {
+            for (int i = 0; i < _trainingData.Count; i++)
+            {
+                _trainingData[i].Index = i;
             }
         }
 
@@ -2106,11 +2147,11 @@ namespace DataManager
 
         private void ShowFrame(int index)
         {
-            if (pbTestPreview == null || _allData.Count == 0) return;
+            if (pbTestPreview == null || _trainingData.Count == 0) return;
 
-            int frameIndex = Math.Max(0, Math.Min(index, _allData.Count - 1));
+            int frameIndex = Math.Max(0, Math.Min(index, _trainingData.Count - 1));
             _testCurrentIndex = frameIndex;
-            DrivingData data = _allData[frameIndex];
+            DrivingData data = _trainingData[frameIndex];
             UpdateTestIndexLabel(frameIndex);
 
             if (tbTestImageNavigator != null && tbTestImageNavigator.Value != frameIndex)
@@ -2284,7 +2325,7 @@ namespace DataManager
             }
         }
 
-        private void RefreshUI() { _currentIndex = Math.Max(0, Math.Min(_currentIndex, _allData.Count - 1)); _testCurrentIndex = Math.Max(0, Math.Min(_testCurrentIndex, _allData.Count - 1)); tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); if (tbTestImageNavigator != null) tbTestImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); RefreshDataListView(); UpdateDisplay(); ShowFrame(_testCurrentIndex); UpdateCharts(); }
+        private void RefreshUI() { _currentIndex = Math.Max(0, Math.Min(_currentIndex, _allData.Count - 1)); tbImageNavigator.Maximum = Math.Max(0, _allData.Count - 1); RefreshDataListView(); UpdateDisplay(); UpdateCharts(); }
 
         private void AddMarker()
         {
@@ -2311,10 +2352,6 @@ namespace DataManager
 
         private void UpdateCharts()
         {
-            if (_allData.Count == 0) return;
-            int step = Math.Max(1, _allData.Count / (_showTestOverlay ? 500 : 100));
-            int maxIdx = _allData.Count - 1;
-
             if (chtSteeringValue != null) chtSteeringValue.Series[0].Points.Clear();
             if (chtSpeedValue != null) chtSpeedValue.Series[0].Points.Clear();
             if (chtTestSteeringValue != null)
@@ -2328,11 +2365,36 @@ namespace DataManager
                 chtTestSpeedValue.Series["Predict"].Points.Clear();
             }
 
-            for (int i = 0; i < _allData.Count; i += step)
+            if (_allData.Count > 0)
             {
-                var d = _allData[i];
-                if (chtSteeringValue != null) chtSteeringValue.Series[0].Points.AddXY(d.Index, d.Steering);
-                if (chtSpeedValue != null) chtSpeedValue.Series[0].Points.AddXY(d.Index, d.Speed);
+                int dataStep = Math.Max(1, _allData.Count / 100);
+                int dataMaxIdx = _allData.Count - 1;
+
+                for (int i = 0; i < _allData.Count; i += dataStep)
+                {
+                    var d = _allData[i];
+                    if (chtSteeringValue != null) chtSteeringValue.Series[0].Points.AddXY(d.Index, d.Steering);
+                    if (chtSpeedValue != null) chtSpeedValue.Series[0].Points.AddXY(d.Index, d.Speed);
+                }
+
+                foreach (var c in new[] { chtSteeringValue, chtSpeedValue })
+                {
+                    if (c == null) continue;
+                    c.ChartAreas[0].AxisX.Minimum = 0; c.ChartAreas[0].AxisX.Maximum = dataMaxIdx;
+                    c.ChartAreas[0].AxisX.LabelStyle.Format = "0;0;0";
+                    c.ChartAreas[0].RecalculateAxesScale();
+                    c.Invalidate();
+                }
+            }
+
+            if (_trainingData.Count == 0) return;
+
+            int testStep = Math.Max(1, _trainingData.Count / (_showTestOverlay ? 500 : 100));
+            int testMaxIdx = _trainingData.Count - 1;
+
+            for (int i = 0; i < _trainingData.Count; i += testStep)
+            {
+                var d = _trainingData[i];
 
                 if (chtTestSteeringValue != null)
                 {
@@ -2348,10 +2410,10 @@ namespace DataManager
                 }
             }
 
-            foreach (var c in new[] { chtSteeringValue, chtSpeedValue, chtTestSteeringValue, chtTestSpeedValue })
+            foreach (var c in new[] { chtTestSteeringValue, chtTestSpeedValue })
             {
                 if (c == null) continue;
-                c.ChartAreas[0].AxisX.Minimum = 0; c.ChartAreas[0].AxisX.Maximum = maxIdx;
+                c.ChartAreas[0].AxisX.Minimum = 0; c.ChartAreas[0].AxisX.Maximum = testMaxIdx;
                 c.ChartAreas[0].AxisX.LabelStyle.Format = "0;0;0";
                 c.ChartAreas[0].RecalculateAxesScale();
                 c.Invalidate();
@@ -2476,7 +2538,7 @@ namespace DataManager
 
         private void tbTestPlaybackSpeed_Scroll(object? sender, EventArgs e)
         {
-            if (!EnsureDataLoaded()) return;
+            if (!EnsureTrainingDataLoaded()) return;
 
             UpdateTestPlaybackSpeedLabel();
             if (_testPlayTimer.Enabled) _testPlayTimer.Interval = GetTestPlaybackInterval();
@@ -2484,7 +2546,7 @@ namespace DataManager
 
         private void tbTestBrightness_Scroll(object sender, EventArgs e)
         {
-            if (!EnsureDataLoaded()) return;
+            if (!EnsureTrainingDataLoaded()) return;
 
             UpdateTestBrightnessLabel();
             ShowFrame(_testCurrentIndex);
