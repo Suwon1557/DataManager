@@ -286,7 +286,7 @@ namespace DataManager
             tbImageNavigator.Margin = new Padding(7, 5, 7, 5);
             tbImageNavigator.Maximum = 100;
             tbImageNavigator.Name = "tbImageNavigator";
-            tbImageNavigator.Size = new Size(1747, 56);
+            tbImageNavigator.Size = new Size(1747, 45);
             tbImageNavigator.TabIndex = 11;
             tbImageNavigator.MouseUp += tbImageNavigator_MouseUp;
             // 
@@ -368,7 +368,7 @@ namespace DataManager
             lblPlaybackSpeed.Location = new Point(487, 369);
             lblPlaybackSpeed.Margin = new Padding(7, 0, 7, 0);
             lblPlaybackSpeed.Name = "lblPlaybackSpeed";
-            lblPlaybackSpeed.Size = new Size(39, 31);
+            lblPlaybackSpeed.Size = new Size(32, 25);
             lblPlaybackSpeed.TabIndex = 7;
             lblPlaybackSpeed.Text = "x1";
             // 
@@ -380,7 +380,7 @@ namespace DataManager
             tbPlaybackSpeed.Margin = new Padding(7, 5, 7, 5);
             tbPlaybackSpeed.Maximum = 4;
             tbPlaybackSpeed.Name = "tbPlaybackSpeed";
-            tbPlaybackSpeed.Size = new Size(458, 56);
+            tbPlaybackSpeed.Size = new Size(458, 45);
             tbPlaybackSpeed.TabIndex = 6;
             tbPlaybackSpeed.Value = 2;
             tbPlaybackSpeed.Scroll += tbPlaybackSpeed_Scroll;
@@ -603,7 +603,7 @@ namespace DataManager
             txtFolderPath.Margin = new Padding(7, 5, 7, 5);
             txtFolderPath.Name = "txtFolderPath";
             txtFolderPath.ReadOnly = true;
-            txtFolderPath.Size = new Size(983, 49);
+            txtFolderPath.Size = new Size(983, 40);
             txtFolderPath.TabIndex = 1;
             txtFolderPath.Text = "(폴더경로)";
             txtFolderPath.TextChanged += txtFolderPath_TextChanged;
@@ -692,11 +692,11 @@ namespace DataManager
             // 
             tbTestBrightness.BackColor = Color.FromArgb(39, 50, 72);
             tbTestBrightness.LargeChange = 1;
-            tbTestBrightness.Location = new Point(650, 294);
+            tbTestBrightness.Location = new Point(647, 297);
             tbTestBrightness.Margin = new Padding(7, 5, 7, 5);
             tbTestBrightness.Maximum = 4;
             tbTestBrightness.Name = "tbTestBrightness";
-            tbTestBrightness.Size = new Size(458, 56);
+            tbTestBrightness.Size = new Size(461, 45);
             tbTestBrightness.TabIndex = 7;
             tbTestBrightness.Value = 2;
             // 
@@ -705,10 +705,10 @@ namespace DataManager
             lblTestBrightness.AutoSize = true;
             lblTestBrightness.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTestBrightness.ForeColor = Color.FromArgb(45, 212, 191);
-            lblTestBrightness.Location = new Point(1116, 297);
+            lblTestBrightness.Location = new Point(1129, 297);
             lblTestBrightness.Margin = new Padding(7, 0, 7, 0);
             lblTestBrightness.Name = "lblTestBrightness";
-            lblTestBrightness.Size = new Size(122, 41);
+            lblTestBrightness.Size = new Size(97, 32);
             lblTestBrightness.TabIndex = 16;
             lblTestBrightness.Text = "밝기 x1";
             // 
@@ -738,7 +738,7 @@ namespace DataManager
             btnTestPlay.FlatStyle = FlatStyle.Flat;
             btnTestPlay.Font = new Font("굴림", 14.78F, FontStyle.Bold);
             btnTestPlay.ForeColor = Color.FromArgb(238, 243, 249);
-            btnTestPlay.Location = new Point(650, 415);
+            btnTestPlay.Location = new Point(647, 415);
             btnTestPlay.Margin = new Padding(7, 5, 7, 5);
             btnTestPlay.Name = "btnTestPlay";
             btnTestPlay.Size = new Size(145, 48);
@@ -754,7 +754,7 @@ namespace DataManager
             tbTestImageNavigator.Margin = new Padding(7, 5, 7, 5);
             tbTestImageNavigator.Maximum = 100;
             tbTestImageNavigator.Name = "tbTestImageNavigator";
-            tbTestImageNavigator.Size = new Size(1833, 56);
+            tbTestImageNavigator.Size = new Size(1833, 45);
             tbTestImageNavigator.TabIndex = 2;
             tbTestImageNavigator.Scroll += tbTestImageNavigator_Scroll_1;
             // 
@@ -849,7 +849,7 @@ namespace DataManager
             txtSelectedModelFile.Margin = new Padding(7, 5, 7, 5);
             txtSelectedModelFile.Name = "txtSelectedModelFile";
             txtSelectedModelFile.ReadOnly = true;
-            txtSelectedModelFile.Size = new Size(321, 27);
+            txtSelectedModelFile.Size = new Size(321, 23);
             txtSelectedModelFile.TabIndex = 11;
             txtSelectedModelFile.Text = "최신 파일 자동 선택";
             // 
@@ -879,7 +879,7 @@ namespace DataManager
             txtSelectedPredictionCsv.Margin = new Padding(7, 5, 7, 5);
             txtSelectedPredictionCsv.Name = "txtSelectedPredictionCsv";
             txtSelectedPredictionCsv.ReadOnly = true;
-            txtSelectedPredictionCsv.Size = new Size(321, 27);
+            txtSelectedPredictionCsv.Size = new Size(321, 23);
             txtSelectedPredictionCsv.TabIndex = 13;
             txtSelectedPredictionCsv.Text = "최신 파일 자동 선택";
             // 
@@ -887,12 +887,12 @@ namespace DataManager
             // 
             tbTestPlaybackSpeed.BackColor = Color.FromArgb(39, 50, 72);
             tbTestPlaybackSpeed.LargeChange = 1;
-            tbTestPlaybackSpeed.Location = new Point(659, 349);
+            tbTestPlaybackSpeed.Location = new Point(647, 352);
             tbTestPlaybackSpeed.Margin = new Padding(7, 5, 7, 5);
             tbTestPlaybackSpeed.Maximum = 400;
             tbTestPlaybackSpeed.Minimum = 25;
             tbTestPlaybackSpeed.Name = "tbTestPlaybackSpeed";
-            tbTestPlaybackSpeed.Size = new Size(439, 56);
+            tbTestPlaybackSpeed.Size = new Size(461, 45);
             tbTestPlaybackSpeed.TabIndex = 14;
             tbTestPlaybackSpeed.Value = 100;
             // 
@@ -901,10 +901,10 @@ namespace DataManager
             lblTestPlaybackSpeed.AutoSize = true;
             lblTestPlaybackSpeed.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTestPlaybackSpeed.ForeColor = Color.FromArgb(45, 212, 191);
-            lblTestPlaybackSpeed.Location = new Point(1116, 352);
+            lblTestPlaybackSpeed.Location = new Point(1129, 352);
             lblTestPlaybackSpeed.Margin = new Padding(7, 0, 7, 0);
             lblTestPlaybackSpeed.Name = "lblTestPlaybackSpeed";
-            lblTestPlaybackSpeed.Size = new Size(122, 41);
+            lblTestPlaybackSpeed.Size = new Size(97, 32);
             lblTestPlaybackSpeed.TabIndex = 15;
             lblTestPlaybackSpeed.Text = "배속 x1";
             lblTestPlaybackSpeed.Click += lblTestPlaybackSpeed_Click;
@@ -975,7 +975,7 @@ namespace DataManager
             txtTrainingSavePath.Margin = new Padding(7, 5, 7, 5);
             txtTrainingSavePath.Name = "txtTrainingSavePath";
             txtTrainingSavePath.ReadOnly = true;
-            txtTrainingSavePath.Size = new Size(505, 42);
+            txtTrainingSavePath.Size = new Size(505, 35);
             txtTrainingSavePath.TabIndex = 2;
             txtTrainingSavePath.Text = "(학습용 저장본 경로)";
             // 
@@ -1103,7 +1103,7 @@ namespace DataManager
             lblTitle.Location = new Point(6, 8);
             lblTitle.Margin = new Padding(7, 0, 7, 0);
             lblTitle.Name = "lblTitle";
-            lblTitle.Size = new Size(196, 31);
+            lblTitle.Size = new Size(162, 25);
             lblTitle.TabIndex = 0;
             lblTitle.Text = "Data Manager";
             // 
