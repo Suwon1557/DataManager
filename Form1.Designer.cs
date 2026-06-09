@@ -16,6 +16,7 @@ namespace DataManager
         private Label lblTestCurrentIndex;
         private Button btnStartTest;
         private Button btnShowCurrentPrediction;
+        private Button btnPredictCurrentFrame;
         private Button btnSelectModelFile;
         private TextBox txtSelectedModelFile;
         private Button btnSelectPredictionCsv;
@@ -127,6 +128,7 @@ namespace DataManager
             btnTestPlay = new Button();
             tbTestImageNavigator = new TrackBar();
             lblTestCurrentIndex = new Label();
+            btnPredictCurrentFrame = new Button();
             btnShowCurrentPrediction = new Button();
             btnStartTest = new Button();
             btnSelectModelFile = new Button();
@@ -236,7 +238,7 @@ namespace DataManager
             btnSetRange.BackColor = Color.FromArgb(49, 62, 88);
             btnSetRange.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
             btnSetRange.FlatStyle = FlatStyle.Flat;
-            btnSetRange.Font = new Font("한컴 고딕", 17.9999981F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnSetRange.Font = new Font("Microsoft Sans Serif", 17.9999981F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnSetRange.ForeColor = Color.FromArgb(238, 243, 249);
             btnSetRange.Location = new Point(1332, 361);
             btnSetRange.Margin = new Padding(7, 5, 7, 5);
@@ -561,7 +563,7 @@ namespace DataManager
             btnCheckDataIntegrity.BackColor = Color.FromArgb(49, 62, 88);
             btnCheckDataIntegrity.FlatAppearance.BorderColor = Color.FromArgb(45, 212, 191);
             btnCheckDataIntegrity.FlatStyle = FlatStyle.Flat;
-            btnCheckDataIntegrity.Font = new Font("한컴 고딕", 20.25F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnCheckDataIntegrity.Font = new Font("Microsoft Sans Serif", 20.25F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnCheckDataIntegrity.ForeColor = Color.FromArgb(238, 243, 249);
             btnCheckDataIntegrity.Location = new Point(1472, 41);
             btnCheckDataIntegrity.Margin = new Padding(7, 5, 7, 5);
@@ -648,6 +650,7 @@ namespace DataManager
             gbModelTest.Controls.Add(btnTestPlay);
             gbModelTest.Controls.Add(tbTestImageNavigator);
             gbModelTest.Controls.Add(lblTestCurrentIndex);
+            gbModelTest.Controls.Add(btnPredictCurrentFrame);
             gbModelTest.Controls.Add(btnShowCurrentPrediction);
             gbModelTest.Controls.Add(btnStartTest);
             gbModelTest.Controls.Add(btnSelectModelFile);
@@ -689,7 +692,7 @@ namespace DataManager
             // 
             tbTestBrightness.BackColor = Color.FromArgb(39, 50, 72);
             tbTestBrightness.LargeChange = 1;
-            tbTestBrightness.Location = new Point(650, 283);
+            tbTestBrightness.Location = new Point(650, 294);
             tbTestBrightness.Margin = new Padding(7, 5, 7, 5);
             tbTestBrightness.Maximum = 4;
             tbTestBrightness.Name = "tbTestBrightness";
@@ -702,7 +705,7 @@ namespace DataManager
             lblTestBrightness.AutoSize = true;
             lblTestBrightness.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTestBrightness.ForeColor = Color.FromArgb(45, 212, 191);
-            lblTestBrightness.Location = new Point(1112, 283);
+            lblTestBrightness.Location = new Point(1116, 297);
             lblTestBrightness.Margin = new Padding(7, 0, 7, 0);
             lblTestBrightness.Name = "lblTestBrightness";
             lblTestBrightness.Size = new Size(97, 32);
@@ -769,6 +772,23 @@ namespace DataManager
             lblTestCurrentIndex.Text = "현재 인덱스\r\n- / -";
             lblTestCurrentIndex.TextAlign = ContentAlignment.MiddleCenter;
             // 
+            // btnPredictCurrentFrame
+            // 
+            btnPredictCurrentFrame.BackColor = Color.FromArgb(16, 185, 129);
+            btnPredictCurrentFrame.FlatAppearance.BorderColor = Color.FromArgb(16, 185, 129);
+            btnPredictCurrentFrame.FlatStyle = FlatStyle.Flat;
+            btnPredictCurrentFrame.Font = new Font("Microsoft Sans Serif", 10.52F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnPredictCurrentFrame.ForeColor = Color.FromArgb(6, 42, 43);
+            btnPredictCurrentFrame.Location = new Point(881, 139);
+            btnPredictCurrentFrame.Margin = new Padding(7, 5, 7, 5);
+            btnPredictCurrentFrame.Name = "btnPredictCurrentFrame";
+            btnPredictCurrentFrame.Size = new Size(227, 46);
+            btnPredictCurrentFrame.TabIndex = 12;
+            btnPredictCurrentFrame.Text = "실시간 예측 적용";
+            toolTip.SetToolTip(btnPredictCurrentFrame, "현재 밝기 슬라이더 값으로 전체 테스트 이미지를 예측하고 차트에 반영");
+            btnPredictCurrentFrame.UseVisualStyleBackColor = false;
+            btnPredictCurrentFrame.Click += btnPredictCurrentFrame_Click;
+            // 
             // btnShowCurrentPrediction
             // 
             btnShowCurrentPrediction.BackColor = Color.FromArgb(59, 130, 246);
@@ -779,7 +799,7 @@ namespace DataManager
             btnShowCurrentPrediction.Location = new Point(647, 139);
             btnShowCurrentPrediction.Margin = new Padding(7, 5, 7, 5);
             btnShowCurrentPrediction.Name = "btnShowCurrentPrediction";
-            btnShowCurrentPrediction.Size = new Size(461, 46);
+            btnShowCurrentPrediction.Size = new Size(220, 46);
             btnShowCurrentPrediction.TabIndex = 4;
             btnShowCurrentPrediction.Text = "현재 예측 보기";
             toolTip.SetToolTip(btnShowCurrentPrediction, "현재 예측 결과 보기");
@@ -810,7 +830,7 @@ namespace DataManager
             btnSelectModelFile.FlatStyle = FlatStyle.Flat;
             btnSelectModelFile.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnSelectModelFile.ForeColor = Color.FromArgb(238, 243, 249);
-            btnSelectModelFile.Location = new Point(647, 195);
+            btnSelectModelFile.Location = new Point(647, 206);
             btnSelectModelFile.Margin = new Padding(7, 5, 7, 5);
             btnSelectModelFile.Name = "btnSelectModelFile";
             btnSelectModelFile.Size = new Size(132, 32);
@@ -825,7 +845,7 @@ namespace DataManager
             txtSelectedModelFile.BorderStyle = BorderStyle.FixedSingle;
             txtSelectedModelFile.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
             txtSelectedModelFile.ForeColor = Color.FromArgb(238, 243, 249);
-            txtSelectedModelFile.Location = new Point(787, 195);
+            txtSelectedModelFile.Location = new Point(787, 206);
             txtSelectedModelFile.Margin = new Padding(7, 5, 7, 5);
             txtSelectedModelFile.Name = "txtSelectedModelFile";
             txtSelectedModelFile.ReadOnly = true;
@@ -840,7 +860,7 @@ namespace DataManager
             btnSelectPredictionCsv.FlatStyle = FlatStyle.Flat;
             btnSelectPredictionCsv.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
             btnSelectPredictionCsv.ForeColor = Color.FromArgb(238, 243, 249);
-            btnSelectPredictionCsv.Location = new Point(647, 235);
+            btnSelectPredictionCsv.Location = new Point(647, 246);
             btnSelectPredictionCsv.Margin = new Padding(7, 5, 7, 5);
             btnSelectPredictionCsv.Name = "btnSelectPredictionCsv";
             btnSelectPredictionCsv.Size = new Size(132, 32);
@@ -855,7 +875,7 @@ namespace DataManager
             txtSelectedPredictionCsv.BorderStyle = BorderStyle.FixedSingle;
             txtSelectedPredictionCsv.Font = new Font("맑은 고딕", 9F, FontStyle.Bold, GraphicsUnit.Point, 129);
             txtSelectedPredictionCsv.ForeColor = Color.FromArgb(238, 243, 249);
-            txtSelectedPredictionCsv.Location = new Point(787, 235);
+            txtSelectedPredictionCsv.Location = new Point(787, 246);
             txtSelectedPredictionCsv.Margin = new Padding(7, 5, 7, 5);
             txtSelectedPredictionCsv.Name = "txtSelectedPredictionCsv";
             txtSelectedPredictionCsv.ReadOnly = true;
@@ -867,7 +887,7 @@ namespace DataManager
             // 
             tbTestPlaybackSpeed.BackColor = Color.FromArgb(39, 50, 72);
             tbTestPlaybackSpeed.LargeChange = 1;
-            tbTestPlaybackSpeed.Location = new Point(659, 338);
+            tbTestPlaybackSpeed.Location = new Point(659, 349);
             tbTestPlaybackSpeed.Margin = new Padding(7, 5, 7, 5);
             tbTestPlaybackSpeed.Maximum = 400;
             tbTestPlaybackSpeed.Minimum = 25;
@@ -881,7 +901,7 @@ namespace DataManager
             lblTestPlaybackSpeed.AutoSize = true;
             lblTestPlaybackSpeed.Font = new Font("맑은 고딕", 18F, FontStyle.Bold, GraphicsUnit.Point, 129);
             lblTestPlaybackSpeed.ForeColor = Color.FromArgb(45, 212, 191);
-            lblTestPlaybackSpeed.Location = new Point(1112, 338);
+            lblTestPlaybackSpeed.Location = new Point(1116, 352);
             lblTestPlaybackSpeed.Margin = new Padding(7, 0, 7, 0);
             lblTestPlaybackSpeed.Name = "lblTestPlaybackSpeed";
             lblTestPlaybackSpeed.Size = new Size(97, 32);
