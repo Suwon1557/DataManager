@@ -31,6 +31,7 @@ namespace DataManager
         private bool _showTestOverlay = false;
         private bool _isTestRunning = false;
         private Process? _testProcess;
+        private Button? _activeTestButton;
         private bool _testStopRequested = false;
         private Process? _trainingProcess;
         private bool _isTrainingRunning = false;
@@ -376,7 +377,7 @@ namespace DataManager
             int chartTop = pbTestPreview.Top;
             int chartBottom = tbTestImageNavigator.Top - 12;
             int availableWidth = Math.Max(100, gbModelTest.ClientSize.Width - chartLeft - 12);
-            int chartWidth = Math.Max(100, availableWidth / 2);
+            int chartWidth = Math.Max(100, (int)Math.Round((availableWidth / 2.0) * 0.8));
             int rightAlignedLeft = Math.Max(chartLeft, gbModelTest.ClientSize.Width - chartWidth - 12);
             layout.Bounds = new Rectangle(rightAlignedLeft, chartTop, chartWidth, Math.Max(80, chartBottom - chartTop));
             layout.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
@@ -1241,17 +1242,38 @@ namespace DataManager
         {
             if (btnStartTest == null) return;
 
-            btnStartTest.Enabled = true;
-            if (btnPredictCurrentFrame != null) btnPredictCurrentFrame.Enabled = !isRunning;
-            if (isRunning)
+            if (!isRunning)
             {
-                btnStartTest.Text = "Stop";
-                StyleButton(btnStartTest, Color.FromArgb(248, 113, 113), Color.White, Color.FromArgb(248, 113, 113));
+                RestoreTestActionButtons();
                 return;
             }
 
-            btnStartTest.Text = "테스트 시작";
-            StyleButton(btnStartTest, Color.FromArgb(45, 212, 191), Color.FromArgb(6, 42, 43), Color.FromArgb(45, 212, 191));
+            Button activeButton = _activeTestButton ?? btnStartTest;
+            Button? inactiveButton = activeButton == btnStartTest ? btnPredictCurrentFrame : btnStartTest;
+
+            activeButton.Enabled = true;
+            activeButton.Text = "Stop";
+            StyleButton(activeButton, Color.FromArgb(248, 113, 113), Color.White, Color.FromArgb(248, 113, 113));
+
+            if (inactiveButton != null)
+                inactiveButton.Enabled = false;
+        }
+
+        private void RestoreTestActionButtons()
+        {
+            if (btnStartTest != null)
+            {
+                btnStartTest.Enabled = true;
+                btnStartTest.Text = "테스트 시작";
+                StyleButton(btnStartTest, Color.FromArgb(45, 212, 191), Color.FromArgb(6, 42, 43), Color.FromArgb(45, 212, 191));
+            }
+
+            if (btnPredictCurrentFrame != null)
+            {
+                btnPredictCurrentFrame.Enabled = true;
+                btnPredictCurrentFrame.Text = "밝기 예측 적용";
+                StyleButton(btnPredictCurrentFrame, Color.FromArgb(16, 185, 129), Color.FromArgb(6, 42, 43), Color.FromArgb(16, 185, 129));
+            }
         }
 
         private void StopTestProcess()
@@ -1381,6 +1403,7 @@ namespace DataManager
             {
                 _isTestRunning = true;
                 _testStopRequested = false;
+                _activeTestButton ??= btnStartTest;
                 SetTestButtonRunningState(true);
                 AppendTrainingLog("Test session started. Syncing paths.");
                 string envName = "e2e_env";
@@ -1585,6 +1608,7 @@ namespace DataManager
                 _isTestRunning = false;
                 _testStopRequested = false;
                 SetTestButtonRunningState(false);
+                _activeTestButton = null;
             }
         }
 
@@ -1614,11 +1638,12 @@ namespace DataManager
             if (!EnsureDataLoaded()) return;
             if (_isTestRunning)
             {
-                AppendTrainingLog("Brightness prediction is already running.");
+                StopTestProcess();
                 return;
             }
 
             AppendTrainingLog($"Starting full prediction with brightness x{GetTestBrightnessFactor():0.##}.");
+            _activeTestButton = btnPredictCurrentFrame;
             btnStartTest_Click(sender ?? btnPredictCurrentFrame, e);
         }
 
