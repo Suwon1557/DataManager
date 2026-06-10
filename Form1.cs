@@ -1412,7 +1412,8 @@ namespace DataManager
                     .ToList();
                 File.WriteAllLines(winPathsFile, linuxPaths);
                 AppendTrainingLog($"Prepared {linuxPaths.Count} test images.");
-                AppendTrainingLog($"Prediction input brightness: x{predictionBrightnessFactor:0.##}.");
+                if (_activeTestButton == btnPredictCurrentFrame)
+                    AppendTrainingLog($"Prediction input brightness: x{predictionBrightnessFactor:0.##}.");
 
                 if (_testStopRequested)
                 {
