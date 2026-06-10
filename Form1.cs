@@ -1774,10 +1774,22 @@ namespace DataManager
         {
             if (!EnsureDataLoaded()) return;
             var targets = _allData.Where(x => x.Steering == 0 || x.Speed == 0).ToList();
-            if (targets.Count > 0)
+            if (targets.Count == 0)
             {
-                DeleteDataItems(targets, _allData.IndexOf(targets[0]));
+                MessageBox.Show(
+                    "삭제할 데이터가 없습니다.",
+                    "필터링",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
             }
+
+            DeleteDataItems(targets, _allData.IndexOf(targets[0]));
+            MessageBox.Show(
+                $"{targets.Count}개의 데이터를 삭제했습니다.",
+                "필터링",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
