@@ -39,6 +39,8 @@ namespace DataManager
         private bool _trainingStopRequested = false;
         private SynchronizationContext? _uiContext;
         private Image? _trainButtonIdleImage;
+        private Font? _trainButtonIdleFont;
+        private Font? _trainButtonRunningFont;
         private bool _responsiveLayoutUpdatePending = false;
         private string _selectedModelFile = "";
         private string _selectedPredictionResultsFile = "";
@@ -83,6 +85,8 @@ namespace DataManager
             InitializeComponent();
             _uiContext = SynchronizationContext.Current;
             _trainButtonIdleImage = btnTrain.BackgroundImage;
+            _trainButtonIdleFont = btnTrain.Font;
+            _trainButtonRunningFont = new Font(btnTrain.Font.FontFamily, 16.2F, FontStyle.Bold, btnTrain.Font.Unit);
             AutoScaleMode = AutoScaleMode.None;
 
             if (lvDataItems.Columns.Count == 0)
@@ -1195,6 +1199,7 @@ namespace DataManager
             {
                 btnTrain.Enabled = true;
                 btnTrain.BackgroundImage = null;
+                btnTrain.Font = _trainButtonRunningFont ?? btnTrain.Font;
                 btnTrain.Text = "멈춤";
                 StyleButton(btnTrain, Color.FromArgb(248, 113, 113), Color.White, Color.FromArgb(248, 113, 113));
                 return;
@@ -1202,6 +1207,8 @@ namespace DataManager
 
             btnTrain.Enabled = true;
             btnTrain.Text = string.Empty;
+            if (_trainButtonIdleFont != null)
+                btnTrain.Font = _trainButtonIdleFont;
             btnTrain.BackgroundImage = _trainButtonIdleImage;
             StyleButton(btnTrain, Color.FromArgb(45, 212, 191), Color.FromArgb(6, 42, 43), Color.FromArgb(45, 212, 191));
         }
@@ -1238,7 +1245,7 @@ namespace DataManager
             Button? inactiveButton = activeButton == btnStartTest ? btnPredictCurrentFrame : btnStartTest;
 
             activeButton.Enabled = true;
-            activeButton.Text = "Stop";
+            activeButton.Text = "멈춤";
             StyleButton(activeButton, Color.FromArgb(248, 113, 113), Color.White, Color.FromArgb(248, 113, 113));
 
             if (inactiveButton != null)
