@@ -1,7 +1,7 @@
 # Data Manager : Autonomous Driving Data Integrated Workflow
 
 ![.NET](https://img.shields.io/badge/.NET-WinForms-512BD4?style=for-the-badge&logo=dotnet)
-![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python)
+![Python](https://img.shields.io/badge/Python-3.0-3776AB?style=for-the-badge&logo=python)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13.0-FF6F00?style=for-the-badge&logo=tensorflow)
 ![Ubuntu](https://img.shields.io/badge/WSL2-Ubuntu_24.04-E95420?style=for-the-badge&logo=ubuntu)
 
