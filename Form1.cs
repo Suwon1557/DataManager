@@ -39,6 +39,7 @@ namespace DataManager
         private bool _trainingStopRequested = false;
         private SynchronizationContext? _uiContext;
         private Image? _trainButtonIdleImage;
+        private bool _responsiveLayoutUpdatePending = false;
         private string _selectedModelFile = "";
         private string _selectedPredictionResultsFile = "";
         private readonly Color _folderPathTextColor = Color.FromArgb(238, 243, 249);
@@ -215,7 +216,6 @@ namespace DataManager
                 }
             }
 
-            ApplyResponsiveLayout();
             EnsureDataChartsLayout();
             EnsureTestChartsLayout();
             SetupSafeChart(chtSteeringValue, "조향값", Color.FromArgb(45, 212, 191), "실제 조향값");
@@ -246,10 +246,20 @@ namespace DataManager
 
         private void Form1_Resize(object? sender, EventArgs e)
         {
-            ApplyResponsiveLayout();
             EnsureDataChartsLayout();
             EnsureTestChartsLayout();
             AdjustDataListColumns();
+
+            if (_responsiveLayoutUpdatePending || IsDisposed) return;
+            _responsiveLayoutUpdatePending = true;
+            BeginInvoke(new Action(() =>
+            {
+                _responsiveLayoutUpdatePending = false;
+                if (IsDisposed) return;
+                EnsureDataChartsLayout();
+                EnsureTestChartsLayout();
+                AdjustDataListColumns();
+            }));
         }
 
         private void Form1_FormClosed(object? sender, FormClosedEventArgs e)
@@ -281,9 +291,6 @@ namespace DataManager
 
         private void ConfigureResponsiveLayout()
         {
-            tcMain.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            gbDataLoad.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            gbDataContent.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             txtFolderPath.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             btnCheckDataIntegrity.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnSaveCatalogState.Anchor = AnchorStyles.Top | AnchorStyles.Right;
@@ -300,60 +307,10 @@ namespace DataManager
             txtTrainingLog.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             txtTrainingSavePath.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             tbTestImageNavigator.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            ApplyResponsiveLayout();
-        }
-
-        private void ApplyResponsiveLayout()
-        {
-            if (tcMain == null || gbDataLoad == null || gbDataContent == null || gbTrainingSetup == null || gbModelTest == null)
-                return;
-
-            const int margin = 5;
-            int tabTop = Math.Max(48, lblTitle.Bottom + 8);
-            tcMain.SetBounds(0, tabTop, Math.Max(400, ClientSize.Width), Math.Max(300, ClientSize.Height - tabTop));
-
-            int pageWidth = Math.Max(400, tpDataManager.ClientSize.Width - (margin * 2));
-            int pageHeight = Math.Max(260, tpDataManager.ClientSize.Height);
-
-            int dataLoadHeight = Math.Min(96, Math.Max(76, pageHeight / 6));
-            gbDataLoad.SetBounds(margin, 3, pageWidth, dataLoadHeight);
-            gbDataContent.SetBounds(margin, gbDataLoad.Bottom + 8, pageWidth, Math.Max(220, pageHeight - gbDataLoad.Bottom - 16));
         }
 
         private void LayoutModelTestControls()
         {
-            if (gbModelTest == null) return;
-
-            const int margin = 18;
-            int width = gbModelTest.ClientSize.Width;
-            int height = gbModelTest.ClientSize.Height;
-            int previewWidth = Math.Min(606, Math.Max(260, width / 3));
-            int previewHeight = Math.Min(360, Math.Max(110, height - 180));
-
-            pbTestPreview.SetBounds(margin, 41, previewWidth, previewHeight);
-            btnStartTest.SetBounds(margin, pbTestPreview.Bottom + 12, previewWidth, 46);
-            btnShowCurrentPrediction.SetBounds(margin, btnStartTest.Bottom + 8, previewWidth, 40);
-            int controlLeft = pbTestPreview.Right + 23;
-            int controlWidth = Math.Min(460, Math.Max(280, width - controlLeft - 12));
-            int leftButtonWidth = Math.Min(220, Math.Max(132, (controlWidth - 14) / 2));
-            int rightButtonLeft = controlLeft + leftButtonWidth + 14;
-            int rightButtonWidth = Math.Max(140, controlLeft + controlWidth - rightButtonLeft);
-            lblTestCurrentIndex.SetBounds(controlLeft, 41, leftButtonWidth, 74);
-            btnStartTest.SetBounds(rightButtonLeft, 41, rightButtonWidth, 74);
-            btnShowCurrentPrediction.SetBounds(controlLeft, 123, leftButtonWidth, 46);
-            btnPredictCurrentFrame.SetBounds(rightButtonLeft, 123, rightButtonWidth, 46);
-            btnSelectModelFile.SetBounds(controlLeft, 179, 132, 32);
-            txtSelectedModelFile.SetBounds(btnSelectModelFile.Right + 8, 179, Math.Max(160, controlWidth - 140), 32);
-            btnSelectPredictionCsv.SetBounds(controlLeft, 219, 132, 32);
-            txtSelectedPredictionCsv.SetBounds(btnSelectPredictionCsv.Right + 8, 219, Math.Max(160, controlWidth - 140), 32);
-            tbTestBrightness.SetBounds(controlLeft, 272, Math.Max(120, controlWidth - 70), 45);
-            lblTestBrightness.SetBounds(tbTestBrightness.Right + 8, tbTestBrightness.Top + 2, 70, 32);
-            tbTestPlaybackSpeed.SetBounds(controlLeft, 325, Math.Max(120, controlWidth - 70), 45);
-            lblTestPlaybackSpeed.SetBounds(tbTestPlaybackSpeed.Right + 8, tbTestPlaybackSpeed.Top + 2, 70, 32);
-            btnTestPlay.SetBounds(controlLeft, 378, 145, 48);
-            btnTestStop.SetBounds(btnTestPlay.Right + 11, 378, 148, 48);
-            btnTestReverse.SetBounds(btnTestStop.Right + 11, 378, 146, 48);
-            tbTestImageNavigator.SetBounds(margin, Math.Max(40, height - 58), Math.Max(120, width - (margin * 2)), 30);
         }
 
         private void EnsureDataChartsLayout()
@@ -396,14 +353,6 @@ namespace DataManager
 
         private void LayoutTestImageNavigatorAtBottom()
         {
-            if (gbModelTest == null || tbTestImageNavigator == null) return;
-
-            const int margin = 12;
-            tbTestImageNavigator.SetBounds(
-                margin,
-                Math.Max(40, gbModelTest.ClientSize.Height - 58),
-                Math.Max(100, gbModelTest.ClientSize.Width - (margin * 2)),
-                30);
         }
 
         private void UpdateTestIndexLabel(int? displayIndex = null)
@@ -1463,7 +1412,8 @@ namespace DataManager
                     .ToList();
                 File.WriteAllLines(winPathsFile, linuxPaths);
                 AppendTrainingLog($"Prepared {linuxPaths.Count} test images.");
-                AppendTrainingLog($"Prediction input brightness: x{predictionBrightnessFactor:0.##}.");
+                if (_activeTestButton == btnPredictCurrentFrame)
+                    AppendTrainingLog($"Prediction input brightness: x{predictionBrightnessFactor:0.##}.");
 
                 if (_testStopRequested)
                 {
@@ -1773,7 +1723,7 @@ namespace DataManager
         private void btnFilter_Click(object sender, EventArgs e)
         {
             if (!EnsureDataLoaded()) return;
-            var targets = _allData.Where(x => x.Steering == 0 || x.Speed == 0).ToList();
+            var targets = _allData.Where(x => x.Steering == 0 || x.Speed <= 0).ToList();
             if (targets.Count == 0)
             {
                 MessageBox.Show(
