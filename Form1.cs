@@ -1723,7 +1723,7 @@ namespace DataManager
         private void btnFilter_Click(object sender, EventArgs e)
         {
             if (!EnsureDataLoaded()) return;
-            var targets = _allData.Where(x => x.Steering == 0 || x.Speed == 0).ToList();
+            var targets = _allData.Where(x => x.Steering == 0 || x.Speed <= 0).ToList();
             if (targets.Count == 0)
             {
                 MessageBox.Show(
